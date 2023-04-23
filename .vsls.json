@@ -1,7 +1,8 @@
 {
     "excludeFiles":[
-        "env_name.envname",
-        ".gitignore"
+        "env_name.txt",
+        ".gitignore",
+        "token.txt"
     ],
     "hideFiles": [
         "bin",
