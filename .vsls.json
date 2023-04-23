@@ -1,0 +1,10 @@
+{
+    "excludeFiles":[
+        "env_name.envname",
+        ".gitignore"
+    ],
+    "hideFiles": [
+        "bin",
+        "obj"
+    ]
+}
