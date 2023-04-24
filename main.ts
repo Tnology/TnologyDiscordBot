@@ -9,6 +9,11 @@ import {
 } from "https://deno.land/x/harmony@v2.8.0/mod.ts";
 import { parseXMessage } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 
+// TODO: Add a ping (latency) command
+// TODO: Add user avatar to userinfo command
+// TODO: Use Discord timestamp feature (figure out how to convert time to unix timestamp) in userinfo command
+// TODO: Add user join server date to userinfo command
+
 function RandomNumber(min: number, max: number) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -64,12 +69,18 @@ bot.on("messageCreate", (msg) => {
 class HelpCommand extends Command {
 	name = "help";
 	aliases = ["commands", "cmds"];
+	description = "Shows available commands.\n**Syntax:** `help`";
 	async execute(ctx: CommandContext) {
+		let commands = "";
+		for (let commandIndex in ctx.client.commands.list.array()) {
+			let thisCommand = ctx.client.commands.list.array()[commandIndex];
+			commands += `**\n${thisCommand.name}**\nAliases: ${thisCommand.aliases}\nDescription: ${thisCommand.description}\n`; // 10/10 code
+		}
+
 		await ctx.message.reply(
 			new Embed({
 				title: "Help",
-				description:
-					"Here is a list of commands:\nhelp - What do you think it does? Take a guess.\nrps - Play a game of rock, paper, scissors",
+				description: `${commands}`,
 			})
 		);
 	}
@@ -78,6 +89,7 @@ class HelpCommand extends Command {
 class Whoami extends Command {
 	name = "whoami";
 	aliases = ["imhavinganidentitycrisis"];
+	description = "Gets your username.\n**Syntax:** `whoami`";
 
 	async execute(ctx: CommandContext) {
 		await ctx.message.reply(
@@ -92,6 +104,7 @@ class Whoami extends Command {
 class Restart extends Command {
 	name = "restart";
 	aliases = ["reboot"];
+	description = "This command doesn't even work.";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -118,6 +131,8 @@ class Restart extends Command {
 class ShellCommand extends Command {
 	name = "shell";
 	aliases = ["sh", "shellcmd"];
+	description =
+		"Executes a shell command. Owner only.\n**Syntax:** `shell <shell command to execute>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -163,6 +178,8 @@ class ShellCommand extends Command {
 class RockPaperScissorsCommand extends Command {
 	name = "rps";
 	aliases = ["rockpaperscissors"];
+	description =
+		"Lets you play a game of Rock, Paper, Scissors with the bot.\n**Syntax:** `rps <rock|paper|scissors>`";
 
 	async execute(ctx: CommandContext) {
 		const userChoice = ctx.argString.split(" ")[0];
@@ -186,7 +203,13 @@ class RockPaperScissorsCommand extends Command {
 					title: "Tie!",
 					description: `You picked ${userChoice}. I also picked ${botChoice}. We tied!`,
 				})
-			);
+			),
+				{
+					allowedMentions: {
+						replied_user: true,
+						roles: [],
+					},
+				};
 			return;
 		} else if (userChoice == "rock") {
 			if (botChoice == "paper") {
@@ -194,7 +217,13 @@ class RockPaperScissorsCommand extends Command {
 					new Embed({
 						title: "I Win!",
 						description: `You picked ${userChoice}. I picked ${botChoice}. I win!`,
-					})
+					}),
+					{
+						allowedMentions: {
+							replied_user: true,
+							roles: [],
+						},
+					}
 				);
 				return;
 			} else if (botChoice == "scissors") {
@@ -202,7 +231,13 @@ class RockPaperScissorsCommand extends Command {
 					new Embed({
 						title: "You Win!",
 						description: `You picked ${userChoice}. I picked ${botChoice}. You win!`,
-					})
+					}),
+					{
+						allowedMentions: {
+							replied_user: true,
+							roles: [],
+						},
+					}
 				);
 				return;
 			}
@@ -212,7 +247,13 @@ class RockPaperScissorsCommand extends Command {
 					new Embed({
 						title: "You Win!",
 						description: `You picked ${userChoice}. I picked ${botChoice}. You win!`,
-					})
+					}),
+					{
+						allowedMentions: {
+							replied_user: true,
+							roles: [],
+						},
+					}
 				);
 				return;
 			} else if (botChoice == "scissors") {
@@ -220,7 +261,13 @@ class RockPaperScissorsCommand extends Command {
 					new Embed({
 						title: "I Win!",
 						description: `You picked ${userChoice}. I picked ${botChoice}. I win!`,
-					})
+					}),
+					{
+						allowedMentions: {
+							replied_user: true,
+							roles: [],
+						},
+					}
 				);
 				return;
 			}
@@ -230,7 +277,13 @@ class RockPaperScissorsCommand extends Command {
 					new Embed({
 						title: "I Win!",
 						description: `You picked ${userChoice}. I picked ${botChoice}. I win!`,
-					})
+					}),
+					{
+						allowedMentions: {
+							replied_user: true,
+							roles: [],
+						},
+					}
 				);
 				return;
 			} else if (botChoice == "paper") {
@@ -238,7 +291,13 @@ class RockPaperScissorsCommand extends Command {
 					new Embed({
 						title: "You Win!",
 						description: `You picked ${userChoice}. I picked ${botChoice}. You win!`,
-					})
+					}),
+					{
+						allowedMentions: {
+							replied_user: true,
+							roles: [],
+						},
+					}
 				);
 				return;
 			}
@@ -249,7 +308,13 @@ class RockPaperScissorsCommand extends Command {
 					description:
 						"Please make a choice between rock, paper, and scissors.",
 					color: 0x00ff00,
-				})
+				}),
+				{
+					allowedMentions: {
+						replied_user: true,
+						roles: [],
+					},
+				}
 			);
 			return;
 		}
@@ -259,6 +324,8 @@ class RockPaperScissorsCommand extends Command {
 class SayCommand extends Command {
 	name = "say";
 	aliases = ["echo"];
+	description =
+		"Makes the bot say something. Owner only.\n**Syntax:** `say <thing to say>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -269,6 +336,8 @@ class SayCommand extends Command {
 class SendEmbedCommand extends Command {
 	name = "sendembed";
 	aliases = ["embedsend"];
+	description =
+		"Makes the bot send an embed. Owner only.\n**Syntax:** `sendembed <channel> <title, ending before a newline> <description, beginning with a newline>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -287,6 +356,71 @@ class SendEmbedCommand extends Command {
 				description: description,
 				// title: ctx.argString.split(" ")[0],
 				// description: ctx.argString.split(" ").slice(1).join(" "),
+			})
+		);
+	}
+}
+
+class UserInfoCommand extends Command {
+	name = "userinfo";
+	aliases = ["ui", "whois", "about", "aboutuser"];
+	description =
+		"Lets you get information about a user.\n**Syntax:** `whois <user>`";
+
+	async execute(ctx: CommandContext) {
+		const user = ctx.message.mentions.users.first();
+		if (user == undefined) {
+			await ctx.message.reply(
+				new Embed({
+					title: "Error!",
+					description: "Please provide a user to get information about.",
+					color: 0xff0000,
+				}),
+				{
+					allowedMentions: {
+						replied_user: true,
+						roles: [],
+					},
+				}
+			);
+			return;
+		}
+		await ctx.message.reply(
+			new Embed({
+				title: "User Info",
+				description: `Information about user ${user.mention}\n\n**Username:**\n${user.username}#${user.discriminator}\n\n**User ID:**\n${user.id}\n\n**Account Created:**\n${user.timestamp},`,
+				color: 0x0000ff,
+			}),
+			{
+				allowedMentions: {
+					replied_user: true,
+					roles: [],
+				},
+			}
+		);
+	}
+}
+
+class EvalCommand extends Command {
+	name = "eval";
+	description =
+		"Lets you run TypeScript code with the bot. Owner only.\n`eval <code to evaluate>`";
+	ownerOnly = true;
+
+	async execute(ctx: CommandContext) {
+		// and my brain is farting again fantastic, i think it has some diarrhea idek
+		// i am mentally fucked rn
+		// maybe i put a little too much crack in those three sandwiches i ate (ask zack, i really did eat three sandwiches)
+		// what was i gonna do here
+		// oh lol
+		console.log(
+			`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
+		);
+		const evaluatedCode = eval(ctx.argString);
+		await ctx.message.reply(
+			new Embed({
+				title: "Output",
+				description: `${evaluatedCode}`,
 			})
 		);
 	}
@@ -350,6 +484,8 @@ bot.commands.add(ShellCommand);
 bot.commands.add(RockPaperScissorsCommand);
 bot.commands.add(SayCommand);
 bot.commands.add(SendEmbedCommand);
+bot.commands.add(UserInfoCommand);
+bot.commands.add(EvalCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
