@@ -144,31 +144,31 @@ class ShellCommand extends Command {
 				color: 0xff9e00,
 			})
 		);
-//		try {
+		//		try {
 		const cmd = Deno.run({
 			cmd: ctx.argString.split(" "),
 			stdout: "piped",
 			stderr: "piped",
 		});
-//		}
-//		catch (e) { // the reason why this code is formatted so badly is because i wrote this via the Termius mobile app, using nano via SSH tp my VPS, while on a tour bus. I wrote this comment at 12:02 PM on 4/26/2023
-//			await ctx.message.reply(new Embed({
-//			title: "Error!",
-//			description: `{e}`,
-//			color: 0xff0000
-//			}))
-//		}
+		//		}
+		//		catch (e) { // the reason why this code is formatted so badly is because i wrote this via the Termius mobile app, using nano via SSH tp my VPS, while on a tour bus. I wrote this comment at 12:02 PM on 4/26/2023
+		//			await ctx.message.reply(new Embed({
+		//			title: "Error!",
+		//			description: `{e}`,
+		//			color: 0xff0000
+		//			}))
+		//		}
 
 		//if ((await cmd.status()).success) {
-			await ctx.message.reply(
-				new Embed({
-					title: `Success (${(await cmd.status()).code})`,
-					description: `Output: \`\`\`${new TextDecoder().decode(
-						await cmd.output()
-					)}\`\`\``,
-					color: 0x00ff00,
-				})
-			);
+		await ctx.message.reply(
+			new Embed({
+				title: `Success (${(await cmd.status()).code})`,
+				description: `Output: \`\`\`${new TextDecoder().decode(
+					await cmd.output()
+				)}\`\`\``,
+				color: 0x00ff00,
+			})
+		);
 		//}// else {
 		// await ctx.message.reply(
 		//		new Embed({
@@ -409,8 +409,6 @@ class UserInfoCommand extends Command {
 	}
 }
 
-
-
 class EvalCommand extends Command {
 	name = "eval";
 	description =
@@ -432,26 +430,37 @@ class EvalCommand extends Command {
 				new Embed({
 					title: "Output",
 					description: `\`\`\`${evaluatedCode}\`\`\``,
-					color: 0x00FF00
+					color: 0x00ff00,
 				})
 			);
-		}
-		catch (err) {
+		} catch (err) {
 			await ctx.message.reply(
 				new Embed({
 					title: "Error",
 					description: `\`\`\`${err}\`\`\``,
-					color: 0xFF0000
+					color: 0xff0000,
 				})
-			)
+			);
 		}
-
 	}
 }
 
+class CoinflipCommand extends Command {
+	name = "coinflip";
+	aliases = ["flipcoin", "iamtryingtoresolveadebateaboutsomethingwithafriend"];
 
+	async execute(ctx: CommandContext) {
+		const result = RandomNumber(1, 2);
 
-
+		result == 1
+			? await ctx.message.reply(
+					new Embed({ title: "Heads!", description: "The result is heads." })
+			  )
+			: await ctx.message.reply(
+					new Embed({ title: "Tails!", description: "The result is tails." })
+			  );
+	}
+}
 
 /*
 class EvalCommand extends Command {
@@ -487,7 +496,6 @@ class EvalCommand extends Command {
 	}
 }
 */
-
 
 // class ShellCommand extends Command {
 // 	name = "shell";
