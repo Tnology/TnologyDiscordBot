@@ -575,6 +575,7 @@ class EvalCommand extends Command {
 
 class CoinflipCommand extends Command {
 	name = "coinflip";
+	description = "Chooses between heads and tails.\n**Syntax:** `coinflip`"
 	aliases = ["flipcoin", "iamtryingtoresolveadebateaboutsomethingwithafriend"];
 
 	async execute(ctx: CommandContext) {
@@ -593,6 +594,7 @@ class CoinflipCommand extends Command {
 class TopicCommand extends Command {
 	name = "topic"
 	aliases = ["generatetopic", "gentopic", "topicgenerate", "topicgen", "topicidea"]
+	description = "Picks a topic from a list of topics that T_nology has created."
 
 	async execute(ctx: CommandContext) {
 		const pickedTopic = topicArray[RandomNumber(0, (topicArray.length - 1))];
@@ -700,6 +702,7 @@ bot.commands.add(SendEmbedCommand);
 bot.commands.add(UserInfoCommand);
 bot.commands.add(EvalCommand);
 bot.commands.add(TopicCommand);
+bot.commands.add(CoinflipCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
