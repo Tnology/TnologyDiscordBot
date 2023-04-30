@@ -144,14 +144,22 @@ class ShellCommand extends Command {
 				color: 0xff9e00,
 			})
 		);
-
+//		try {
 		const cmd = Deno.run({
 			cmd: ctx.argString.split(" "),
 			stdout: "piped",
 			stderr: "piped",
 		});
+//		}
+//		catch (e) { // the reason why this code is formatted so badly is because i wrote this via the Termius mobile app, using nano via SSH tp my VPS, while on a tour bus. I wrote this comment at 12:02 PM on 4/26/2023
+//			await ctx.message.reply(new Embed({
+//			title: "Error!",
+//			description: `{e}`,
+//			color: 0xff0000
+//			}))
+//		}
 
-		if ((await cmd.status()).success) {
+		//if ((await cmd.status()).success) {
 			await ctx.message.reply(
 				new Embed({
 					title: `Success (${(await cmd.status()).code})`,
@@ -161,16 +169,16 @@ class ShellCommand extends Command {
 					color: 0x00ff00,
 				})
 			);
-		} else {
-			await ctx.message.reply(
-				new Embed({
-					title: `Error! (${(await cmd.status()).code})`,
-					description: `Output: \`\`\`${new TextDecoder().decode(
-						await cmd.output()
-					)}\`\`\``,
-				})
-			);
-		}
+		//}// else {
+		// await ctx.message.reply(
+		//		new Embed({
+		//			title: `Error! (${(await cmd.status()).code})`,
+		//			description: `Output: \`\`\`${new TextDecoder().decode(
+		//				await cmd.output()
+		//			)}\`\`\``,
+		//		})
+		//	);
+		//}
 		await ctx.message.reply(`${new TextDecoder().decode(await cmd.output())}`);
 	}
 }
@@ -401,6 +409,38 @@ class UserInfoCommand extends Command {
 	}
 }
 
+
+
+class EvalCommand extends Command {
+	name = "eval";
+	description =
+		"Lets you run TypeScript code with the bot. Owner only.\n`eval <code to evaluate>`";
+	ownerOnly = true;
+
+	async execute(ctx: CommandContext) {
+		// and my brain is farting again fantastic, i think it has some diarrhea idek
+		// i am mentally fucked rn
+		// maybe i put a little too much crack in those three sandwiches i ate (ask zack, i really did eat three sandwiches)
+		// what was i gonna do here
+		// oh lol
+		console.log(
+			`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
+		);
+		const evaluatedCode = eval(ctx.argString);
+		await ctx.message.reply(
+			new Embed({
+				title: "Output",
+				description: `${evaluatedCode}`,
+			})
+		);
+	}
+}
+
+
+
+
+
+/*
 class EvalCommand extends Command {
 	name = "eval";
 	description =
@@ -433,6 +473,8 @@ class EvalCommand extends Command {
 		);
 	}
 }
+*/
+
 
 // class ShellCommand extends Command {
 // 	name = "shell";
