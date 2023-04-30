@@ -181,7 +181,7 @@ bot.on("messageCreate", (msg) => {
 
 	// if (msg.content.toLowerCase().includes("@everyone"))
 
-	if (msg.content.toLowerCase().includes("i'm")) {
+	if (msg.content.toLowerCase().includes("i'm") && !msg.content.toLowerCase().includes("\n")) {
 		const followingContent = msg.content.substring(
 			msg.content.toLowerCase().indexOf("i'm") + 4
 		);
