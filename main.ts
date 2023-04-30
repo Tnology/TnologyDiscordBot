@@ -18,6 +18,134 @@ function RandomNumber(min: number, max: number) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+const topicArray = [
+	"the weather",
+	"news about intel",
+	"news about AMD",
+	"news about NVIDIA",
+	"news about Apple",
+	"news about Samsung",
+	"news about Google",
+	"news about Microsoft",
+	"news about Sony",
+	"news about Nintendo",
+	"news about Facebook/Meta",
+	"news about Amazon",
+	"talking about Elon Musk",
+	"what programming language is the best",
+	"what web development framework is the best",
+	"what programming language is the worst",
+	"what web development framework is the worst",
+	"Minecraft",
+	"An interesting fact that not everyone knows about you",
+	"Your favorite video game(s)",
+	"Your favorite movie(s)",
+	"Do you have a 3D Printer? If so, what have you printed?",
+	"Is Moore's law dead?",
+	"Do you use GitHub Copilot?",
+	"How important is responsive design in web develpment (for mobile devices and whatnot)?",
+	"Are MacBooks/iMacs worth it?",
+	"Which is better - iOS or Android?",
+	"What email client do you use?",
+	"What are some good Linux distributions?",
+	"Which is better - Windows, macOS, or Linux?",
+	"Are Chromebooks good?",
+	"What is some software that you wish worked on Linux (properly)?",
+	"Is TikTok a threat to national security?",
+	"Is the US government spying on us?",
+	"Should healthcare be free in the United States?",
+	"Is Communism a good idea?",
+	"Is Socialism a good idea?",
+	"Is GitHub or GitLab better?",
+	"Is Discord or Guilded better?",
+	"Are Telegram or Signal good alternatives to SMS Messaging?",
+	"Is TypeScript better than JavaScript?",
+	"Is Deno better than Node.js?",
+	"Is Rust better than C++?",
+	"How many words per minute do you get typing on a keyboard?",
+	"Should America's education system be revamped?",
+	"How much memory do you have in your computer?",
+	"What phone do you have?",
+	"Is tax theft?",
+	"Should land be a commodity to be bought and sold?",
+	"Is Canada real?",
+	"Is Australia real?",
+	"What are some features that Discord should add?",
+	"Is Discord Nitro worth it?",
+	"Should prisons be based on rehabilitation as opposed to punishment?",
+	"Is water wet?",
+	"Who are some YouTubers that you watch?",
+	"How are you?",
+	"How did you come up with your username?",
+	"What are your favorite foods?",
+	"What are your favorite drinks?",
+	"What are your favorite snacks?",
+	"What are your favorite desserts?",
+	"How many digits of pi do you memorize?",
+	"What time zone are you in?",
+	"Do you eat meat?",
+	"Is your main computer a desktop or a laptop?",
+	"Should seeds be able to be patented?",
+	"Do you touch grass?",
+	"Should teachers have guns at schools?",
+	"What flavors of ice cream do you like?",
+	"Should the United States disband political parties?",
+	"Has Elon Musk made any good decisions for Twitter while owning it?",
+	"Can macaroni and cheese be a Thanksgiving food?",
+	"Is soup a drink?",
+	"Is cereal a soup?",
+	"Is a hot dog a taco?\nBy the way - https://cuberule.com/",
+	"Do you use Guilded?",
+	"What is a movie that has a sequel as good as the original?",
+	"What books have you read?",
+	"What web browser do you use?",
+	"Should it be required by law for companies to give consumers the right to repair? If so, should consumers also get the right to documentation/instructions on how to repair the products?",
+	"Are you good at math?",
+	"What (spoken) languages do you know?",
+	"Is Windows 11 better than Windows 10?",
+	"Did you ever use Windows XP? If so, did you ever use it on an actual machine (outside of a VM)?",
+	"Is it transphobic to have a preference to not date those who are transgender?",
+	"Do you like s'mores?",
+	"Do you like tacos?",
+	"Do you like pizza?",
+	"Do you like burgers?",
+	"What's a popular food that you have never tried?",
+	"Do you like salad?",
+	"Do you sleep with any light on in the room (e.g. TV or lamp)?",
+	"What FOV do you play Minecraft at?",
+	"What's a good tip you have learned for software development?",
+	"Should airplanes be legally required to always have a doctor on board?",
+	"Do you have any USB Flash Drives?",
+	"How do you feel about NFTs and cryptocurrency?",
+	"Is hardware-based authentication (such as YubiKeys) a good idea for two-factor authentication?",
+	"Is it a good idea to use a password manager?",
+	"Do you use a VPN? If so, what VPN do you use?",
+	"Should it be illegal to raise a child vegan?",
+	"Should the US use the Metric System?",
+	"Your username is now a shop, what do you sell?",
+	"You are hanging down from a tall building, and you are holding onto your profile picture. Do you trust it to not let go?",
+	"Should Discord allow client modifications?",
+	"Is a 360Hz monitor worth it?",
+	"What is the refresh rate of your monitor?",
+	"Which is better: WinRaR or 7Zip?",
+	"Is bacon good on cheeseburgers?",
+	"Is pineapple good on pizza?",
+	"Do you prefer your keyboard to have a numberpad or be TKL?",
+	"Are oatmeal raisin cookies good?",
+	"How many hours of sleep do you typically get each night?",
+	"Does the \"militia\" in the Second Amendment of the United States Constitution refer to the people?",
+	"Suppose you have an old boat, the wood of whioch starts to rot out every now and then. If you slowly replace the wood plank by plank, by the time every plank has been replaced, is it still the same boat?",
+	"Is it okay to use a VPN to bypass a website's region lock?",
+	"Have you ever donated to Wikipedia? Do you ever plan on donating to it in the future?",
+	"Is it okay to pirate software if you own a license for it?",
+	"Is it okay to pirate games if they are no longer obtainable?",
+	"Have you ever built a PC? Do you ever plan on building a PC in the future?",
+	"Should you strive to make code that is optimized for performance or readability?",
+	"Are you in a relationship?",
+	"Do you have an antivirus? If so, what antivirus do you have?",
+	"Do you use an adblocker? If so, what adblocker do you use?",
+]
+
 function DetermineBotChoice(choiceNum: number) {
 	switch (choiceNum) {
 		case 1:
@@ -462,6 +590,20 @@ class CoinflipCommand extends Command {
 	}
 }
 
+class TopicCommand extends Command {
+	name = "topic"
+	aliases = ["generatetopic", "gentopic", "topicgenerate", "topicgen", "topicidea"]
+
+	async execute(ctx: CommandContext) {
+		const pickedTopic = topicArray[RandomNumber(0, (topicArray.length - 1))];
+
+		await ctx.message.reply(new Embed({
+			title: "Topic",
+			description: `${pickedTopic}`,
+		}))
+	}
+}
+
 /*
 class EvalCommand extends Command {
 	name = "eval";
@@ -557,6 +699,7 @@ bot.commands.add(SayCommand);
 bot.commands.add(SendEmbedCommand);
 bot.commands.add(UserInfoCommand);
 bot.commands.add(EvalCommand);
+bot.commands.add(TopicCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
