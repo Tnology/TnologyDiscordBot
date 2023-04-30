@@ -548,7 +548,7 @@ class EvalCommand extends Command {
 			`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
 		);
 		try {
-			const evaluatedCode = eval(ctx.argString).replace("```js", "").replace("```", "");
+			const evaluatedCode = eval(ctx.argString.replace("```js", "").replace("```", ""));
 			await ctx.message.reply(
 				new Embed({
 					title: "Output",
