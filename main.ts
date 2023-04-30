@@ -544,16 +544,11 @@ class EvalCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
-		// and my brain is farting again fantastic, i think it has some diarrhea idek
-		// i am mentally fucked rn
-		// maybe i put a little too much crack in those three sandwiches i ate (ask zack, i really did eat three sandwiches)
-		// what was i gonna do here
-		// oh lol
 		console.log(
 			`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
 		);
 		try {
-			const evaluatedCode = eval(ctx.argString);
+			const evaluatedCode = eval(ctx.argString).replace("```js", "").replace("```", "");
 			await ctx.message.reply(
 				new Embed({
 					title: "Output",
