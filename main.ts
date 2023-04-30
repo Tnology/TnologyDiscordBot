@@ -431,7 +431,7 @@ class EvalCommand extends Command {
 			await ctx.message.reply(
 				new Embed({
 					title: "Output",
-					description: `${evaluatedCode}`,
+					description: `\`\`\`${evaluatedCode}\`\`\``,
 					color: 0x00FF00
 				})
 			);
