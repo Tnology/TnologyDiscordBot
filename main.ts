@@ -426,13 +426,26 @@ class EvalCommand extends Command {
 		console.log(
 			`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
 		);
-		const evaluatedCode = eval(ctx.argString);
-		await ctx.message.reply(
-			new Embed({
-				title: "Output",
-				description: `${evaluatedCode}`,
-			})
-		);
+		try {
+			const evaluatedCode = eval(ctx.argString);
+			await ctx.message.reply(
+				new Embed({
+					title: "Output",
+					description: `${evaluatedCode}`,
+					color: 0x00FF00
+				})
+			);
+		}
+		catch (err) {
+			await ctx.message.reply(
+				new Embed({
+					title: "Error",
+					description: `\`\`\`${err}\`\`\``,
+					color: 0xFF0000
+				})
+			)
+		}
+
 	}
 }
 
