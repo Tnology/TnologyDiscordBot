@@ -8,11 +8,16 @@ import {
 	userContextMenu,
 } from "https://deno.land/x/harmony@v2.8.0/mod.ts";
 import { parseXMessage } from "https://deno.land/x/redis@v0.25.1/stream.ts";
+import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 
 // TODO: Add a ping (latency) command
 // TODO: Add user avatar to userinfo command
 // TODO: Use Discord timestamp feature (figure out how to convert time to unix timestamp) in userinfo command
 // TODO: Add user join server date to userinfo command
+
+await config({export: true});
+
+const developerMode = Boolean(Deno.env.get("DEVELOPER_MODE"));
 
 function RandomNumber(min: number, max: number) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
@@ -164,7 +169,7 @@ const bot = new CommandClient({
 	caseSensitive: false,
 	enableSlash: false,
 	mentionPrefix: true,
-	prefix: ">",
+	prefix: developerMode == false ? ">" : ">>",
 	owners: ["319223591046742016"],
 });
 
@@ -177,7 +182,7 @@ bot.on("ready", () => {
 });
 
 bot.on("messageCreate", (msg) => {
-	if (msg.author.bot) return;
+	if (msg.author.bot || developerMode) return;
 
 	// if (msg.content.toLowerCase().includes("@everyone"))
 
@@ -700,6 +705,8 @@ bot.commands.add(TopicCommand);
 bot.commands.add(CoinflipCommand);
 
 const token = await Deno.readTextFile("./token.txt");
+
+// const token = await Deno.env.get("TOKEN") // Use this when ready!
 
 bot.connect(token, [
 	GatewayIntents.GUILDS,
