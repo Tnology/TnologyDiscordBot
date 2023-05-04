@@ -19,6 +19,8 @@ await config({export: true});
 
 const developerMode = Boolean(Deno.env.get("DEVELOPER_MODE"));
 
+const ownersArray = Deno.env.get("OWNERS")?.split(",");
+
 function RandomNumber(min: number, max: number) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
@@ -170,7 +172,8 @@ const bot = new CommandClient({
 	enableSlash: false,
 	mentionPrefix: true,
 	prefix: developerMode == false ? ">" : ">>",
-	owners: ["319223591046742016"],
+	// owners: ["319223591046742016"],
+	owners: ownersArray
 });
 
 bot.on("ready", () => {
