@@ -704,9 +704,9 @@ bot.commands.add(EvalCommand);
 bot.commands.add(TopicCommand);
 bot.commands.add(CoinflipCommand);
 
-const token = await Deno.readTextFile("./token.txt");
+// const token = await Deno.readTextFile("./token.txt");
 
-// const token = await Deno.env.get("TOKEN") // Use this when ready!
+const token = await Deno.env.get("TOKEN") // Use this when ready!
 
 bot.connect(token, [
 	GatewayIntents.GUILDS,
