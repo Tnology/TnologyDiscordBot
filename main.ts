@@ -17,7 +17,7 @@ import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@
 
 await config({export: true});
 
-const developerMode = Boolean(Deno.env.get("DEVELOPER_MODE"));
+const developerMode = Boolean(Deno.env.get("DEV_MODE"));
 
 const ownersArray = Deno.env.get("OWNERS")?.split(",");
 
@@ -177,11 +177,13 @@ const bot = new CommandClient({
 });
 
 bot.on("ready", () => {
+	developerMode == false ? 
 	console.log(
-		`The bot is ready. The bot's info is the following:\nBot Username: ${
-			bot.user!.tag
-		}`
-	);
+		`The bot is ready. The bot's info is the following:\nBot Username: ${bot.user!.tag}\nBot Owner(s): ${ownersArray}`
+	) : 
+	console.log(
+		`The bot is ready and is in developer mode.\nBot Username: ${bot.user!.tag}\nBot Owner(s): ${ownersArray}`
+	)
 });
 
 bot.on("messageCreate", (msg) => {
