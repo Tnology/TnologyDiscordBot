@@ -17,7 +17,7 @@ import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@
 
 await config({export: true});
 
-const developerMode = Boolean(Deno.env.get("DEV_MODE"));
+const developerMode = Deno.env.get("DEV_MODE") == "true" ? true : false;
 
 const ownersArray = Deno.env.get("OWNERS")?.split(",");
 
