@@ -6,6 +6,7 @@ import {
 	Embed,
 	CommandContext,
 	userContextMenu,
+Option,
 } from "https://deno.land/x/harmony@v2.8.0/mod.ts";
 import { parseXMessage } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
@@ -18,7 +19,8 @@ import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@
 await config({export: true});
 
 const developerMode = Deno.env.get("DEV_MODE") == "true" ? true : false;
-
+const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true" ? true : false;
+const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
 const ownersArray = Deno.env.get("OWNERS")?.split(",");
 
 function RandomNumber(min: number, max: number) {
@@ -187,11 +189,18 @@ bot.on("ready", () => {
 });
 
 bot.on("messageCreate", (msg) => {
-	if (msg.author.bot || developerMode) return;
-
-	// if (msg.content.toLowerCase().includes("@everyone"))
+	// if (msg.author.bot || developerMode) return;
 
 	
+	// if (msg.content.toLowerCase().includes("@everyone"))
+
+	if (discussionThreadsEnabled) {
+		if (discussionChannels!.includes(msg.channel.id)) {
+			msg.startThread({
+				name: "Discussion Thread",
+			})
+		}
+	}
 	}
 );
 
