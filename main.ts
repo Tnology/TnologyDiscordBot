@@ -16,6 +16,9 @@ import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@
 // TODO: Use Discord timestamp feature (figure out how to convert time to unix timestamp) in userinfo command
 // TODO: Add user join server date to userinfo command
 // TODO: Add a send webhook command.
+// TODO: Add a private logging channel for when the bot comes online and/or eval commands and/or shell commands, by having "EVAL_COMMANDS_CHANNEL" (for example) 
+// as a .env variable that can be set to -1 to be disabled or a channel ID to post eval command usage with info. Same with a "SHELL_COMMANDS_CHANNEL" and 
+// a "BOT_START_CHANNEL" and whatnot.
 
 let oneWordStoryChannels: any = [] // TODO: Stop using any type
 let twoWordStoryChannels: any = [] // TODO: Stop using any type
