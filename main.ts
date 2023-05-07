@@ -38,6 +38,8 @@ if (twoWordStoryEnabled) {let twoWordStoryChannels = Deno.env.get("TWO_WORD_STOR
 // an element to the array of -1, which in the code for one/two word story will just cancel it (in the on message handling).
 // Maybe a for loop can be used for this, check later.
 
+// TODO: Add a "BOT_OVERRIDE" .env variable for one and two word story channels, for whether or not a bot can bypass the restriction.
+
 
 const ownersArray = Deno.env.get("OWNERS")?.split(",");
 
