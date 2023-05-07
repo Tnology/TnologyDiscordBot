@@ -15,12 +15,27 @@ import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@
 // TODO: Add user avatar to userinfo command
 // TODO: Use Discord timestamp feature (figure out how to convert time to unix timestamp) in userinfo command
 // TODO: Add user join server date to userinfo command
+// TODO: Add a send webhook command.
+
+let oneWordStoryChannels: any = [] // TODO: Stop using any type
+let twoWordStoryChannels: any = [] // TODO: Stop using any type
 
 await config({export: true});
 
 const developerMode = Deno.env.get("DEV_MODE") == "true" ? true : false;
 const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true" ? true : false;
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
+const oneWordStoryEnabled = Deno.env.get("ENABLE_ONE_WORD_STORY") == "true" ? true : false
+if (oneWordStoryEnabled) {let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",")} else {let oneWordStoryChannels = [-1]}
+const twoWordStoryEnabled = Deno.env.get("ENABLE_TWO_WORD_STORY") == "true" ? true : false
+if (twoWordStoryEnabled) {let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",")} else {let twoWordStoryChannels = [-1]}
+
+// TODO: Add an error if a channel is both a one-word story and a two word story, and remove it from both arrays 
+// if it is (hence why the array is using let instead of const). Then, if no channels are left in the array, add 
+// an element to the array of -1, which in the code for one/two word story will just cancel it (in the on message handling).
+// Maybe a for loop can be used for this, check later.
+
+
 const ownersArray = Deno.env.get("OWNERS")?.split(",");
 
 function RandomNumber(min: number, max: number) {
@@ -199,6 +214,24 @@ bot.on("messageCreate", (msg) => {
 			msg.startThread({
 				name: "Discussion Thread",
 			})
+		}
+	}
+
+	if (oneWordStoryEnabled) {
+		if (oneWordStoryChannels!.includes(msg.channel.id)) {
+			if (msg.content.split(" ").length > 1 && !(msg.content[0] == "/" && msg.content[1] == "/")) {
+				console.log(`Message has been deleted for having too many words\nType: One Word Story\nMessage Content: ${msg.content}`) // TODO: Test this after coming back from dinner, when available.
+				msg.delete();
+			}
+		}
+	}
+
+	if (twoWordStoryEnabled) {
+		if (twoWordStoryChannels!.includes(msg.channel.id)) {
+			if (msg.content.split(" ").length > 2 && !(msg.content[0] == "/" && msg.content[1] == "/")) {
+				console.log(`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`) // TODO: Test this after coming back from dinner, when available.
+				msg.delete();
+			}
 		}
 	}
 	}
