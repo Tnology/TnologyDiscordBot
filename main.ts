@@ -20,8 +20,8 @@ import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@
 // as a .env variable that can be set to -1 to be disabled or a channel ID to post eval command usage with info. Same with a "SHELL_COMMANDS_CHANNEL" and 
 // a "BOT_START_CHANNEL" and whatnot.
 
-//const oneWordStoryChannels: any = [] // TODO: Stop using any type
-//const twoWordStoryChannels: any = [] // TODO: Stop using any type
+// let oneWordStoryChannels: any = [] // TODO: Stop using any type FIXME: Checkpoint 1
+// let twoWordStoryChannels: any = [] // TODO: Stop using any type FIXME: Checkpoint 1
 
 await config({export: true});
 
@@ -31,15 +31,15 @@ const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "t
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
 
 const oneWordStoryEnabled = Deno.env.get("ENABLE_ONE_WORD_STORY") == "true" ? true : false;
-if (oneWordStoryEnabled) {
-	var oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
-	console.log(oneWordStoryChannels)
-	var oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
-}
-else {
-	let oneWordStoryChannels = [-1];
-	let oneWordStoryLoggingChannel = -1;
-}
+// if (oneWordStoryEnabled) { FIXME: Checkpoint 1
+// 	let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
+// 	console.log(oneWordStoryChannels)
+// 	let oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
+// }
+// else {
+// 	let oneWordStoryChannels = [-1];
+// 	let oneWordStoryLoggingChannel = -1;
+// }
 
 const twoWordStoryEnabled = Deno.env.get("ENABLE_TWO_WORD_STORY") == "true" ? true : false
 if (twoWordStoryEnabled) {let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",")} else {let twoWordStoryChannels = [-1]}
@@ -236,6 +236,7 @@ bot.on("messageCreate", (msg) => {
 	}
 
 	if (oneWordStoryEnabled) {
+		let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
 		if (oneWordStoryChannels!.includes(msg.channel.id)) {
 			if (msg.content.split(" ").length > 1 && !(msg.content[0] == "/" && msg.content[1] == "/")) {
 				console.log(`Message has been deleted for having too many words\nType: One Word Story\nMessage Content: ${msg.content}`) // TODO: Test this after coming back from dinner, when available.
@@ -245,6 +246,7 @@ bot.on("messageCreate", (msg) => {
 	}
 
 	if (twoWordStoryEnabled) {
+		let twoWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
 		if (twoWordStoryChannels!.includes(msg.channel.id)) {
 			if (msg.content.split(" ").length > 2 && !(msg.content[0] == "/" && msg.content[1] == "/")) {
 				console.log(`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`) // TODO: Test this after coming back from dinner, when available.
