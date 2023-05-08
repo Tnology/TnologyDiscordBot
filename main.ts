@@ -20,8 +20,8 @@ import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@
 // as a .env variable that can be set to -1 to be disabled or a channel ID to post eval command usage with info. Same with a "SHELL_COMMANDS_CHANNEL" and 
 // a "BOT_START_CHANNEL" and whatnot.
 
-const oneWordStoryChannels: any = [] // TODO: Stop using any type
-const twoWordStoryChannels: any = [] // TODO: Stop using any type
+//const oneWordStoryChannels: any = [] // TODO: Stop using any type
+//const twoWordStoryChannels: any = [] // TODO: Stop using any type
 
 await config({export: true});
 
@@ -32,8 +32,9 @@ const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
 
 const oneWordStoryEnabled = Deno.env.get("ENABLE_ONE_WORD_STORY") == "true" ? true : false;
 if (oneWordStoryEnabled) {
-	let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
-	let oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
+	var oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
+	console.log(oneWordStoryChannels)
+	var oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
 }
 else {
 	let oneWordStoryChannels = [-1];
