@@ -26,8 +26,10 @@ let twoWordStoryChannels: any = [] // TODO: Stop using any type
 await config({export: true});
 
 const developerMode = Deno.env.get("DEV_MODE") == "true" ? true : false;
+
 const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true" ? true : false;
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
+
 const oneWordStoryEnabled = Deno.env.get("ENABLE_ONE_WORD_STORY") == "true" ? true : false
 if (oneWordStoryEnabled) {let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",")} else {let oneWordStoryChannels = [-1]}
 const twoWordStoryEnabled = Deno.env.get("ENABLE_TWO_WORD_STORY") == "true" ? true : false
@@ -39,6 +41,8 @@ if (twoWordStoryEnabled) {let twoWordStoryChannels = Deno.env.get("TWO_WORD_STOR
 // Maybe a for loop can be used for this, check later.
 
 // TODO: Add a "BOT_OVERRIDE" .env variable for one and two word story channels, for whether or not a bot can bypass the restriction.
+
+// TODO: Check if Harmony has a new version and update it if it does
 
 
 const ownersArray = Deno.env.get("OWNERS")?.split(",");

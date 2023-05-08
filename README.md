@@ -11,3 +11,8 @@ If you have found a security vulnerability, please let T_nology know (preferably
 - **Alternative Method:** If you do not wish to create a Management Ticket in the Discord server, or you are unable to do so, you can email T_nology at `tnology55@gmail.com`.<br>
 - **Other Alternative Method:** You can create a GitHub issue with the "Security Vulnerability" label.<br>
 
+
+# Configuring the Bot
+
+To configure the bot, please create a `.env` file (with this specific name). I will add documentation later, but for now, there is a `.env.example` file you can use.<br>
+`_LOGGING_CHANNEL` values can be set to -1 to be disabled.
