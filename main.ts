@@ -27,22 +27,26 @@ await config({export: true});
 
 const developerMode = Deno.env.get("DEV_MODE") == "true" ? true : false;
 
-const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true" ? true : false;
+const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true";
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
 
-const oneWordStoryEnabled = Deno.env.get("ENABLE_ONE_WORD_STORY") == "true" ? true : false;
-if (oneWordStoryEnabled) { // FIXME: Checkpoint 1
-	var oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
-	// console.log(oneWordStoryChannels)
-	var oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
-}
-else {
-	// var oneWordStoryChannels = [-1]; FIXME: I need sleep urgently my body can't take this anymore ahhh
-	// var oneWordStoryLoggingChannel = -1;
-}
+const oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
+const oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
 
-const twoWordStoryEnabled = Deno.env.get("ENABLE_TWO_WORD_STORY") == "true" ? true : false
-if (twoWordStoryEnabled) {var twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",")} //else {var twoWordStoryChannels = [-1]}
+const twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",");
+const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL");
+
+function HandleLogging(ctx: CommandContext, channelid: string, title: string, description: string, color: number) {
+	if (channelid == "-1") {return false}
+
+	bot.channels.sendMessage(channelid, new Embed({
+		title: title,
+		description: description,
+		color: color,
+	}))
+
+	return true;
+}
 
 // TODO: Add an error if a channel is both a one-word story and a two word story, and remove it from both arrays 
 // if it is (hence why the array is using let instead of const). Then, if no channels are left in the array, add 
@@ -235,25 +239,30 @@ bot.on("messageCreate", (msg) => {
 		}
 	}
 
-	if (oneWordStoryEnabled) {
-		//let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
+	if (!(oneWordStoryChannels?.includes("-1"))) {
 		if (oneWordStoryChannels!.includes(msg.channel.id)) {
 			if (!(msg.content[0] == "/" && msg.content[1] == "/")) {
 				console.log(msg.content.includes("\n"))
 				if (msg.content.split(" ").length > 1 || msg.content.includes("https://") || msg.content.includes("http://") || msg.content.includes("\n") || msg.content.length >= 100) {
-					console.log(`Message has been deleted for having too many words\nType: One Word Story\nMessage Content: ${msg.content}`) // TODO: Test this after coming back from dinner, when available.
+						if (oneWordStoryLoggingChannel != "-1") {
+							bot.channels.sendMessage(oneWordStoryLoggingChannel!, new Embed({
+								title: "One-Word Story - Deleted",
+								description: `A message from <#${msg.channel.id}> has been deleted.\n**Author:** ${msg.author.id}\n**Content:** \`${msg.content}\``,
+								color: 0xFF0000,
+							}));
+						}
+				//console.log(`Message has been deleted for having too many words\nType: One Word Story\nMessage Content: ${msg.content}`);
 					msg.delete();
 				}
 			}
 		}
 	}
 
-	if (twoWordStoryEnabled) {
-		//let twoWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
+	if (!(twoWordStoryChannels?.includes("-1"))) {
 		if (twoWordStoryChannels!.includes(msg.channel.id)) {
 			if (!(msg.content[0] == "/" && msg.content[1] == "/" || msg.content.includes("https://") || msg.content.includes("http://") || msg.content.includes("\n") || msg.content.length >= 100)) {
 				if (msg.content.split(" ").length > 2) {
-					console.log(`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`) // TODO: Test this after coming back from dinner, when available.
+					console.log(`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`);
 					msg.delete();	
 				}
 			}
