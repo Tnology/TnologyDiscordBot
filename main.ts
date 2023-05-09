@@ -238,9 +238,11 @@ bot.on("messageCreate", (msg) => {
 	if (oneWordStoryEnabled) {
 		let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
 		if (oneWordStoryChannels!.includes(msg.channel.id)) {
-			if (msg.content.split(" ").length > 1 && !(msg.content[0] == "/" && msg.content[1] == "/")) {
-				console.log(`Message has been deleted for having too many words\nType: One Word Story\nMessage Content: ${msg.content}`) // TODO: Test this after coming back from dinner, when available.
-				msg.delete();
+			if (!(msg.content[0] == "/" && msg.content[1] == "/")) {
+				if (msg.content.split(" ").length > 1 || msg.content.includes("https://" || msg.content.includes("http://" || msg.content.includes("\n")))) {
+					console.log(`Message has been deleted for having too many words\nType: One Word Story\nMessage Content: ${msg.content}`) // TODO: Test this after coming back from dinner, when available.
+					msg.delete();
+				}
 			}
 		}
 	}
