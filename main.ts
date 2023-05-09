@@ -36,7 +36,7 @@ const oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL"
 const twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",");
 const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL");
 
-function HandleLogging(ctx: CommandContext, channelid: string, title: string, description: string, color: number) {
+function SendEmbed(channelid: string, title: string, description: string, color: number) {
 	if (channelid == "-1") {return false}
 
 	bot.channels.sendMessage(channelid, new Embed({
@@ -245,6 +245,7 @@ bot.on("messageCreate", (msg) => {
 				console.log(msg.content.includes("\n"))
 				if (msg.content.split(" ").length > 1 || msg.content.includes("https://") || msg.content.includes("http://") || msg.content.includes("\n") || msg.content.length >= 100) {
 						if (oneWordStoryLoggingChannel != "-1") {
+
 							bot.channels.sendMessage(oneWordStoryLoggingChannel!, new Embed({
 								title: "One-Word Story - Deleted",
 								description: `A message from <#${msg.channel.id}> has been deleted.\n**Author:** ${msg.author.id}\n**Content:** \`${msg.content}\``,
