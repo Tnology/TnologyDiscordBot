@@ -33,7 +33,7 @@ const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
 const oneWordStoryEnabled = Deno.env.get("ENABLE_ONE_WORD_STORY") == "true" ? true : false;
 if (oneWordStoryEnabled) { // FIXME: Checkpoint 1
 	var oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
-	console.log(oneWordStoryChannels)
+	// console.log(oneWordStoryChannels)
 	var oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
 }
 else {
@@ -42,7 +42,7 @@ else {
 }
 
 const twoWordStoryEnabled = Deno.env.get("ENABLE_TWO_WORD_STORY") == "true" ? true : false
-if (twoWordStoryEnabled) {let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",")} else {let twoWordStoryChannels = [-1]}
+if (twoWordStoryEnabled) {var twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",")} //else {var twoWordStoryChannels = [-1]}
 
 // TODO: Add an error if a channel is both a one-word story and a two word story, and remove it from both arrays 
 // if it is (hence why the array is using let instead of const). Then, if no channels are left in the array, add 
