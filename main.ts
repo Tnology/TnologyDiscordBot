@@ -245,7 +245,7 @@ bot.on("messageCreate", (msg) => {
 				console.log(msg.content.includes("\n"))
 				if (msg.content.split(" ").length > 1 || msg.content.includes("https://") || msg.content.includes("http://") || msg.content.includes("\n") || msg.content.length >= 100) {
 						if (oneWordStoryLoggingChannel != "-1") {
-
+							SendEmbed(msg.channel.id, "One Word Story - Deleted", `A message has been deleted from ${msg.channel.id}\n**Author:** ${msg.author}\n**Content:** ${msg.content}\n**Time:** ${msg.timestamp}`, 0xFF0000)
 							bot.channels.sendMessage(oneWordStoryLoggingChannel!, new Embed({
 								title: "One-Word Story - Deleted",
 								description: `A message from <#${msg.channel.id}> has been deleted.\n**Author:** ${msg.author.id}\n**Content:** \`${msg.content}\``,
@@ -263,6 +263,9 @@ bot.on("messageCreate", (msg) => {
 		if (twoWordStoryChannels!.includes(msg.channel.id)) {
 			if (!(msg.content[0] == "/" && msg.content[1] == "/" || msg.content.includes("https://") || msg.content.includes("http://") || msg.content.includes("\n") || msg.content.length >= 100)) {
 				if (msg.content.split(" ").length > 2) {
+					if (twoWordStoryLoggingChannel != "-1") {
+						SendEmbed(msg.channel.id, "Two Word Story - Deleted", `A message has been deleted from ${msg.channel.id}\n**Author:** ${msg.author}\n**Content:** ${msg.content}\n**Time:** ${msg.timestamp}`, 0xFF0000)
+					}
 					console.log(`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`);
 					msg.delete();	
 				}
