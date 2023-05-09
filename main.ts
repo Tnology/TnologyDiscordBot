@@ -31,15 +31,15 @@ const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "t
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
 
 const oneWordStoryEnabled = Deno.env.get("ENABLE_ONE_WORD_STORY") == "true" ? true : false;
-// if (oneWordStoryEnabled) { FIXME: Checkpoint 1
-// 	let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
-// 	console.log(oneWordStoryChannels)
-// 	let oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
-// }
-// else {
-// 	let oneWordStoryChannels = [-1];
-// 	let oneWordStoryLoggingChannel = -1;
-// }
+if (oneWordStoryEnabled) { // FIXME: Checkpoint 1
+	var oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
+	console.log(oneWordStoryChannels)
+	var oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
+}
+else {
+	// var oneWordStoryChannels = [-1]; FIXME: I need sleep urgently my body can't take this anymore ahhh
+	// var oneWordStoryLoggingChannel = -1;
+}
 
 const twoWordStoryEnabled = Deno.env.get("ENABLE_TWO_WORD_STORY") == "true" ? true : false
 if (twoWordStoryEnabled) {let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",")} else {let twoWordStoryChannels = [-1]}
@@ -236,7 +236,7 @@ bot.on("messageCreate", (msg) => {
 	}
 
 	if (oneWordStoryEnabled) {
-		let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
+		//let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
 		if (oneWordStoryChannels!.includes(msg.channel.id)) {
 			if (!(msg.content[0] == "/" && msg.content[1] == "/")) {
 				if (msg.content.split(" ").length > 1 || msg.content.includes("https://" || msg.content.includes("http://" || msg.content.includes("\n") || msg.content.length >= 100))) {
@@ -248,7 +248,7 @@ bot.on("messageCreate", (msg) => {
 	}
 
 	if (twoWordStoryEnabled) {
-		let twoWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
+		//let twoWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
 		if (twoWordStoryChannels!.includes(msg.channel.id)) {
 			if (!(msg.content[0] == "/" && msg.content[1] == "/" || msg.content.includes("https://" || msg.content.includes("http://" || msg.content.includes("\n") || msg.content.length >= 100)))) {
 				if (msg.content.split(" ").length > 2) {
