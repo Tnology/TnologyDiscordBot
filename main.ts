@@ -590,35 +590,67 @@ class UserInfoCommand extends Command {
 		"Lets you get information about a user.\n**Syntax:** `whois <user>`";
 
 	async execute(ctx: CommandContext) {
-		const user = ctx.message.mentions.users.first();
+		// let user = ctx.message.mentions.users.first();
+		// const user = (await ctx.guild!.members.resolve(ctx.author.id))!
+		let user = (await ctx.guild!.members.resolve(ctx.message.mentions.users.first()!.id))!
+		// TODO: Test users outside of the guild (I ran out of time and I have a super busy rest of my day ahead of me. Likely won't be able to work on the bot for now.
+		// TODO: Make it so a User ID can be provided as a parameter as opposed to a user mention
 		if (user == undefined) {
-			await ctx.message.reply(
-				new Embed({
-					title: "Error!",
-					description: "Please provide a user to get information about.",
-					color: 0xff0000,
-				}),
-				{
-					allowedMentions: {
-						replied_user: true,
-						roles: [],
-					},
-				}
-			);
-			return;
+			let user = await ctx.guild?.members.resolve(ctx.author.id) // FIXME: Fix this.
 		}
+		// if (user == undefined) {
+			// user = ctx.author;
+			// await ctx.message.reply(
+			// 	new Embed({
+			// 		title: "Error!",
+			// 		description: "Please provide a user to get information about.",
+			// 		color: 0xff0000,
+			// 	}),
+			// 	{
+			// 		allowedMentions: {
+			// 			replied_user: true,
+			// 			roles: [],
+			// 		},
+			// 	}
+			// );
+			// return;
+		// }
+		const serverJoinDate = `<t:${(new Date(user.joinedAt).getTime() / 1000).toFixed(0)}:F>`
+		const userJoinDate = `<t:${(new Date(user.timestamp).getTime() / 1000).toFixed(0)}:F>`
 		await ctx.message.reply(
 			new Embed({
-				title: "User Info",
-				description: `Information about user ${user.mention}\n\n**Username:**\n${user.username}#${user.discriminator}\n\n**User ID:**\n${user.id}\n\n**Account Created:**\n${user.timestamp},`,
-				color: 0x0000ff,
+				title: `${user.user.username}`,
+				description: `Information about ${user.user.mention}:`,
+				thumbnail: {
+					url: user.user.avatarURL("png"),
+				},
+				fields: [
+					{
+						name: "User ID:",
+						value: `${user.user.id}#${user.user.discriminator}`,
+						inline: true,
+					},
+					{
+						name: "Account Created:",
+						value: `${userJoinDate}`,
+						inline: true,
+					},
+					{
+						name: "Joined Server:",
+						value: `${serverJoinDate}`,
+						inline: true,
+					},
+				]
+				// title: "User Info",
+				// description: `Information about user ${user.mention}\n\n**Username:**\n${user.username}#${user.discriminator}\n\n**User ID:**\n${user.id}\n\n**Account Created:**\n${user.timestamp},`,
+				// color: 0x0000ff,
 			}),
 			{
 				allowedMentions: {
 					replied_user: true,
 					roles: [],
 				},
-			}
+			},
 		);
 	}
 }
