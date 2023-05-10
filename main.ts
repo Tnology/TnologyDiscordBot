@@ -11,7 +11,6 @@ Option,
 import { parseXMessage } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 
-// TODO: Add a ping (latency) command
 // TODO: Add user avatar to userinfo command
 // TODO: Use Discord timestamp feature (figure out how to convert time to unix timestamp) in userinfo command
 // TODO: Add user join server date to userinfo command
@@ -688,91 +687,19 @@ class TopicCommand extends Command {
 	}
 }
 
-/*
-class EvalCommand extends Command {
-	name = "eval";
-	description =
-		"Lets you run TypeScript code with the bot. Owner only.\n`eval <code to evaluate>`";
-	ownerOnly = true;
+class PingCommand extends Command {
+	name = "ping";
+	aliases = ["pong", "latency"];
+	description = "Gets the latency of the bot."
 
 	async execute(ctx: CommandContext) {
-		// and my brain is farting again fantastic, i think it has some diarrhea idek
-		// i am mentally fucked rn
-		// maybe i put a little too much crack in those three sandwiches i ate (ask zack, i really did eat three sandwiches)
-		// what was i gonna do here
-		// oh lol
-		console.log(
-			`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
-		);
-		try{
-			const evaluatedCode = eval(ctx.argString);
-		}
-		catch (e) {
-			await ctx.message.reply(new Embed({
-				title: "Error!",
-				description: `${e}`,
-			}))
-		}
-		await ctx.message.reply(
-			new Embed({
-				title: "Output",
-				description: `${evaluatedCode}`,
-			})
-		);
+		const messageCreatedTime = new Date();
+		await ctx.message.reply(new Embed({
+			title: "🏓 **Pong!**",
+			description: `**Ping:** \`${Date.now() - messageCreatedTime.getTime()}\` ms\n**Websocket/Gateway Ping:** \`${ctx.message.client.gateway.ping}\``
+		}))
 	}
 }
-*/
-
-// class ShellCommand extends Command {
-// 	name = "shell";
-// 	aliases = ["sh", "shellcmd"];
-// 	ownerOnly = true;
-
-// 	async execute(ctx: CommandContext) {
-// 		await ctx.message.reply(
-// 			new Embed({
-// 				title: "Executing",
-// 				description: "Executing the command...",
-// 				color: 0xff9e00,
-// 			})
-// 		);
-
-// 		const cmd = Deno.run({
-// 			cmd: ctx.argString.split(" "),
-// 			stdout: "piped",
-// 			stderr: "piped",
-// 		});
-
-// 		const [status, stdout, stderr] = await Promise.all([
-// 			cmd.status(),
-// 			cmd.output(),
-// 			cmd.stderrOutput(),
-// 		]);
-
-// 		console.log(await cmd.output());
-
-// 		if (status.success == true) {
-// 			await ctx.message.reply(
-// 				new Embed({
-// 					title: "Success",
-// 					description: `Exit Code: ${status.code}\nSuccess: ${status.success}\nOutput: \`\`\`temp\`\`\``,
-// 					color: 0x00ff00,
-// 				})
-// 			);
-// 		}
-// 		else {
-// 			await ctx.message.reply(
-// 				new Embed({
-// 					title: "Error",
-// 					description: `Unfortunately, something went wrong.\nsuccess Status Boolean: ${status.success}\nStatus Code: ${status.code}`,
-// 				})
-// 			);
-// 		}
-// 		console.log("repeating");
-// 		status.success == true;
-// 		cmd.close();
-// 	}
-// }
 
 bot.commands.add(HelpCommand);
 bot.commands.add(Whoami);
@@ -785,6 +712,7 @@ bot.commands.add(UserInfoCommand);
 bot.commands.add(EvalCommand);
 bot.commands.add(TopicCommand);
 bot.commands.add(CoinflipCommand);
+bot.commands.add(PingCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
