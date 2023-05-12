@@ -8,7 +8,7 @@ import {
 	userContextMenu,
 Option,
 } from "https://deno.land/x/harmony@v2.8.0/mod.ts";
-import { parseXMessage } from "https://deno.land/x/redis@v0.25.1/stream.ts";
+import { isNumber, isString, parseXMessage } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 
 // TODO: Add user avatar to userinfo command
@@ -584,50 +584,76 @@ class SendEmbedCommand extends Command {
 }
 
 class UserInfoCommand extends Command {
+	// FIXME: Members who are in the guild might not able to be fetched
 	name = "userinfo";
 	aliases = ["ui", "whois", "about", "aboutuser"];
 	description =
 		"Lets you get information about a user.\n**Syntax:** `whois <user>`";
 
 	async execute(ctx: CommandContext) {
+		console.log("abc")
+		try {
+			var user = (await ctx.guild!.members.fetch(ctx.argString.split(" ")[0]));
+		}
+		catch (e) {
+			// await ctx.message.reply(`${e}`) // TODO: Add to logging
+		}
+		console.log("def")
+		// console.log("start")
+		// console.log(user)
+
+		if (ctx.argString == "") {
+			await ctx.message.reply(new Embed({
+				title: "Error",
+				description: "Please provide the user you want to view information about.",
+				color: 0xFF0000,
+			}))
+		}
+		else if (ctx.message.mentions.users.first() == undefined) {
+			if (ctx.argString.split(" ")[0].length > 1) {
+				console.log(`Debug: ctx.argString.split(" ")[0].length > 1 - True // Argument: ${ctx.argString.split(" ")[0]} // Length: ${ctx.argString.split(" ")[0].length}`)
+				// var user = (await ctx.guild!.members.resolve("319223591046742016"));
+			}
+		}
+		else if (isString((ctx.message.mentions.users.first()!.username))) {
+			console.log(`ctx.message.mentions.users.first()!.username is a string, is returned true.`)
+			user = (await ctx.guild!.members.fetch(ctx.message.mentions.users.first()!.id))
+			// user = bot.users.fetch(ctx.message.mentions.users.first()!.id)
+			console.log("\n\nnext")
+			console.log(user)
+			// man i would literally KILL to be able to sit down and write code for more than 3-5 minutes
+		}
+		console.log("now mentions")
+		console.log(ctx.message.mentions.users.first())
+		console.log(`typeof = ${typeof(ctx.message.mentions.users.first())}`)
 		// let user = ctx.message.mentions.users.first();
 		// const user = (await ctx.guild!.members.resolve(ctx.author.id))!
-		let user = (await ctx.guild!.members.resolve(ctx.message.mentions.users.first()!.id))!
-		// TODO: Test users outside of the guild (I ran out of time and I have a super busy rest of my day ahead of me. Likely won't be able to work on the bot for now.
-		// TODO: Make it so a User ID can be provided as a parameter as opposed to a user mention
-		if (user == undefined) {
-			let user = await ctx.guild?.members.resolve(ctx.author.id) // FIXME: Fix this.
+		// var user = (await ctx.guild!.members.resolve(ctx.message.mentions.users.first()!.id))!
+		// var assignUser = true;
+		console.log(user!.id);
+		console.log(`\n${typeof(user!)}`);// let assignDefaultUser = true;
+		const serverJoinDate = `<t:${(new Date(user!.joinedAt).getTime() / 1000).toFixed(0)}:F>`
+		const userJoinDate = `<t:${(new Date(user!.timestamp).getTime() / 1000).toFixed(0)}:F>`
+		const userStatus = (await ctx.guild!.presences.fetch(user!.id))!.status
+
+		console.log(`\n\n\n\n\n\n\n\n\n\n${user!.user}\n\n${user!}\n\n${user!.user.id}\n\n${user!.user.tag}\n\n\n`)
+		console.log(`\n\n\nnow the user\n\n${user!}\ntypeof = ${typeof(user!)}\n\n`)
+
+		if (user!.user.username == undefined) {
+			await ctx.message.reply(`user.user == undefined (double equals)\n value: ${user!.user.username}`)
 		}
-		// if (user == undefined) {
-			// user = ctx.author;
-			// await ctx.message.reply(
-			// 	new Embed({
-			// 		title: "Error!",
-			// 		description: "Please provide a user to get information about.",
-			// 		color: 0xff0000,
-			// 	}),
-			// 	{
-			// 		allowedMentions: {
-			// 			replied_user: true,
-			// 			roles: [],
-			// 		},
-			// 	}
-			// );
-			// return;
-		// }
-		const serverJoinDate = `<t:${(new Date(user.joinedAt).getTime() / 1000).toFixed(0)}:F>`
-		const userJoinDate = `<t:${(new Date(user.timestamp).getTime() / 1000).toFixed(0)}:F>`
+
 		await ctx.message.reply(
 			new Embed({
-				title: `${user.user.username}`,
-				description: `Information about ${user.user.mention}:`,
+				title: `${user!.user.username}#${user!.user.discriminator}`,
+				description: `Information about ${user!.user.mention}:`,
 				thumbnail: {
-					url: user.user.avatarURL("png"),
+					url: user!.user.avatarURL("png"),
 				},
 				fields: [
 					{
 						name: "User ID:",
-						value: `${user.user.id}#${user.user.discriminator}`,
+						value: `${user!.user.id}`,
 						inline: true,
 					},
 					{
@@ -640,6 +666,11 @@ class UserInfoCommand extends Command {
 						value: `${serverJoinDate}`,
 						inline: true,
 					},
+					{
+						name: "Status",
+						value: `${userStatus[0].toUpperCase()}${userStatus.slice(1)}`,
+						inline: true
+					}
 				]
 				// title: "User Info",
 				// description: `Information about user ${user.mention}\n\n**Username:**\n${user.username}#${user.discriminator}\n\n**User ID:**\n${user.id}\n\n**Account Created:**\n${user.timestamp},`,
@@ -733,6 +764,30 @@ class PingCommand extends Command {
 	}
 }
 
+class RandomNumberCommand extends Command {
+	name = "randomnumber";
+	aliases = ["rng", "choosenumber"]
+	description = "Chooses a number between the two parameters provided."
+
+	async execute(ctx: CommandContext) {
+		const lNum = Number(ctx.argString.split(" ")![0]);
+		const hNum = Number(ctx.argString.split(" ")[1]);
+		if (isNaN(lNum) || isNaN(hNum)) {
+			await ctx.message.reply(new Embed({
+				title: "Error!",
+				description: `Please enter two numbers.`,
+				color: 0xFF0000,
+			}))
+			return;
+		}
+
+		await ctx.message.reply(new Embed({
+			title: "Random Number",
+			description: `I picked a number between ${lNum} and ${hNum}. The result is ${RandomNumber(lNum, hNum)}`
+		}))
+	}
+}
+
 bot.commands.add(HelpCommand);
 bot.commands.add(Whoami);
 bot.commands.add(Restart);
@@ -745,6 +800,7 @@ bot.commands.add(EvalCommand);
 bot.commands.add(TopicCommand);
 bot.commands.add(CoinflipCommand);
 bot.commands.add(PingCommand);
+bot.commands.add(RandomNumberCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
