@@ -585,6 +585,7 @@ class SendEmbedCommand extends Command {
 
 class UserInfoCommand extends Command {
 	// FIXME: Members who are in the guild might not able to be fetched
+	// This is indeed the case. ^
 	name = "userinfo";
 	aliases = ["ui", "whois", "about", "aboutuser"];
 	description =
@@ -603,16 +604,24 @@ class UserInfoCommand extends Command {
 		// console.log(user)
 
 		if (ctx.argString == "") {
-			await ctx.message.reply(new Embed({
-				title: "Error",
-				description: "Please provide the user you want to view information about.",
-				color: 0xFF0000,
-			}))
+			user = (await ctx.guild!.members.fetch(ctx.author.id));
+			// await ctx.message.reply(new Embed({
+			// 	title: "Error",
+			// 	description: "Please provide the user you want to view information about.",
+			// 	color: 0xFF0000,
+			// }))
 		}
 		else if (ctx.message.mentions.users.first() == undefined) {
 			if (ctx.argString.split(" ")[0].length > 1) {
 				console.log(`Debug: ctx.argString.split(" ")[0].length > 1 - True // Argument: ${ctx.argString.split(" ")[0]} // Length: ${ctx.argString.split(" ")[0].length}`)
-				// var user = (await ctx.guild!.members.resolve("319223591046742016"));
+				var user = (await ctx.guild!.members.resolve(ctx.argString.split(" ")[0]))!;
+				if (user == undefined) {
+					await ctx.message.reply(new Embed({
+						title: "Error",
+						description: "The user could not be found. Please make sure you are providing the right user.",
+						color: 0xFF0000,
+					}))
+				}
 			}
 		}
 		else if (isString((ctx.message.mentions.users.first()!.username))) {
