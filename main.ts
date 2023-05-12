@@ -592,28 +592,21 @@ class UserInfoCommand extends Command {
 		"Lets you get information about a user.\n**Syntax:** `whois <user>`";
 
 	async execute(ctx: CommandContext) {
-		console.log("abc")
 		try {
 			var user = (await ctx.guild!.members.fetch(ctx.argString.split(" ")[0]));
 		}
 		catch (e) {
 			// await ctx.message.reply(`${e}`) // TODO: Add to logging
 		}
-		console.log("def")
-		// console.log("start")
-		// console.log(user)
+		// console.log("start") // DEBUG
+		// console.log(user) // DEBUG
 
 		if (ctx.argString == "") {
 			user = (await ctx.guild!.members.fetch(ctx.author.id));
-			// await ctx.message.reply(new Embed({
-			// 	title: "Error",
-			// 	description: "Please provide the user you want to view information about.",
-			// 	color: 0xFF0000,
-			// }))
 		}
 		else if (ctx.message.mentions.users.first() == undefined) {
 			if (ctx.argString.split(" ")[0].length > 1) {
-				console.log(`Debug: ctx.argString.split(" ")[0].length > 1 - True // Argument: ${ctx.argString.split(" ")[0]} // Length: ${ctx.argString.split(" ")[0].length}`)
+				// DEBUG // console.log(`Debug: ctx.argString.split(" ")[0].length > 1 - True // Argument: ${ctx.argString.split(" ")[0]} // Length: ${ctx.argString.split(" ")[0].length}`)
 				var user = (await ctx.guild!.members.resolve(ctx.argString.split(" ")[0]))!;
 				if (user == undefined) {
 					await ctx.message.reply(new Embed({
@@ -625,32 +618,27 @@ class UserInfoCommand extends Command {
 			}
 		}
 		else if (isString((ctx.message.mentions.users.first()!.username))) {
-			console.log(`ctx.message.mentions.users.first()!.username is a string, is returned true.`)
+			// console.log(`ctx.message.mentions.users.first()!.username is a string, is returned true.`) // DEBUG
 			user = (await ctx.guild!.members.fetch(ctx.message.mentions.users.first()!.id))
-			// user = bot.users.fetch(ctx.message.mentions.users.first()!.id)
-			console.log("\n\nnext")
-			console.log(user)
-			// man i would literally KILL to be able to sit down and write code for more than 3-5 minutes
+			// console.log("\n\nnext") // DEBUG
+			// console.log(user) // DEBUG
 		}
-		console.log("now mentions")
-		console.log(ctx.message.mentions.users.first())
-		console.log(`typeof = ${typeof(ctx.message.mentions.users.first())}`)
-		// let user = ctx.message.mentions.users.first();
-		// const user = (await ctx.guild!.members.resolve(ctx.author.id))!
-		// var user = (await ctx.guild!.members.resolve(ctx.message.mentions.users.first()!.id))!
-		// var assignUser = true;
-		console.log(user!.id);
-		console.log(`\n${typeof(user!)}`);// let assignDefaultUser = true;
+		// console.log("now mentions") // DEBUG
+		// console.log(ctx.message.mentions.users.first()) // DEBUG
+		// console.log(`typeof = ${typeof(ctx.message.mentions.users.first())}`) // DEBUG
+
+		// console.log(user!.id); // DEBUG
+		// console.log(`\n${typeof(user!)}`); // DEBUG
 		const serverJoinDate = `<t:${(new Date(user!.joinedAt).getTime() / 1000).toFixed(0)}:F>`
 		const userJoinDate = `<t:${(new Date(user!.timestamp).getTime() / 1000).toFixed(0)}:F>`
 		const userStatus = (await ctx.guild!.presences.fetch(user!.id))!.status
 
-		console.log(`\n\n\n\n\n\n\n\n\n\n${user!.user}\n\n${user!}\n\n${user!.user.id}\n\n${user!.user.tag}\n\n\n`)
-		console.log(`\n\n\nnow the user\n\n${user!}\ntypeof = ${typeof(user!)}\n\n`)
+		// console.log(`\n\n\n\n\n\n\n\n\n\n${user!.user}\n\n${user!}\n\n${user!.user.id}\n\n${user!.user.tag}\n\n\n`) // DEBUG
+		// console.log(`\n\n\nnow the user\n\n${user!}\ntypeof = ${typeof(user!)}\n\n`) // DEBUG
 
-		if (user!.user.username == undefined) {
-			await ctx.message.reply(`user.user == undefined (double equals)\n value: ${user!.user.username}`)
-		}
+		// if (user!.user.username == undefined) {
+			// await ctx.message.reply(`user.user == undefined (double equals)\n value: ${user!.user.username}`)
+		// } // DEBUG
 
 		await ctx.message.reply(
 			new Embed({
@@ -681,9 +669,6 @@ class UserInfoCommand extends Command {
 						inline: true
 					}
 				]
-				// title: "User Info",
-				// description: `Information about user ${user.mention}\n\n**Username:**\n${user.username}#${user.discriminator}\n\n**User ID:**\n${user.id}\n\n**Account Created:**\n${user.timestamp},`,
-				// color: 0x0000ff,
 			}),
 			{
 				allowedMentions: {
