@@ -42,11 +42,20 @@ const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") =
 function SendEmbed(channelid: string, title: string, description: string, color: number) {
 	if (channelid == "-1") {return false}
 
-	bot.channels.sendMessage(channelid, new Embed({
-		title: title,
-		description: description,
-		color: color,
-	}))
+	// try {
+		bot.channels.sendMessage(channelid, new Embed({
+			title: title,
+			description: description,
+			color: color,
+		})).catch(error => {
+			console.error(`*****\nAn error occurred attempting to send an embed.\n\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----\n${description}\n-----\n\nAttempted Color: ${color}\n\nError: ${error}\n*****\n`);
+			return false;
+		})
+	// }
+	// catch (err) {
+		// console.log(`Error!\n${err}\n`)
+	// }
+
 
 	return true;
 }
@@ -286,6 +295,14 @@ bot.on("messageCreate", (msg) => {
 bot.on("gatewayError", (err) => {
 	console.log("An error has occurred! Please implement proper error handling!"); // TODO: Add this
 	console.log(err);
+})
+
+bot.on("commandError", (err) => {
+	console.log("An error has occurred! Please implement proper error handling!");
+	console.log(`Name of Error: ${err.name}`)
+	console.log(`Message of Error: ${err.message}`)
+	console.log(`Command of Error: ${err.command}`)
+	console.log(`Full Error: ${err}\n\n`)
 })
 
 class HelpCommand extends Command {
