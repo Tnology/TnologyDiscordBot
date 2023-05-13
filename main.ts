@@ -824,57 +824,111 @@ class RemindmeCommand extends Command {
 	description = "Currently not yet implemented.";
 
 	async execute(ctx: CommandContext) {
-		const timestampSeconds = ctx.argString.split("s");
-		const timestampMinutes = ctx.argString.split("m");
-		const timestampHours = ctx.argString.split("h");
-		const timestampDays = ctx.argString.split("d");
-		let timestamp = Math.floor(Date.now() / 1000);
+		// const timestampSeconds = ctx.argString.split("s");
+		// const timestampMinutes = ctx.argString.split("m");
+		// const timestampHours = ctx.argString.split("h");
+		// const timestampDays = ctx.argString.split("d");
+		let preTimestamp = Math.floor(Date.now() / 1000);
 
-		if (timestampSeconds.length > 1 || timestampMinutes.length > 1 || timestampHours.length > 1 || timestampDays.length > 1) {
-			await ctx.message.reply(new Embed({
-				title: "Error!",
-				description: "Please use a valid timestamp for your reminder.",
-				color: 0xFF0000
-			}))
+		let seconds = 0;
+		let minutes = 0;
+		let hours = 0;
+		let days = 0;
+
+		let secondsCompleted = false;
+		let minutesCompleted = false;
+		let hoursCompleted = false;
+		let daysCompleted = false;
+
+		let temporaryNumber = "0";
+
+		console.log(ctx.argString.length)
+		console.log(ctx.argString.length < 0)
+
+		const letterArray = ["s", "m", "h", "d"]
+
+		for (let index = 0; ctx.argString.length > index; index++) {
+			console.log(`We are currently at index ${index} - The character is ${ctx.argString[index]}`)
+			if (!letterArray.includes(ctx.argString[index])) {
+				console.log(`Not equals, ${ctx.argString[index]} @ index ${index}`)
+				temporaryNumber += ctx.argString[index];
+			}
+			if (ctx.argString[index] == "s") {
+				seconds += (1 * Number(temporaryNumber));
+				temporaryNumber = "0";
+			}
+			else if (ctx.argString[index] == "m") {
+				minutes += (60 * Number(temporaryNumber));
+				temporaryNumber = "0";
+			}
+			else if (ctx.argString[index] == "h") {
+				hours += (3600 * Number(temporaryNumber));
+				temporaryNumber = "0";
+			}
+			else if (ctx.argString[index] == "d") {
+				console.log(temporaryNumber)
+				console.log(Number(temporaryNumber))
+				days += (86400 * Number(temporaryNumber));
+				console.log(days)
+				temporaryNumber = "0";
+			}
 		}
 
-		for (const element in timestampSeconds) {
-			if (element == "0") {
-				break
-			}
-			console.log(`adding sec with timestamp ${timestamp}`)
-			timestamp += 1;
-			console.log(`timestamp is now ${timestamp}\n`)
-		}
+		const timestamp = preTimestamp + seconds + minutes + hours + days;
+
+		await ctx.message.reply(new Embed({
+			title: "Result",
+			description: `**Seconds:** ${seconds}\n**Minutes:** ${minutes}\n**Hours:** ${hours}\n**Days:** ${days}\n**Temporary Number:** ${temporaryNumber}\n**Pre Timestamp:** ${preTimestamp}\n**Timestamp:** ${timestamp}`,
+		}))
+
+
+
+		// if (timestampSeconds.length > 1 || timestampMinutes.length > 1 || timestampHours.length > 1 || timestampDays.length > 1) {
+		// 	await ctx.message.reply(new Embed({
+		// 		title: "Error!",
+		// 		description: "Please use a valid timestamp for your reminder.",
+		// 		color: 0xFF0000
+		// 	}));
+		// 	return
+		// }
+
+		// for (const element in timestampSeconds) {
+		// 	if (element == "0") {
+		// 		break
+		// 	}
+		// 	console.log(`adding sec with timestamp ${timestamp}`)
+		// 	timestamp += 1;
+		// 	console.log(`timestamp is now ${timestamp}\n`)
+		// }
 		
-		for (const element in timestampMinutes) {
-			if (element == "0") {
-				break
-			}
-			console.log(`adding min with timestamp ${timestamp}`)
-			timestamp += 60;
-			console.log(`timestamp is now ${timestamp}\n`)
-		}
+		// for (const element in timestampMinutes) {
+		// 	if (element == "0") {
+		// 		break
+		// 	}
+		// 	console.log(`adding min with timestamp ${timestamp}`)
+		// 	timestamp += 60;
+		// 	console.log(`timestamp is now ${timestamp}\n`)
+		// }
 		
-		for (const element in timestampHours) {
-			if (element == "0") {
-				break
-			}
-			console.log(`adding hour with timestamp ${timestamp}`)
-			timestamp += 3600;
-			console.log(`timestamp is now ${timestamp}\n`)
-		}
+		// for (const element in timestampHours) {
+		// 	if (element == "0") {
+		// 		break
+		// 	}
+		// 	console.log(`adding hour with timestamp ${timestamp}`)
+		// 	timestamp += 3600;
+		// 	console.log(`timestamp is now ${timestamp}\n`)
+		// }
 		
-		for (const element in timestampDays) {
-			if (element == "0") {
-				break
-			}
-			console.log(`adding day with timestamp ${timestamp}`)
-			timestamp += 86400;
-			console.log(`timestamp is now ${timestamp}\n`)
-		}
+		// for (const element in timestampDays) {
+		// 	if (element == "0") {
+		// 		break
+		// 	}
+		// 	console.log(`adding day with timestamp ${timestamp}`)
+		// 	timestamp += 86400;
+		// 	console.log(`timestamp is now ${timestamp}\n`)
+		// }
 		
-		await ctx.message.reply(`timestampSeconds = ${timestampSeconds}\ntimestampMinutes = ${timestampMinutes}\ntimestampHours = ${timestampHours}\ntimestampDays = ${timestampDays}\nThe timestamp is ${timestamp}`)
+		// await ctx.message.reply(`timestampSeconds = ${timestampSeconds}\ntimestampMinutes = ${timestampMinutes}\ntimestampHours = ${timestampHours}\ntimestampDays = ${timestampDays}\nThe timestamp is ${timestamp}`)
 	}
 }
 
