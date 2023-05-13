@@ -818,6 +818,66 @@ class RandomNumberCommand extends Command {
 	}
 }
 
+class RemindmeCommand extends Command {
+	name = "remindme";
+	aliases = ["setreminder", "reminderset"];
+	description = "Currently not yet implemented.";
+
+	async execute(ctx: CommandContext) {
+		const timestampSeconds = ctx.argString.split("s");
+		const timestampMinutes = ctx.argString.split("m");
+		const timestampHours = ctx.argString.split("h");
+		const timestampDays = ctx.argString.split("d");
+		let timestamp = Math.floor(Date.now() / 1000);
+
+		if (timestampSeconds.length > 1 || timestampMinutes.length > 1 || timestampHours.length > 1 || timestampDays.length > 1) {
+			await ctx.message.reply(new Embed({
+				title: "Error!",
+				description: "Please use a valid timestamp for your reminder.",
+				color: 0xFF0000
+			}))
+		}
+
+		for (const element in timestampSeconds) {
+			if (element == "0") {
+				break
+			}
+			console.log(`adding sec with timestamp ${timestamp}`)
+			timestamp += 1;
+			console.log(`timestamp is now ${timestamp}\n`)
+		}
+		
+		for (const element in timestampMinutes) {
+			if (element == "0") {
+				break
+			}
+			console.log(`adding min with timestamp ${timestamp}`)
+			timestamp += 60;
+			console.log(`timestamp is now ${timestamp}\n`)
+		}
+		
+		for (const element in timestampHours) {
+			if (element == "0") {
+				break
+			}
+			console.log(`adding hour with timestamp ${timestamp}`)
+			timestamp += 3600;
+			console.log(`timestamp is now ${timestamp}\n`)
+		}
+		
+		for (const element in timestampDays) {
+			if (element == "0") {
+				break
+			}
+			console.log(`adding day with timestamp ${timestamp}`)
+			timestamp += 86400;
+			console.log(`timestamp is now ${timestamp}\n`)
+		}
+		
+		await ctx.message.reply(`timestampSeconds = ${timestampSeconds}\ntimestampMinutes = ${timestampMinutes}\ntimestampHours = ${timestampHours}\ntimestampDays = ${timestampDays}\nThe timestamp is ${timestamp}`)
+	}
+}
+
 bot.commands.add(HelpCommand);
 bot.commands.add(Whoami);
 bot.commands.add(Restart);
@@ -831,6 +891,7 @@ bot.commands.add(TopicCommand);
 bot.commands.add(CoinflipCommand);
 bot.commands.add(PingCommand);
 bot.commands.add(RandomNumberCommand);
+bot.commands.add(RemindmeCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
