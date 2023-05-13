@@ -921,7 +921,7 @@ class RemindmeCommand extends Command {
 
 		await ctx.message.reply(new Embed({
 			title: "Reminder Set!",
-			description: `You will be reminded at <t:${timestamp}:F> (<t:${timestamp}:R>) for the reason \`${reason}\``,
+			description: `You will be reminded at <t:${timestamp}:F> (<t:${timestamp}:R>)\n**Reason:** \`${reason}\`\n**Reminder ID:** \`${reminders.id}\``,
 			color: 0x00FF00
 		})).catch(() => {
 			try {
@@ -931,6 +931,38 @@ class RemindmeCommand extends Command {
 				console.log("nope")
 			}
 		})
+	}
+}
+
+class CancelReminderCommand extends Command {
+	name = "cancelreminder";
+	aliases = ["remindercancel"];
+	description = "This command is not yet implemented.";
+
+	async execute(ctx: CommandContext) {
+		const userReminder = ctx.argString.split(" ")[0];
+
+		await ctx.message.reply(new Embed({
+			title: "Error",
+			description: "This command has not been implemented yet!",
+			color: 0xFF0000,
+		}))
+	}
+}
+
+class ListRemindersCommand extends Command {
+	name = "listreminders";
+	aliases = ["listreminder", "reminderlist", "reminderslist"]
+	description = "This command is not yet implemented."
+
+	async execute(ctx: CommandContext) {
+		const userReminder = ctx.argString.split(" ")[0];
+
+		await ctx.message.reply(new Embed({
+			title: "Error",
+			description: "This command has not been implemented yet!",
+			color: 0xFF0000,
+		}))
 	}
 }
 
@@ -993,8 +1025,10 @@ setInterval(async () => {
 						embeds: [embed],
 					})
 				})
-			}
 			reminders.reminders[reminder].Expired = true;
+			console.log("expired? yep")
+			}
+			
 
 			Deno.writeTextFile("./reminders.json", JSON.stringify(reminders))
 		}
