@@ -923,7 +923,14 @@ class RemindmeCommand extends Command {
 			title: "Reminder Set!",
 			description: `You will be reminded at <t:${timestamp}:F> (<t:${timestamp}:R>) for the reason \`${reason}\``,
 			color: 0x00FF00
-		}))
+		})).catch(() => {
+			try {
+				ctx.message.addReaction("❗");
+			}
+			catch {
+				console.log("nope")
+			}
+		})
 	}
 }
 
