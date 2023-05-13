@@ -26,6 +26,9 @@ await config({export: true});
 
 const developerMode = Deno.env.get("DEV_MODE") == "true" ? true : false;
 
+const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL");
+const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL")
+
 const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true";
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
 
@@ -279,6 +282,11 @@ bot.on("messageCreate", (msg) => {
 	}
 	}
 );
+
+bot.on("gatewayError", (err) => {
+	console.log("An error has occurred! Please implement proper error handling!"); // TODO: Add this
+	console.log(err);
+})
 
 class HelpCommand extends Command {
 	name = "help";
@@ -690,6 +698,15 @@ class EvalCommand extends Command {
 		console.log(
 			`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
 		);
+		// TODO: Add error handling if the message is not sent
+		// try {
+			SendEmbed(evalLoggingChannel!, "Executing Eval Command", `**Author:** \`${ctx.author}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``, 0x0000FF)
+		// }
+		// catch (err) {
+			// console.log(`An error occurred while attempting to send a message.\nThe message attempted was: Log Message for Executing Eval Command.`)
+			// console.log(err)
+			// console.log("Error, might be 50001 Missing Access") // TODO: Add this
+		// }
 		try {
 			const evaluatedCode = eval(ctx.argString.replace("```js", "").replace("```", ""));
 			await ctx.message.reply(
@@ -707,6 +724,8 @@ class EvalCommand extends Command {
 					color: 0xff0000,
 				})
 			);
+			// TODO: Add error handling if the message is not sent
+			SendEmbed(evalLoggingChannel!, "Eval Command Error", `Error Executing Code!\n**Author:** \`${ctx.author}\`\n**Error:** \`\`\`js\n${err}\n\`\`\``, 0xFF0000)
 		}
 	}
 }
@@ -810,3 +829,4 @@ bot.connect(token, [
 	GatewayIntents.GUILD_EMOJIS_AND_STICKERS,
 	GatewayIntents.DIRECT_MESSAGES,
 ]);
+
