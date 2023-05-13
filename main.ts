@@ -10,6 +10,7 @@ Option,
 } from "https://deno.land/x/harmony@v2.8.0/mod.ts";
 import { isNumber, isString, parseXMessage } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
+import { UsersManager } from "https://deno.land/x/harmony@v2.8.0/src/managers/users.ts";
 
 // TODO: Add user avatar to userinfo command
 // TODO: Use Discord timestamp feature (figure out how to convert time to unix timestamp) in userinfo command
@@ -38,6 +39,8 @@ const oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL"
 const twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",");
 const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL");
 const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
+
+let reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
 
 function SendEmbed(channelid: string, title: string, description: string, color: number) {
 	if (channelid == "-1") {return false}
@@ -297,12 +300,16 @@ bot.on("gatewayError", (err) => {
 	console.log(err);
 })
 
-bot.on("commandError", (err) => {
+bot.on("commandError", (ctx, error) => {
 	console.log("An error has occurred! Please implement proper error handling!");
-	console.log(`Name of Error: ${err.name}`)
-	console.log(`Message of Error: ${err.message}`)
-	console.log(`Command of Error: ${err.command}`)
-	console.log(`Full Error: ${err}\n\n`)
+	ctx.message.reply(new Embed({
+		title: "Error!",
+		description: `An unexpected error has occurred. Please contact the developer if you believe this shouldn't happen!\n**Error:** \`${error.name}\`\n**Error Cause:** \`${error.cause}\`\n**Full Error:**\n\`\`\`js\n${error.stack}\n\`\`\``
+	}))
+	console.log(`Name of Error: ${error.name}`)
+	console.log(`Message of Error: ${error.message}`)
+	console.log(`Cause of Error: ${error.cause}`)
+	console.log(`Full Error: ${error}\n\n`)
 })
 
 class HelpCommand extends Command {
@@ -588,14 +595,14 @@ class SendEmbedCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
-		// const channelArg = ctx.argString.split(" ")[0];
+		// const channelArg = ctx.argString.split(" ")[0]; // DEBUG
 		const channel = ctx.message.mentions.channels.first();
 		const cmdArgs: any = ctx.argString.split(" ").splice(1).join(" ");
-		console.log(cmdArgs);
+		// console.log(cmdArgs); // DEBUG
 		const title = cmdArgs.split("\n")[0];
-		console.log("A");
+		// console.log("A"); // DEBUG
 		console.log(title);
-		console.log("B");
+		// console.log("B"); // DEBUG
 		const description = cmdArgs.split("\n")[1];
 		await channel!.send(
 			new Embed({
@@ -824,13 +831,10 @@ class RemindmeCommand extends Command {
 	description = "Currently not yet implemented.";
 
 	async execute(ctx: CommandContext) {
-		// const timestampSeconds = ctx.argString.split("s");
-		// const timestampMinutes = ctx.argString.split("m");
-		// const timestampHours = ctx.argString.split("h");
-		// const timestampDays = ctx.argString.split("d");
 		const preTimestamp = Math.floor(Date.now() / 1000);
 		const userTimestamp = ctx.argString.split(" ")[0];
 		const reason = ctx.argString.split(" ")[1];
+		const currentReminderId = reminders.id;
 
 		if (userTimestamp == "") {
 			await ctx.message.reply(new Embed({
@@ -887,7 +891,7 @@ class RemindmeCommand extends Command {
 			}
 			else if (userTimestamp[index] == "d") {
 				// console.log(temporaryNumber) // DEBUG
-				// console.log(Number(temporaryNumber)) // DEBUg
+				// console.log(Number(temporaryNumber)) // DEBUG
 				days += (86400 * Number(temporaryNumber));
 				// console.log(days) // DEBUG
 				temporaryNumber = "0";
@@ -901,9 +905,23 @@ class RemindmeCommand extends Command {
 			// description: `**Seconds:** ${seconds}\n**Minutes:** ${minutes}\n**Hours:** ${hours}\n**Days:** ${days}\n**Temporary Number:** ${temporaryNumber}\n**Pre Timestamp:** ${preTimestamp}\n**Timestamp:** ${timestamp}`,
 		// }))
 
+		reminders.reminders[(currentReminderId + 1)] = {
+			UserId: ctx.author.id,
+			Timestamp: timestamp,
+			Reason: reason,
+			Expired: false,
+			ChannelId: ctx.channel.id
+		};
+
+		// console.log(reminders.reminders[(currentReminderId + 1)]) // DEBUG
+
+		reminders.id += 1;
+
+		Deno.writeTextFile("./reminders.json", JSON.stringify(reminders));
+
 		await ctx.message.reply(new Embed({
 			title: "Reminder Set!",
-			description: `Just kidding, I have actually not set a reminder for <t:${timestamp}:F> (<t:${timestamp}:R>)\nfor the reason ${reason}`,
+			description: `You will be reminded at <t:${timestamp}:F> (<t:${timestamp}:R>) for the reason \`${reason}\``,
 			color: 0x00FF00
 		}))
 	}
@@ -939,3 +957,38 @@ bot.connect(token, [
 	GatewayIntents.DIRECT_MESSAGES,
 ]);
 
+setInterval(async () => {
+	const currentTime = Math.floor(Date.now() / 1000);
+
+	for (const reminder in reminders.reminders) {
+		// console.log("checking") // DEBUG
+		// console.log(reminders.reminders[reminder].Expired == false); // DEBUG
+		// console.log(reminders.reminders[reminder].Timestamp >= currentTime);
+		// console.log(currentTime);
+		// console.log(reminders.reminders[reminder].Timestamp);
+		if (reminders.reminders[reminder].Expired == false && currentTime >= reminders.reminders[reminder].Timestamp) {
+			// console.log("attempting")
+			const user = await bot.users.fetch(reminders.reminders[reminder].UserId);
+			const embed = new Embed({
+				title: "Reminder",
+				description: `<t:${reminders.reminders[reminder].Timestamp}:R> you asked to be reminded about:\n\`\`\`\n${reminders.reminders[reminder].Reason}\n\`\`\``,
+				color: 0x00FF00,
+			});
+			user.send(new Embed({
+				title: "Reminder",
+				description: `<t:${reminders.reminders[reminder].Timestamp}:R> you asked to be reminded about:\n\`\`\`\n${reminders.reminders[reminder].Reason}\n\`\`\``,
+				color: 0x00FF00,
+			})).catch(async (error) => {
+				console.log("hi")
+				await bot.channels.sendMessage(
+					reminders.reminders[reminder].ChannelId, {
+						content: `${user}`,
+						embeds: [embed],
+					})
+				})
+			}
+			reminders.reminders[reminder].Expired = true;
+
+			Deno.writeTextFile("./reminders.json", JSON.stringify(reminders))
+		}
+	}, 2500)
