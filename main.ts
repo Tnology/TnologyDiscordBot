@@ -35,6 +35,7 @@ await config({ export: true });
 
 const developerMode = Deno.env.get("DEV_MODE") == "true" ? true : false;
 
+const botStartLoggingChannel = Deno.env.get("BOT_START_CHANNEL");
 const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL");
 const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL");
 
@@ -266,6 +267,21 @@ bot.on("ready", () => {
 					bot.user!.tag
 				}\nBot Owner(s): ${ownersArray}`
 		  );
+	botStartLoggingChannel != "-1"
+		? SendEmbed(
+				botStartLoggingChannel!,
+				"Bot Started!",
+				`The bot has started!\n**Username:** ${bot.user!.tag}\n**Owners:** ${
+					bot.owners
+				}\n**Developer Mode:** ${developerMode}\n\n**Eval Channel:** ${evalLoggingChannel} (<#${evalLoggingChannel}>)
+				**Shell Channel:** ${shellLoggingChannel} (<#${shellLoggingChannel}>)\n
+				**One Word Story Channels:** ${oneWordStoryChannels}
+				**One Word Story Logging Channel:** ${oneWordStoryLoggingChannel} (<#${oneWordStoryLoggingChannel}>)\n
+				**Two Word Story Channels:** ${twoWordStoryChannels}\n**Two Word Story Logging Channel:** ${twoWordStoryLoggingChannel} (<#${twoWordStoryLoggingChannel}>)\n
+				`,
+				0x00ff00
+		  )
+		: {};
 });
 
 bot.on("messageCreate", (msg) => {
@@ -440,6 +456,12 @@ class ShellCommand extends Command {
 				color: 0xff9e00,
 			})
 		);
+		SendEmbed(
+			shellLoggingChannel!,
+			"Executing Shell Command",
+			`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n**Command:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+			0x0000ff
+		);
 		//		try {
 		const cmd = Deno.run({
 			cmd: ctx.argString.split(" "),
@@ -447,16 +469,22 @@ class ShellCommand extends Command {
 			stderr: "piped",
 		});
 
+		const output = new TextDecoder().decode(await cmd.output());
+
 		await ctx.message.reply(
 			new Embed({
 				title: `Success (${(await cmd.status()).code})`,
-				description: `Output: \`\`\`${new TextDecoder().decode(
-					await cmd.output()
-				)}\`\`\``,
+				description: `Output: \`\`\`\n${output}\n\`\`\``,
 				color: 0x00ff00,
 			})
 		);
-		await ctx.message.reply(`${new TextDecoder().decode(await cmd.output())}`);
+		SendEmbed(
+			shellLoggingChannel!,
+			"Executed Shell Command",
+			`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n\n**Output:**\n\`\`\`\n${output}\n\`\`\`\n**Command:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+			0x00ff00
+		);
+		// await ctx.message.reply(`${new TextDecoder().decode(await cmd.output())}`);
 	}
 }
 
@@ -764,7 +792,7 @@ class EvalCommand extends Command {
 		SendEmbed(
 			evalLoggingChannel!,
 			"Executing Eval Command",
-			`**Author:** \`${ctx.author}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+			`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
 			0x0000ff
 		);
 		// }
@@ -783,6 +811,12 @@ class EvalCommand extends Command {
 					description: `\`\`\`${evaluatedCode}\`\`\``,
 					color: 0x00ff00,
 				})
+			);
+			SendEmbed(
+				shellLoggingChannel!,
+				"Executed Shell Command",
+				`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n\n**Output:**\n\`\`\`js\n${evaluatedCode}\n\`\`\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+				0x00ff00
 			);
 		} catch (err) {
 			await ctx.message.reply(
@@ -1074,19 +1108,19 @@ class ListRemindersCommand extends Command {
 	description = "Lists current reminders";
 
 	async execute(ctx: CommandContext) {
-
 		let unslicedUserReminders = [];
 		let userPage = Number(ctx.argString.split(" ")[0]);
 
 		if (!isNumber(Number(userPage)) || userPage < 0) {
-			await ctx.message.reply(new Embed({
-				title: "Error",
-				description: "Please enter a valid page number!",
-				color: 0xFF0000,
-			}));
+			await ctx.message.reply(
+				new Embed({
+					title: "Error",
+					description: "Please enter a valid page number!",
+					color: 0xff0000,
+				})
+			);
 			return;
-		}
-		else if (userPage == 0) {
+		} else if (userPage == 0) {
 			userPage = 1;
 		}
 
@@ -1101,36 +1135,43 @@ class ListRemindersCommand extends Command {
 			}
 		}
 
-		const maxReminderPage = Math.ceil(unslicedUserReminders.length / 5)
+		const maxReminderPage = Math.ceil(unslicedUserReminders.length / 5);
 
 		if (userPage > maxReminderPage) {
-			await ctx.message.reply(new Embed({
-				title: "Error",
-				description: `Please enter a valid page! Valid pages are from 1 to ${maxReminderPage}`,
-				color: 0xFF0000,
-			}));
+			await ctx.message.reply(
+				new Embed({
+					title: "Error",
+					description: `Please enter a valid page! Valid pages are from 1 to ${maxReminderPage}`,
+					color: 0xff0000,
+				})
+			);
 			return;
 		}
 
-		let arrayIndexStart = (Number(userPage) * 5) - 5;
-		let arrayIndexEnd = (Number(userPage) * 5) - 1;
+		let arrayIndexStart = Number(userPage) * 5 - 5;
+		let arrayIndexEnd = Number(userPage) * 5 - 1;
 
-		let userReminders = unslicedUserReminders.slice(arrayIndexStart, arrayIndexEnd);
+		let userReminders = unslicedUserReminders.slice(
+			arrayIndexStart,
+			arrayIndexEnd
+		);
 
 		let reminderString = "Here is a list of your reminders: \n";
 
 		for (let i = 0; i < userReminders.length; i++) {
-			reminderString += `\n${userReminders[i][0]}\n${userReminders[i][1]}\n${userReminders[i][2]}\n`
+			reminderString += `\n${userReminders[i][0]}\n${userReminders[i][1]}\n${userReminders[i][2]}\n`;
 		}
 
-		await ctx.message.reply(new Embed({
-			title: "Reminders",
-			description: reminderString,
-			color: 0x00FF00,
-			footer: {
-				text: `Page ${userPage}/${maxReminderPage}`
-			}
-		}))
+		await ctx.message.reply(
+			new Embed({
+				title: "Reminders",
+				description: reminderString,
+				color: 0x00ff00,
+				footer: {
+					text: `Page ${userPage}/${maxReminderPage}`,
+				},
+			})
+		);
 	}
 }
 
