@@ -6,72 +6,97 @@ import {
 	Embed,
 	CommandContext,
 	userContextMenu,
-Option,
+	Option,
 } from "https://deno.land/x/harmony@v2.8.0/mod.ts";
-import { isNumber, isString, parseXMessage } from "https://deno.land/x/redis@v0.25.1/stream.ts";
-import { config, ConfigOptions, DotenvConfig } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
+import {
+	isNumber,
+	isString,
+	parseXMessage,
+} from "https://deno.land/x/redis@v0.25.1/stream.ts";
+import {
+	config,
+	ConfigOptions,
+	DotenvConfig,
+} from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 import { UsersManager } from "https://deno.land/x/harmony@v2.8.0/src/managers/users.ts";
 
 // TODO: Add user avatar to userinfo command
 // TODO: Use Discord timestamp feature (figure out how to convert time to unix timestamp) in userinfo command
 // TODO: Add user join server date to userinfo command
 // TODO: Add a send webhook command.
-// TODO: Add a private logging channel for when the bot comes online and/or eval commands and/or shell commands, by having "EVAL_COMMANDS_CHANNEL" (for example) 
-// as a .env variable that can be set to -1 to be disabled or a channel ID to post eval command usage with info. Same with a "SHELL_COMMANDS_CHANNEL" and 
+// TODO: Add a private logging channel for when the bot comes online and/or eval commands and/or shell commands, by having "EVAL_COMMANDS_CHANNEL" (for example)
+// as a .env variable that can be set to -1 to be disabled or a channel ID to post eval command usage with info. Same with a "SHELL_COMMANDS_CHANNEL" and
 // a "BOT_START_CHANNEL" and whatnot.
 
 // let oneWordStoryChannels: any = [] // TODO: Stop using any type FIXME: Checkpoint 1
 // let twoWordStoryChannels: any = [] // TODO: Stop using any type FIXME: Checkpoint 1
 
-await config({export: true});
+await config({ export: true });
 
 const developerMode = Deno.env.get("DEV_MODE") == "true" ? true : false;
 
 const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL");
-const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL")
+const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL");
 
-const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true";
+const discussionThreadsEnabled =
+	Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true";
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
 
-const oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
-const oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
+const oneWordStoryChannels = Deno.env
+	.get("ONE_WORD_STORY_CHANNELS")
+	?.split(",");
+const oneWordStoryLoggingChannel = Deno.env.get(
+	"ONE_WORD_STORY_LOGGING_CHANNEL"
+);
 
-const twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",");
-const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL");
-const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
+const twoWordStoryChannels = Deno.env
+	.get("TWO_WORD_STORY_CHANNELS")
+	?.split(",");
+const twoWordStoryLoggingChannel = Deno.env.get(
+	"TWO_WORD_STORY_LOGGING_CHANNEL"
+);
+const botOverridesStoryChannels =
+	Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
 
 let reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
 
-function SendEmbed(channelid: string, title: string, description: string, color: number) {
-	if (channelid == "-1") {return false}
+function SendEmbed(
+	channelid: string,
+	title: string,
+	description: string,
+	color: number
+) {
+	if (channelid == "-1") {
+		return false;
+	}
 
-	// try {
-		bot.channels.sendMessage(channelid, new Embed({
-			title: title,
-			description: description,
-			color: color,
-		})).catch(error => {
-			console.error(`*****\nAn error occurred attempting to send an embed.\n\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----\n${description}\n-----\n\nAttempted Color: ${color}\n\nError: ${error}\n*****\n`);
+	bot.channels
+		.sendMessage(
+			channelid,
+			new Embed({
+				title: title,
+				description: description,
+				color: color,
+			})
+		)
+		.catch((error) => {
+			console.error(
+				`*****\nAn error occurred attempting to send an embed.\n\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----\n${description}\n-----\n\nAttempted Color: ${color}\n\nError: ${error}\n*****\n`
+			);
 			return false;
-		})
-	// }
-	// catch (err) {
-		// console.log(`Error!\n${err}\n`)
-	// }
-
+		});
 
 	return true;
 }
 
-// TODO: Add an error if a channel is both a one-word story and a two word story, and remove it from both arrays 
-// if it is (hence why the array is using let instead of const). Then, if no channels are left in the array, add 
+// TODO: Add an error if a channel is both a one-word story and a two word story, and remove it from both arrays
+// if it is (hence why the array is using let instead of const). Then, if no channels are left in the array, add
 // an element to the array of -1, which in the code for one/two word story will just cancel it (in the on message handling).
 // Maybe a for loop can be used for this, check later.
 
 // TODO: Add a "BOT_OVERRIDE" .env variable for one and two word story channels, for whether or not a bot can bypass the restriction.
 
 // TODO: Check if Harmony has a new version and update it if it does
-
 
 const ownersArray = Deno.env.get("OWNERS")?.split(",");
 
@@ -194,7 +219,7 @@ const topicArray = [
 	"Do you prefer your keyboard to have a numberpad or be TKL?",
 	"Are oatmeal raisin cookies good?",
 	"How many hours of sleep do you typically get each night?",
-	"Does the \"militia\" in the Second Amendment of the United States Constitution refer to the people?",
+	'Does the "militia" in the Second Amendment of the United States Constitution refer to the people?',
 	"Suppose you have an old boat, the wood of whioch starts to rot out every now and then. If you slowly replace the wood plank by plank, by the time every plank has been replaced, is it still the same boat?",
 	"Is it okay to use a VPN to bypass a website's region lock?",
 	"Have you ever donated to Wikipedia? Do you ever plan on donating to it in the future?",
@@ -205,7 +230,7 @@ const topicArray = [
 	"Are you in a relationship?",
 	"Do you have an antivirus? If so, what antivirus do you have?",
 	"Do you use an adblocker? If so, what adblocker do you use?",
-]
+];
 
 function DetermineBotChoice(choiceNum: number) {
 	switch (choiceNum) {
@@ -226,57 +251,74 @@ const bot = new CommandClient({
 	enableSlash: false,
 	mentionPrefix: true,
 	prefix: developerMode == false ? ">" : ">>",
-	// owners: ["319223591046742016"],
-	owners: ownersArray
+	owners: ownersArray,
 });
 
 bot.on("ready", () => {
-	developerMode == false ? 
-	console.log(
-		`The bot is ready. The bot's info is the following:\nBot Username: ${bot.user!.tag}\nBot Owner(s): ${ownersArray}`
-	) : 
-	console.log(
-		`The bot is ready and is in developer mode.\nBot Username: ${bot.user!.tag}\nBot Owner(s): ${ownersArray}`
-	)
+	developerMode == false
+		? console.log(
+				`The bot is ready. The bot's info is the following:\nBot Username: ${
+					bot.user!.tag
+				}\nBot Owner(s): ${ownersArray}`
+		  )
+		: console.log(
+				`The bot is ready and is in developer mode.\nBot Username: ${
+					bot.user!.tag
+				}\nBot Owner(s): ${ownersArray}`
+		  );
 });
 
 bot.on("messageCreate", (msg) => {
-	// if (msg.author.bot || developerMode) return;
-
-	
-	// if (msg.content.toLowerCase().includes("@everyone"))
-
 	if (discussionThreadsEnabled) {
 		if (discussionChannels!.includes(msg.channel.id)) {
 			msg.startThread({
 				name: "Discussion Thread",
-			})
+			});
 		}
 	}
 
-	if (!(oneWordStoryChannels?.includes("-1"))) {
+	if (!oneWordStoryChannels?.includes("-1")) {
 		if (oneWordStoryChannels!.includes(msg.channel.id)) {
 			if (!(msg.content[0] == "/" && msg.content[1] == "/")) {
-				if (msg.content.split(" ").length > 1 || msg.content.includes("https://") || msg.content.includes("http://") || msg.content.includes("\n") || msg.content.length >= 100) {
-				//console.log(`Message has been deleted for having too many words\nType: One Word Story\nMessage Content: ${msg.content}`);
-				if (botOverridesStoryChannels) {
-					if (msg.author.bot) {
-						return 1;
+				if (
+					msg.content.split(" ").length > 1 ||
+					msg.content.includes("https://") ||
+					msg.content.includes("http://") ||
+					msg.content.includes("\n") ||
+					msg.content.length >= 100
+				) {
+					//console.log(`Message has been deleted for having too many words\nType: One Word Story\nMessage Content: ${msg.content}`);
+					if (botOverridesStoryChannels) {
+						if (msg.author.bot) {
+							return 1;
+						}
 					}
-				}
-				if (oneWordStoryLoggingChannel != "-1") {
-					SendEmbed(oneWordStoryLoggingChannel!, "One Word Story - Deleted", `A message has been deleted from ${msg.channel.id}\n**Author:** ${msg.author}\n**Content:** ${msg.content}\n**Time:** ${msg.timestamp}`, 0xFF0000)
-				}
-				
-				msg.delete();
+					if (oneWordStoryLoggingChannel != "-1") {
+						SendEmbed(
+							oneWordStoryLoggingChannel!,
+							"One Word Story - Deleted",
+							`A message has been deleted from ${msg.channel.id}\n**Author:** ${msg.author}\n**Content:** ${msg.content}\n**Time:** ${msg.timestamp}`,
+							0xff0000
+						);
+					}
+
+					msg.delete();
 				}
 			}
 		}
 	}
 
-	if (!(twoWordStoryChannels?.includes("-1"))) {
+	if (!twoWordStoryChannels?.includes("-1")) {
 		if (twoWordStoryChannels!.includes(msg.channel.id)) {
-			if (!(msg.content[0] == "/" && msg.content[1] == "/" || msg.content.includes("https://") || msg.content.includes("http://") || msg.content.includes("\n") || msg.content.length >= 100)) {
+			if (
+				!(
+					(msg.content[0] == "/" && msg.content[1] == "/") ||
+					msg.content.includes("https://") ||
+					msg.content.includes("http://") ||
+					msg.content.includes("\n") ||
+					msg.content.length >= 100
+				)
+			) {
 				if (msg.content.split(" ").length > 2) {
 					if (botOverridesStoryChannels) {
 						if (msg.author.bot) {
@@ -284,33 +326,41 @@ bot.on("messageCreate", (msg) => {
 						}
 					}
 					if (twoWordStoryLoggingChannel != "-1") {
-						SendEmbed(twoWordStoryLoggingChannel!, "Two Word Story - Deleted", `A message has been deleted from ${msg.channel.id}\n**Author:** ${msg.author}\n**Content:** ${msg.content}\n**Time:** ${msg.timestamp}`, 0xFF0000)
+						SendEmbed(
+							twoWordStoryLoggingChannel!,
+							"Two Word Story - Deleted",
+							`A message has been deleted from ${msg.channel.id}\n**Author:** ${msg.author}\n**Content:** ${msg.content}\n**Time:** ${msg.timestamp}`,
+							0xff0000
+						);
 					}
-					console.log(`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`);
-					msg.delete();	
+					console.log(
+						`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`
+					);
+					msg.delete();
 				}
 			}
 		}
 	}
-	}
-);
+});
 
 bot.on("gatewayError", (err) => {
 	console.log("An error has occurred! Please implement proper error handling!"); // TODO: Add this
 	console.log(err);
-})
+});
 
 bot.on("commandError", (ctx, error) => {
 	console.log("An error has occurred! Please implement proper error handling!");
-	ctx.message.reply(new Embed({
-		title: "Error!",
-		description: `An unexpected error has occurred. Please contact the developer if you believe this shouldn't happen!\n**Error:** \`${error.name}\`\n**Error Cause:** \`${error.cause}\`\n**Full Error:**\n\`\`\`js\n${error.stack}\n\`\`\``
-	}))
-	console.log(`Name of Error: ${error.name}`)
-	console.log(`Message of Error: ${error.message}`)
-	console.log(`Cause of Error: ${error.cause}`)
-	console.log(`Full Error: ${error}\n\n`)
-})
+	ctx.message.reply(
+		new Embed({
+			title: "Error!",
+			description: `An unexpected error has occurred. Please contact the developer if you believe this shouldn't happen!\n**Error:** \`${error.name}\`\n**Error Cause:** \`${error.cause}\`\n**Full Error:**\n\`\`\`js\n${error.stack}\n\`\`\``,
+		})
+	);
+	console.log(`Name of Error: ${error.name}`);
+	console.log(`Message of Error: ${error.message}`);
+	console.log(`Cause of Error: ${error.cause}`);
+	console.log(`Full Error: ${error}\n\n`);
+});
 
 class HelpCommand extends Command {
 	name = "help";
@@ -396,16 +446,7 @@ class ShellCommand extends Command {
 			stdout: "piped",
 			stderr: "piped",
 		});
-		//		}
-		//		catch (e) { // the reason why this code is formatted so badly is because i wrote this via the Termius mobile app, using nano via SSH tp my VPS, while on a tour bus. I wrote this comment at 12:02 PM on 4/26/2023
-		//			await ctx.message.reply(new Embed({
-		//			title: "Error!",
-		//			description: `{e}`,
-		//			color: 0xff0000
-		//			}))
-		//		}
 
-		//if ((await cmd.status()).success) {
 		await ctx.message.reply(
 			new Embed({
 				title: `Success (${(await cmd.status()).code})`,
@@ -415,16 +456,6 @@ class ShellCommand extends Command {
 				color: 0x00ff00,
 			})
 		);
-		//}// else {
-		// await ctx.message.reply(
-		//		new Embed({
-		//			title: `Error! (${(await cmd.status()).code})`,
-		//			description: `Output: \`\`\`${new TextDecoder().decode(
-		//				await cmd.output()
-		//			)}\`\`\``,
-		//		})
-		//	);
-		//}
 		await ctx.message.reply(`${new TextDecoder().decode(await cmd.output())}`);
 	}
 }
@@ -608,8 +639,6 @@ class SendEmbedCommand extends Command {
 			new Embed({
 				title: title,
 				description: description,
-				// title: ctx.argString.split(" ")[0],
-				// description: ctx.argString.split(" ").slice(1).join(" "),
 			})
 		);
 	}
@@ -625,33 +654,37 @@ class UserInfoCommand extends Command {
 
 	async execute(ctx: CommandContext) {
 		try {
-			var user = (await ctx.guild!.members.fetch(ctx.argString.split(" ")[0]));
-		}
-		catch (e) {
+			var user = await ctx.guild!.members.fetch(ctx.argString.split(" ")[0]);
+		} catch (e) {
 			// await ctx.message.reply(`${e}`) // TODO: Add to logging
 		}
 		// console.log("start") // DEBUG
 		// console.log(user) // DEBUG
 
 		if (ctx.argString == "") {
-			user = (await ctx.guild!.members.fetch(ctx.author.id));
-		}
-		else if (ctx.message.mentions.users.first() == undefined) {
+			user = await ctx.guild!.members.fetch(ctx.author.id);
+		} else if (ctx.message.mentions.users.first() == undefined) {
 			if (ctx.argString.split(" ")[0].length > 1) {
 				// DEBUG // console.log(`Debug: ctx.argString.split(" ")[0].length > 1 - True // Argument: ${ctx.argString.split(" ")[0]} // Length: ${ctx.argString.split(" ")[0].length}`)
-				var user = (await ctx.guild!.members.resolve(ctx.argString.split(" ")[0]))!;
+				var user = (await ctx.guild!.members.resolve(
+					ctx.argString.split(" ")[0]
+				))!;
 				if (user == undefined) {
-					await ctx.message.reply(new Embed({
-						title: "Error",
-						description: "The user could not be found. Please make sure you are providing the right user.",
-						color: 0xFF0000,
-					}))
+					await ctx.message.reply(
+						new Embed({
+							title: "Error",
+							description:
+								"The user could not be found. Please make sure you are providing the right user.",
+							color: 0xff0000,
+						})
+					);
 				}
 			}
-		}
-		else if (isString((ctx.message.mentions.users.first()!.username))) {
+		} else if (isString(ctx.message.mentions.users.first()!.username)) {
 			// console.log(`ctx.message.mentions.users.first()!.username is a string, is returned true.`) // DEBUG
-			user = (await ctx.guild!.members.fetch(ctx.message.mentions.users.first()!.id))
+			user = await ctx.guild!.members.fetch(
+				ctx.message.mentions.users.first()!.id
+			);
 			// console.log("\n\nnext") // DEBUG
 			// console.log(user) // DEBUG
 		}
@@ -661,15 +694,19 @@ class UserInfoCommand extends Command {
 
 		// console.log(user!.id); // DEBUG
 		// console.log(`\n${typeof(user!)}`); // DEBUG
-		const serverJoinDate = `<t:${(new Date(user!.joinedAt).getTime() / 1000).toFixed(0)}:F>`
-		const userJoinDate = `<t:${(new Date(user!.timestamp).getTime() / 1000).toFixed(0)}:F>`
-		const userStatus = (await ctx.guild!.presences.fetch(user!.id))!.status
+		const serverJoinDate = `<t:${(
+			new Date(user!.joinedAt).getTime() / 1000
+		).toFixed(0)}:F>`;
+		const userJoinDate = `<t:${(
+			new Date(user!.timestamp).getTime() / 1000
+		).toFixed(0)}:F>`;
+		const userStatus = (await ctx.guild!.presences.fetch(user!.id))!.status;
 
 		// console.log(`\n\n\n\n\n\n\n\n\n\n${user!.user}\n\n${user!}\n\n${user!.user.id}\n\n${user!.user.tag}\n\n\n`) // DEBUG
 		// console.log(`\n\n\nnow the user\n\n${user!}\ntypeof = ${typeof(user!)}\n\n`) // DEBUG
 
 		// if (user!.user.username == undefined) {
-			// await ctx.message.reply(`user.user == undefined (double equals)\n value: ${user!.user.username}`)
+		// await ctx.message.reply(`user.user == undefined (double equals)\n value: ${user!.user.username}`)
 		// } // DEBUG
 
 		await ctx.message.reply(
@@ -698,16 +735,16 @@ class UserInfoCommand extends Command {
 					{
 						name: "Status",
 						value: `${userStatus[0].toUpperCase()}${userStatus.slice(1)}`,
-						inline: true
-					}
-				]
+						inline: true,
+					},
+				],
 			}),
 			{
 				allowedMentions: {
 					replied_user: true,
 					roles: [],
 				},
-			},
+			}
 		);
 	}
 }
@@ -724,15 +761,22 @@ class EvalCommand extends Command {
 		);
 		// TODO: Add error handling if the message is not sent
 		// try {
-			SendEmbed(evalLoggingChannel!, "Executing Eval Command", `**Author:** \`${ctx.author}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``, 0x0000FF)
+		SendEmbed(
+			evalLoggingChannel!,
+			"Executing Eval Command",
+			`**Author:** \`${ctx.author}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+			0x0000ff
+		);
 		// }
 		// catch (err) {
-			// console.log(`An error occurred while attempting to send a message.\nThe message attempted was: Log Message for Executing Eval Command.`)
-			// console.log(err)
-			// console.log("Error, might be 50001 Missing Access") // TODO: Add this
+		// console.log(`An error occurred while attempting to send a message.\nThe message attempted was: Log Message for Executing Eval Command.`)
+		// console.log(err)
+		// console.log("Error, might be 50001 Missing Access") // TODO: Add this
 		// }
 		try {
-			const evaluatedCode = eval(ctx.argString.replace("```js", "").replace("```", ""));
+			const evaluatedCode = eval(
+				ctx.argString.replace("```js", "").replace("```", "")
+			);
 			await ctx.message.reply(
 				new Embed({
 					title: "Output",
@@ -749,14 +793,19 @@ class EvalCommand extends Command {
 				})
 			);
 			// TODO: Add error handling if the message is not sent
-			SendEmbed(evalLoggingChannel!, "Eval Command Error", `Error Executing Code!\n**Author:** \`${ctx.author}\`\n**Error:** \`\`\`js\n${err}\n\`\`\``, 0xFF0000)
+			SendEmbed(
+				evalLoggingChannel!,
+				"Eval Command Error",
+				`Error Executing Code!\n**Author:** \`${ctx.author}\`\n**Error:** \`\`\`js\n${err}\n\`\`\``,
+				0xff0000
+			);
 		}
 	}
 }
 
 class CoinflipCommand extends Command {
 	name = "coinflip";
-	description = "Chooses between heads and tails.\n**Syntax:** `coinflip`"
+	description = "Chooses between heads and tails.\n**Syntax:** `coinflip`";
 	aliases = ["flipcoin", "iamtryingtoresolveadebateaboutsomethingwithafriend"];
 
 	async execute(ctx: CommandContext) {
@@ -773,62 +822,85 @@ class CoinflipCommand extends Command {
 }
 
 class TopicCommand extends Command {
-	name = "topic"
-	aliases = ["generatetopic", "gentopic", "topicgenerate", "topicgen", "topicidea"]
-	description = "Picks a topic from a list of topics that T_nology has created."
+	name = "topic";
+	aliases = [
+		"generatetopic",
+		"gentopic",
+		"topicgenerate",
+		"topicgen",
+		"topicidea",
+	];
+	description =
+		"Picks a topic from a list of topics that T_nology has created.";
 
 	async execute(ctx: CommandContext) {
-		const pickedTopic = topicArray[RandomNumber(0, (topicArray.length - 1))];
+		const pickedTopic = topicArray[RandomNumber(0, topicArray.length - 1)];
 
-		await ctx.message.reply(new Embed({
-			title: "Topic",
-			description: `${pickedTopic}`,
-		}))
+		await ctx.message.reply(
+			new Embed({
+				title: "Topic",
+				description: `${pickedTopic}`,
+			})
+		);
 	}
 }
 
 class PingCommand extends Command {
 	name = "ping";
 	aliases = ["pong", "latency"];
-	description = "Gets the latency of the bot."
+	description = "Gets the latency of the bot.";
 
 	async execute(ctx: CommandContext) {
 		const messageCreatedTime = new Date();
-		await ctx.message.reply(new Embed({
-			title: "🏓 **Pong!**",
-			description: `**Ping:** \`${Date.now() - messageCreatedTime.getTime()}\` ms\n**Websocket/Gateway Ping:** \`${ctx.message.client.gateway.ping}\``
-		}))
+		await ctx.message.reply(
+			new Embed({
+				title: "🏓 **Pong!**",
+				description: `**Ping:** \`${
+					Date.now() - messageCreatedTime.getTime()
+				}\` ms\n**Websocket/Gateway Ping:** \`${
+					ctx.message.client.gateway.ping
+				}\``,
+			})
+		);
 	}
 }
 
 class RandomNumberCommand extends Command {
 	name = "randomnumber";
-	aliases = ["rng", "choosenumber"]
-	description = "Chooses a number between the two parameters provided."
+	aliases = ["rng", "choosenumber"];
+	description = "Chooses a number between the two parameters provided.";
 
 	async execute(ctx: CommandContext) {
 		const lNum = Number(ctx.argString.split(" ")![0]);
 		const hNum = Number(ctx.argString.split(" ")[1]);
 		if (isNaN(lNum) || isNaN(hNum)) {
-			await ctx.message.reply(new Embed({
-				title: "Error!",
-				description: `Please enter two numbers.`,
-				color: 0xFF0000,
-			}))
+			await ctx.message.reply(
+				new Embed({
+					title: "Error!",
+					description: `Please enter two numbers.`,
+					color: 0xff0000,
+				})
+			);
 			return;
 		}
 
-		await ctx.message.reply(new Embed({
-			title: "Random Number",
-			description: `I picked a number between ${lNum} and ${hNum}. The result is ${RandomNumber(lNum, hNum)}`
-		}))
+		await ctx.message.reply(
+			new Embed({
+				title: "Random Number",
+				description: `I picked a number between ${lNum} and ${hNum}. The result is ${RandomNumber(
+					lNum,
+					hNum
+				)}`,
+			})
+		);
 	}
 }
 
 class RemindmeCommand extends Command {
 	name = "remindme";
 	aliases = ["setreminder", "reminderset"];
-	description = "Please do not use this yet! There is currently no way to list reminders.";
+	description =
+		"Please do not use this yet! There is currently no way to list reminders.";
 
 	async execute(ctx: CommandContext) {
 		const preTimestamp = Math.floor(Date.now() / 1000);
@@ -837,19 +909,22 @@ class RemindmeCommand extends Command {
 		const currentReminderId = reminders.id;
 
 		if (userTimestamp == "") {
-			await ctx.message.reply(new Embed({
-				title: "Error",
-				description: "Please enter a valid timestamp (e.g. 1h5s)",
-				color: 0xFF0000,
-			}));
+			await ctx.message.reply(
+				new Embed({
+					title: "Error",
+					description: "Please enter a valid timestamp (e.g. 1h5s)",
+					color: 0xff0000,
+				})
+			);
 			return;
-		}
-		else if (reason == undefined) {
-			await ctx.message.reply(new Embed({
-				title: "Error",
-				description: "Please enter a valid reason",
-				color: 0xFF0000,
-			}));
+		} else if (reason == undefined) {
+			await ctx.message.reply(
+				new Embed({
+					title: "Error",
+					description: "Please enter a valid reason",
+					color: 0xff0000,
+				})
+			);
 			return;
 		}
 
@@ -859,17 +934,13 @@ class RemindmeCommand extends Command {
 		let days = 0;
 
 		// Note: I honestly don't see why being able to use a timestamp like "1d1d" would hurt.
-		// let secondsCompleted = false;
-		// let minutesCompleted = false;
-		// let hoursCompleted = false;
-		// let daysCompleted = false;
 
 		let temporaryNumber = "0";
 
 		// console.log(userTimestamp.length) // DEBUG
 		// console.log(userTimestamp.length < 0) // DEBUG
 
-		const letterArray = ["s", "m", "h", "d"]
+		const letterArray = ["s", "m", "h", "d"];
 
 		for (let index = 0; userTimestamp.length > index; index++) {
 			// console.log(`We are currently at index ${index} - The character is ${ctx.argString[index]}`) // DEBUG
@@ -878,21 +949,18 @@ class RemindmeCommand extends Command {
 				temporaryNumber += userTimestamp[index];
 			}
 			if (userTimestamp[index] == "s") {
-				seconds += (1 * Number(temporaryNumber));
+				seconds += 1 * Number(temporaryNumber);
 				temporaryNumber = "0";
-			}
-			else if (userTimestamp[index] == "m") {
-				minutes += (60 * Number(temporaryNumber));
+			} else if (userTimestamp[index] == "m") {
+				minutes += 60 * Number(temporaryNumber);
 				temporaryNumber = "0";
-			}
-			else if (userTimestamp[index] == "h") {
-				hours += (3600 * Number(temporaryNumber));
+			} else if (userTimestamp[index] == "h") {
+				hours += 3600 * Number(temporaryNumber);
 				temporaryNumber = "0";
-			}
-			else if (userTimestamp[index] == "d") {
+			} else if (userTimestamp[index] == "d") {
 				// console.log(temporaryNumber) // DEBUG
 				// console.log(Number(temporaryNumber)) // DEBUG
-				days += (86400 * Number(temporaryNumber));
+				days += 86400 * Number(temporaryNumber);
 				// console.log(days) // DEBUG
 				temporaryNumber = "0";
 			}
@@ -900,17 +968,12 @@ class RemindmeCommand extends Command {
 
 		const timestamp = preTimestamp + seconds + minutes + hours + days;
 
-		// await ctx.message.reply(new Embed({
-			// title: "Result",
-			// description: `**Seconds:** ${seconds}\n**Minutes:** ${minutes}\n**Hours:** ${hours}\n**Days:** ${days}\n**Temporary Number:** ${temporaryNumber}\n**Pre Timestamp:** ${preTimestamp}\n**Timestamp:** ${timestamp}`,
-		// }))
-
-		reminders.reminders[(currentReminderId + 1)] = {
+		reminders.reminders[currentReminderId + 1] = {
 			UserId: ctx.author.id,
 			Timestamp: timestamp,
 			Reason: reason,
 			Expired: false,
-			ChannelId: ctx.channel.id
+			ChannelId: ctx.channel.id,
 		};
 
 		// console.log(reminders.reminders[(currentReminderId + 1)]) // DEBUG
@@ -919,93 +982,107 @@ class RemindmeCommand extends Command {
 
 		Deno.writeTextFile("./reminders.json", JSON.stringify(reminders));
 
-		await ctx.message.reply(new Embed({
-			title: "Reminder Set!",
-			description: `You will be reminded at <t:${timestamp}:F> (<t:${timestamp}:R>)\n**Reason:** \`${reason}\`\n**Reminder ID:** \`${reminders.id}\``,
-			color: 0x00FF00
-		})).catch(() => {
-			try {
-				ctx.message.addReaction("❗");
-			}
-			catch {
-				console.log("nope")
-			}
-		})
+		await ctx.message
+			.reply(
+				new Embed({
+					title: "Reminder Set!",
+					description: `You will be reminded at <t:${timestamp}:F> (<t:${timestamp}:R>)\n**Reason:** \`${reason}\`\n**Reminder ID:** \`${reminders.id}\``,
+					color: 0x00ff00,
+				})
+			)
+			.catch(() => {
+				try {
+					ctx.message.addReaction("❗");
+				} catch {
+					console.log("nope");
+				}
+			});
 	}
 }
 
 class CancelReminderCommand extends Command {
 	name = "cancelreminder";
 	aliases = ["remindercancel"];
-	description = "This command is still under testing and bugs may occur. Please report any bugs to T_nology.";
+	description =
+		"This command is still under testing and bugs may occur. Please report any bugs to T_nology.";
 
 	async execute(ctx: CommandContext) {
 		const userReminder = ctx.argString.split(" ")[0];
 
 		if (userReminder == "") {
-			await ctx.message.reply(new Embed({
-				title: "Error",
-				description: "Please provide a valid Reminder ID!",
-				color: 0xFF0000
-			}));
+			await ctx.message.reply(
+				new Embed({
+					title: "Error",
+					description: "Please provide a valid Reminder ID!",
+					color: 0xff0000,
+				})
+			);
 			return;
 		}
 
 		try {
 			if (reminders.reminders[userReminder].UserId != ctx.author.id) {
-				await ctx.message.reply(new Embed({
-					title: "Error",
-					description: "Please provide a valid Reminder ID! Make sure this Reminder ID belongs to you if it exists",
-					color: 0xFF0000,
-				}));
+				await ctx.message.reply(
+					new Embed({
+						title: "Error",
+						description:
+							"Please provide a valid Reminder ID! Make sure this Reminder ID belongs to you if it exists",
+						color: 0xff0000,
+					})
+				);
+				return;
+			} else if (reminders.reminders[userReminder].expired) {
+				await ctx.message.reply(
+					new Embed({
+						title: "Error",
+						description: "That reminder has already expired!",
+						color: 0xff0000,
+					})
+				);
 				return;
 			}
-			else if (reminders.reminders[userReminder].expired) {
-				await ctx.message.reply(new Embed({
-					title: "Error",
-					description: "That reminder has already expired!",
-					color: 0xFF0000,
-				}));
-				return;
-			}
-		}
-		catch (error) {
+		} catch (error) {
 			if (error.message.includes("Cannot read properties of undefined")) {
-				await ctx.message.reply(new Embed({
-					title: "Error",
-					description: "Please provide a valid Reminder ID!",
-					color: 0xFF0000,
-				}));
+				await ctx.message.reply(
+					new Embed({
+						title: "Error",
+						description: "Please provide a valid Reminder ID!",
+						color: 0xff0000,
+					})
+				);
 				return;
-			}
-			else {
+			} else {
 				throw error;
 			}
 		}
 
 		reminders.reminders[userReminder].expired = true;
 		Deno.writeTextFile("./reminders.json", JSON.stringify(reminders));
-		await ctx.message.reply(new Embed({
-			title: "Success",
-			description: `The reminder with the ID of **${userReminder}** has been cancelled.`,
-			color: 0x00FF00,
-		}))
+		await ctx.message.reply(
+			new Embed({
+				title: "Success",
+				description: `The reminder with the ID of **${userReminder}** has been cancelled.`,
+				color: 0x00ff00,
+			})
+		);
 	}
 }
 
 class ListRemindersCommand extends Command {
 	name = "listreminders";
-	aliases = ["listreminder", "reminderlist", "reminderslist"]
-	description = "This command is not yet implemented."
+	aliases = ["listreminder", "reminderlist", "reminderslist"];
+	description = "This command is not yet implemented.";
 
 	async execute(ctx: CommandContext) {
 		const userReminder = ctx.argString.split(" ")[0];
 
-		await ctx.message.reply(new Embed({
-			title: "Error",
-			description: "This command has not been implemented yet!",
-			color: 0xFF0000,
-		}))
+		await ctx.message.reply(
+			new Embed({
+				title: "Error",
+				description: "This command has not been implemented yet!",
+				color: 0xff0000,
+			})
+		);
 	}
 }
 
@@ -1028,8 +1105,6 @@ bot.commands.add(ListRemindersCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
-//const token = await Deno.env.get("TOKEN") // Use this when ready!
-
 bot.connect(token, [
 	GatewayIntents.GUILDS,
 	GatewayIntents.GUILD_MESSAGES,
@@ -1047,34 +1122,41 @@ setInterval(async () => {
 	for (const reminder in reminders.reminders) {
 		// console.log("checking") // DEBUG
 		// console.log(reminders.reminders[reminder].Expired == false); // DEBUG
-		// console.log(reminders.reminders[reminder].Timestamp >= currentTime);
-		// console.log(currentTime);
-		// console.log(reminders.reminders[reminder].Timestamp);
-		if (reminders.reminders[reminder].Expired == false && currentTime >= reminders.reminders[reminder].Timestamp) {
+		// console.log(reminders.reminders[reminder].Timestamp >= currentTime); // DEBUG
+		// console.log(currentTime); // DEBUG
+		// console.log(reminders.reminders[reminder].Timestamp); // DEBUG
+		if (
+			reminders.reminders[reminder].Expired == false &&
+			currentTime >= reminders.reminders[reminder].Timestamp
+		) {
 			// console.log("attempting")
 			const user = await bot.users.fetch(reminders.reminders[reminder].UserId);
 			const embed = new Embed({
 				title: "Reminder",
 				description: `<t:${reminders.reminders[reminder].Timestamp}:R> you asked to be reminded about:\n\`\`\`\n${reminders.reminders[reminder].Reason}\n\`\`\``,
-				color: 0x00FF00,
+				color: 0x00ff00,
 			});
-			user.send(new Embed({
-				title: "Reminder",
-				description: `<t:${reminders.reminders[reminder].Timestamp}:R> you asked to be reminded about:\n\`\`\`\n${reminders.reminders[reminder].Reason}\n\`\`\``,
-				color: 0x00FF00,
-			})).catch(async (error) => {
-				console.log("hi")
-				await bot.channels.sendMessage(
-					reminders.reminders[reminder].ChannelId, {
-						content: `${user}`,
-						embeds: [embed],
+			user
+				.send(
+					new Embed({
+						title: "Reminder",
+						description: `<t:${reminders.reminders[reminder].Timestamp}:R> you asked to be reminded about:\n\`\`\`\n${reminders.reminders[reminder].Reason}\n\`\`\``,
+						color: 0x00ff00,
 					})
-				})
+				)
+				.catch(async (error) => {
+					console.log("hi");
+					await bot.channels.sendMessage(
+						reminders.reminders[reminder].ChannelId,
+						{
+							content: `${user}`,
+							embeds: [embed],
+						}
+					);
+				});
 			reminders.reminders[reminder].Expired = true;
-			console.log("expired? yep")
-			}
-			
-
-			Deno.writeTextFile("./reminders.json", JSON.stringify(reminders))
+			// console.log("expired? yep") // DEBUG
 		}
-	}, 2500)
+		Deno.writeTextFile("./reminders.json", JSON.stringify(reminders));
+	}
+}, 2500);
