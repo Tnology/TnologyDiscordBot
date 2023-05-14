@@ -16,3 +16,11 @@ If you have found a security vulnerability, please let T_nology know (preferably
 
 To configure the bot, please create a `.env` file (with this specific name). I will add documentation later, but for now, there is a `.env.example` file you can use.<br>
 `_LOGGING_CHANNEL` values can be set to -1 to be disabled.
+
+
+# How do I refer to versions of the bot?
+
+- For any version of the bot before Monday, May 15th, 2023, refer to it by the first seven (7) letters of the hash of that commit, a dot, and the commit summary in quotes.
+  - **Example 1:** 1f1a66f."Add Shell Command + Bot Start Logging"
+  - **Example 2:** fd80eda."Initial commit"
+- For any version from Monday, May 15th, 2023, up until now, refer to it by the version found in `version.txt`(e.g. Pre-Alpha v0.0.1)
