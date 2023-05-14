@@ -81,7 +81,7 @@ function SendEmbed(
 		)
 		.catch((error) => {
 			console.error(
-				`*****\nAn error occurred attempting to send an embed.\n\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----\n${description}\n-----\n\nAttempted Color: ${color}\n\nError: ${error}\n*****\n`
+				`*****Embed Error*****\nAn error occurred attempting to send an embed.\n\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----Error Description-----\n${description}\n-----End Error Description-----\n\nAttempted Color: ${color}\n\nError: ${error}\n*****End Embed Error*****\n`
 			);
 			return false;
 		});
@@ -1071,18 +1071,66 @@ class CancelReminderCommand extends Command {
 class ListRemindersCommand extends Command {
 	name = "listreminders";
 	aliases = ["listreminder", "reminderlist", "reminderslist"];
-	description = "This command is not yet implemented.";
+	description = "Lists current reminders";
 
 	async execute(ctx: CommandContext) {
-		const userReminder = ctx.argString.split(" ")[0];
 
-		await ctx.message.reply(
-			new Embed({
+		let unslicedUserReminders = [];
+		let userPage = Number(ctx.argString.split(" ")[0]);
+
+		if (!isNumber(Number(userPage)) || userPage < 0) {
+			await ctx.message.reply(new Embed({
 				title: "Error",
-				description: "This command has not been implemented yet!",
-				color: 0xff0000,
-			})
-		);
+				description: "Please enter a valid page number!",
+				color: 0xFF0000,
+			}));
+			return;
+		}
+		else if (userPage == 0) {
+			userPage = 1;
+		}
+
+		for (const reminder in reminders.reminders) {
+			// console.log(reminders.reminders[reminder]); // DEBUG
+			if (reminders.reminders[reminder].UserId == ctx.author.id) {
+				unslicedUserReminders.push([
+					`**Reminder ID:** ${reminder}`,
+					`**Time:** <t:${reminders.reminders[reminder].Timestamp}:F>`,
+					`**Reason:** ${reminders.reminders[reminder].Reason}`,
+				]);
+			}
+		}
+
+		const maxReminderPage = Math.ceil(unslicedUserReminders.length / 5)
+
+		if (userPage > maxReminderPage) {
+			await ctx.message.reply(new Embed({
+				title: "Error",
+				description: `Please enter a valid page! Valid pages are from 1 to ${maxReminderPage}`,
+				color: 0xFF0000,
+			}));
+			return;
+		}
+
+		let arrayIndexStart = (Number(userPage) * 5) - 5;
+		let arrayIndexEnd = (Number(userPage) * 5) - 1;
+
+		let userReminders = unslicedUserReminders.slice(arrayIndexStart, arrayIndexEnd);
+
+		let reminderString = "Here is a list of your reminders: \n";
+
+		for (let i = 0; i < userReminders.length; i++) {
+			reminderString += `\n${userReminders[i][0]}\n${userReminders[i][1]}\n${userReminders[i][2]}\n`
+		}
+
+		await ctx.message.reply(new Embed({
+			title: "Reminders",
+			description: reminderString,
+			color: 0x00FF00,
+			footer: {
+				text: `Page ${userPage}/${maxReminderPage}`
+			}
+		}))
 	}
 }
 
