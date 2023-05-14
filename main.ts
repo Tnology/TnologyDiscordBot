@@ -828,7 +828,7 @@ class RandomNumberCommand extends Command {
 class RemindmeCommand extends Command {
 	name = "remindme";
 	aliases = ["setreminder", "reminderset"];
-	description = "Currently not yet implemented.";
+	description = "Please do not use this yet! There is currently no way to list reminders.";
 
 	async execute(ctx: CommandContext) {
 		const preTimestamp = Math.floor(Date.now() / 1000);
@@ -937,15 +937,58 @@ class RemindmeCommand extends Command {
 class CancelReminderCommand extends Command {
 	name = "cancelreminder";
 	aliases = ["remindercancel"];
-	description = "This command is not yet implemented.";
+	description = "This command is still under testing and bugs may occur. Please report any bugs to T_nology.";
 
 	async execute(ctx: CommandContext) {
 		const userReminder = ctx.argString.split(" ")[0];
 
+		if (userReminder == "") {
+			await ctx.message.reply(new Embed({
+				title: "Error",
+				description: "Please provide a valid Reminder ID!",
+				color: 0xFF0000
+			}));
+			return;
+		}
+
+		try {
+			if (reminders.reminders[userReminder].UserId != ctx.author.id) {
+				await ctx.message.reply(new Embed({
+					title: "Error",
+					description: "Please provide a valid Reminder ID! Make sure this Reminder ID belongs to you if it exists",
+					color: 0xFF0000,
+				}));
+				return;
+			}
+			else if (reminders.reminders[userReminder].expired) {
+				await ctx.message.reply(new Embed({
+					title: "Error",
+					description: "That reminder has already expired!",
+					color: 0xFF0000,
+				}));
+				return;
+			}
+		}
+		catch (error) {
+			if (error.message.includes("Cannot read properties of undefined")) {
+				await ctx.message.reply(new Embed({
+					title: "Error",
+					description: "Please provide a valid Reminder ID!",
+					color: 0xFF0000,
+				}));
+				return;
+			}
+			else {
+				throw error;
+			}
+		}
+
+		reminders.reminders[userReminder].expired = true;
+		Deno.writeTextFile("./reminders.json", JSON.stringify(reminders));
 		await ctx.message.reply(new Embed({
-			title: "Error",
-			description: "This command has not been implemented yet!",
-			color: 0xFF0000,
+			title: "Success",
+			description: `The reminder with the ID of **${userReminder}** has been cancelled.`,
+			color: 0x00FF00,
 		}))
 	}
 }
@@ -980,6 +1023,8 @@ bot.commands.add(CoinflipCommand);
 bot.commands.add(PingCommand);
 bot.commands.add(RandomNumberCommand);
 bot.commands.add(RemindmeCommand);
+bot.commands.add(CancelReminderCommand);
+bot.commands.add(ListRemindersCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
