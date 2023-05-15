@@ -673,7 +673,7 @@ class SendEmbedCommand extends Command {
 }
 
 class UserInfoCommand extends Command {
-	// FIXME: Members who are in the guild might not able to be fetched
+	// FIXME: Members who are not in the guild might not able to be fetched
 	// This is indeed the case. ^
 	name = "userinfo";
 	aliases = ["ui", "whois", "about", "aboutuser"];
@@ -1175,6 +1175,71 @@ class ListRemindersCommand extends Command {
 	}
 }
 
+class TimestampCommand extends Command {
+	name = "timestamp";
+	aliases = ["timestampgen", "gentimestamp", "generatetimestamp"];
+	description = "Generates a timestamp based on the input provided.";
+
+	async execute(ctx: CommandContext) {
+		// FIXME: Add an error if it's something like "-10s" instead of letting it be NaN
+		const userTimestamp = ctx.argString.split(" ")[0];
+		const preTimestamp = Math.floor(Date.now() / 1000);
+
+		let temporaryNumber = "0";
+
+		// console.log(userTimestamp.length) // DEBUG
+		// console.log(userTimestamp.length < 0) // DEBUG
+
+		let seconds = 0;
+		let minutes = 0;
+		let hours = 0;
+		let days = 0;
+
+		const letterArray = ["s", "m", "h", "d"];
+
+		for (let index = 0; userTimestamp.length > index; index++) {
+			// console.log(`We are currently at index ${index} - The character is ${ctx.argString[index]}`) // DEBUG
+			if (!letterArray.includes(userTimestamp[index])) {
+				// console.log(`Not equals, ${userTimestamp[index]} @ index ${index}`) // DEBUG
+				temporaryNumber += userTimestamp[index];
+			}
+			if (userTimestamp[index] == "s") {
+				seconds += 1 * Number(temporaryNumber);
+				temporaryNumber = "0";
+			} else if (userTimestamp[index] == "m") {
+				minutes += 60 * Number(temporaryNumber);
+				temporaryNumber = "0";
+			} else if (userTimestamp[index] == "h") {
+				hours += 3600 * Number(temporaryNumber);
+				temporaryNumber = "0";
+			} else if (userTimestamp[index] == "d") {
+				// console.log(temporaryNumber) // DEBUG
+				// console.log(Number(temporaryNumber)) // DEBUG
+				days += 86400 * Number(temporaryNumber);
+				// console.log(days) // DEBUG
+				temporaryNumber = "0";
+			}
+		}
+
+		const timestamp = preTimestamp + seconds + minutes + hours + days;
+
+		await ctx.message.reply(
+			new Embed({
+				title: "Result",
+				description: `<t:${timestamp}:d> \`<t:${timestamp}:d\`
+				<t:${timestamp}:D> \`<t:${timestamp}:D\`
+				<t:${timestamp}:t> \`<t:${timestamp}:t\`
+				<t:${timestamp}:T> \`<t:${timestamp}:T\`
+				<t:${timestamp}:f> \`<t:${timestamp}:f\`
+				<t:${timestamp}:F> \`<t:${timestamp}:F\`
+				<t:${timestamp}:R> \`<t:${timestamp}:R\`
+				`,
+				color: 0x00ff00,
+			})
+		);
+	}
+}
+
 bot.commands.add(HelpCommand);
 bot.commands.add(Whoami);
 bot.commands.add(Restart);
@@ -1191,6 +1256,7 @@ bot.commands.add(RandomNumberCommand);
 bot.commands.add(RemindmeCommand);
 bot.commands.add(CancelReminderCommand);
 bot.commands.add(ListRemindersCommand);
+bot.commands.add(TimestampCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 

@@ -3,3 +3,4 @@ env_name.txt
 .env
 reminders.json
 reminders.json.example
+/ignoreme
