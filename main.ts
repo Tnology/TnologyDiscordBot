@@ -1,24 +1,15 @@
-import { CHAR_RIGHT_ANGLE_BRACKET } from "https://deno.land/std@0.152.0/path/_constants.ts";
 import {
 	CommandClient,
 	GatewayIntents,
 	Command,
 	Embed,
 	CommandContext,
-	userContextMenu,
-	Option,
 } from "https://deno.land/x/harmony@v2.8.0/mod.ts";
 import {
 	isNumber,
 	isString,
-	parseXMessage,
 } from "https://deno.land/x/redis@v0.25.1/stream.ts";
-import {
-	config,
-	ConfigOptions,
-	DotenvConfig,
-} from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
-import { UsersManager } from "https://deno.land/x/harmony@v2.8.0/src/managers/users.ts";
+import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 
 // TODO: Add user avatar to userinfo command
 // TODO: Use Discord timestamp feature (figure out how to convert time to unix timestamp) in userinfo command
@@ -384,8 +375,8 @@ class HelpCommand extends Command {
 	description = "Shows available commands.\n**Syntax:** `help`";
 	async execute(ctx: CommandContext) {
 		let commands = "";
-		for (let commandIndex in ctx.client.commands.list.array()) {
-			let thisCommand = ctx.client.commands.list.array()[commandIndex];
+		for (const commandIndex in ctx.client.commands.list.array()) {
+			const thisCommand = ctx.client.commands.list.array()[commandIndex];
 			commands += `**\n${thisCommand.name}**\nAliases: ${thisCommand.aliases}\nDescription: ${thisCommand.description}\n`; // 10/10 code
 		}
 
@@ -656,7 +647,7 @@ class SendEmbedCommand extends Command {
 	async execute(ctx: CommandContext) {
 		// const channelArg = ctx.argString.split(" ")[0]; // DEBUG
 		const channel = ctx.message.mentions.channels.first();
-		const cmdArgs: any = ctx.argString.split(" ").splice(1).join(" ");
+		const cmdArgs: string = ctx.argString.split(" ").splice(1).join(" ");
 		// console.log(cmdArgs); // DEBUG
 		const title = cmdArgs.split("\n")[0];
 		// console.log("A"); // DEBUG
@@ -682,8 +673,8 @@ class UserInfoCommand extends Command {
 
 	async execute(ctx: CommandContext) {
 		try {
-			var user = await ctx.guild!.members.fetch(ctx.argString.split(" ")[0]);
-		} catch (e) {
+			user = await ctx.guild!.members.fetch(ctx.argString.split(" ")[0]);
+		} catch {
 			// await ctx.message.reply(`${e}`) // TODO: Add to logging
 		}
 		// console.log("start") // DEBUG
@@ -1108,7 +1099,7 @@ class ListRemindersCommand extends Command {
 	description = "Lists current reminders";
 
 	async execute(ctx: CommandContext) {
-		let unslicedUserReminders = [];
+		const unslicedUserReminders = [];
 		let userPage = Number(ctx.argString.split(" ")[0]);
 
 		if (!isNumber(Number(userPage)) || userPage < 0) {
@@ -1148,10 +1139,10 @@ class ListRemindersCommand extends Command {
 			return;
 		}
 
-		let arrayIndexStart = Number(userPage) * 5 - 5;
-		let arrayIndexEnd = Number(userPage) * 5 - 1;
+		const arrayIndexStart = Number(userPage) * 5 - 5;
+		const arrayIndexEnd = Number(userPage) * 5 - 1;
 
-		let userReminders = unslicedUserReminders.slice(
+		const userReminders = unslicedUserReminders.slice(
 			arrayIndexStart,
 			arrayIndexEnd
 		);
@@ -1299,7 +1290,7 @@ setInterval(async () => {
 						color: 0x00ff00,
 					})
 				)
-				.catch(async (error) => {
+				.catch(async () => {
 					console.log("hi");
 					await bot.channels.sendMessage(
 						reminders.reminders[reminder].ChannelId,
