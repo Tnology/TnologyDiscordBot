@@ -25,16 +25,12 @@ const discussionThreadsEnabled =
 	Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true";
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
 
-const oneWordStoryChannels = Deno.env
-	.get("ONE_WORD_STORY_CHANNELS")
-	?.split(",");
+let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
 const oneWordStoryLoggingChannel = Deno.env.get(
 	"ONE_WORD_STORY_LOGGING_CHANNEL"
 );
 
-const twoWordStoryChannels = Deno.env
-	.get("TWO_WORD_STORY_CHANNELS")
-	?.split(",");
+let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",");
 const twoWordStoryLoggingChannel = Deno.env.get(
 	"TWO_WORD_STORY_LOGGING_CHANNEL"
 );
@@ -42,6 +38,16 @@ const botOverridesStoryChannels =
 	Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
 
 let reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
+
+for (let i = 0; i < oneWordStoryChannels!.length; i++) {
+	if (twoWordStoryChannels!.includes(oneWordStoryChannels![i])) {
+		console.error(
+			`Error: Channel is used for both one-word and two-word story channel! Please fix this in your .env file!\nOne-Word and Two-Word Story Channels have been disabled.`
+		);
+		oneWordStoryChannels = ["-1"];
+		twoWordStoryChannels = ["-1"];
+	}
+}
 
 function SendEmbed(
 	channelid: string,
@@ -71,13 +77,6 @@ function SendEmbed(
 
 	return true;
 }
-
-// TODO: Add an error if a channel is both a one-word story and a two word story, and remove it from both arrays
-// if it is (hence why the array is using let instead of const). Then, if no channels are left in the array, add
-// an element to the array of -1, which in the code for one/two word story will just cancel it (in the on message handling).
-// Maybe a for loop can be used for this, check later.
-
-// TODO: Add a "BOT_OVERRIDE" .env variable for one and two word story channels, for whether or not a bot can bypass the restriction.
 
 // TODO: Check if Harmony has a new version and update it if it does
 
