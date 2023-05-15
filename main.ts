@@ -11,16 +11,7 @@ import {
 } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 
-// TODO: Add user avatar to userinfo command
-// TODO: Use Discord timestamp feature (figure out how to convert time to unix timestamp) in userinfo command
-// TODO: Add user join server date to userinfo command
 // TODO: Add a send webhook command.
-// TODO: Add a private logging channel for when the bot comes online and/or eval commands and/or shell commands, by having "EVAL_COMMANDS_CHANNEL" (for example)
-// as a .env variable that can be set to -1 to be disabled or a channel ID to post eval command usage with info. Same with a "SHELL_COMMANDS_CHANNEL" and
-// a "BOT_START_CHANNEL" and whatnot.
-
-// let oneWordStoryChannels: any = [] // TODO: Stop using any type FIXME: Checkpoint 1
-// let twoWordStoryChannels: any = [] // TODO: Stop using any type FIXME: Checkpoint 1
 
 await config({ export: true });
 
@@ -374,16 +365,47 @@ class HelpCommand extends Command {
 	aliases = ["commands", "cmds"];
 	description = "Shows available commands.\n**Syntax:** `help`";
 	async execute(ctx: CommandContext) {
-		let commands = "";
+		const fullCommandsArray = [];
+		let helpPage = Number(ctx.argString.split(" ")[0]);
+
 		for (const commandIndex in ctx.client.commands.list.array()) {
 			const thisCommand = ctx.client.commands.list.array()[commandIndex];
-			commands += `**\n${thisCommand.name}**\nAliases: ${thisCommand.aliases}\nDescription: ${thisCommand.description}\n`; // 10/10 code
+			fullCommandsArray.push(
+				`**\n${thisCommand.name}**\nAliases: ${thisCommand.aliases}\nDescription: ${thisCommand.description}\n`
+			); // 10/10 code
 		}
+
+		const maxHelpPage = Math.ceil(fullCommandsArray.length / 5);
+
+		if (helpPage == 0) {
+			helpPage = 1;
+		} else if (helpPage < 0 || helpPage > maxHelpPage) {
+			await ctx.message.reply(
+				new Embed({
+					title: "Error!",
+					description: `Please enter a valid page number! Valid pages are **1** to **${maxHelpPage}**.`,
+				})
+			);
+			return;
+		}
+
+		const arrayIndexStart = helpPage * 5 - 5;
+		const arrayIndexEnd = helpPage * 5;
+
+		const commandsArray = fullCommandsArray.slice(
+			arrayIndexStart,
+			arrayIndexEnd
+		);
+
+		const commandString = commandsArray.join("\n");
 
 		await ctx.message.reply(
 			new Embed({
 				title: "Help",
-				description: `${commands}`,
+				description: `${commandString}`,
+				footer: {
+					text: `Page ${helpPage}/${maxHelpPage}`,
+				},
 			})
 		);
 	}
@@ -924,8 +946,7 @@ class RandomNumberCommand extends Command {
 class RemindmeCommand extends Command {
 	name = "remindme";
 	aliases = ["setreminder", "reminderset"];
-	description =
-		"Please do not use this yet! There is currently no way to list reminders.";
+	description = "Sets a reminder for you.";
 
 	async execute(ctx: CommandContext) {
 		const preTimestamp = Math.floor(Date.now() / 1000);
