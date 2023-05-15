@@ -12,10 +12,11 @@ import {
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 
 // TODO: Add a send webhook command.
+// TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
 
 await config({ export: true });
 
-const developerMode = Deno.env.get("DEV_MODE") == "true" ? true : false;
+const developerMode = Deno.env.get("DEV_MODE") == "true";
 
 const botStartLoggingChannel = Deno.env.get("BOT_START_CHANNEL");
 const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL");
@@ -340,9 +341,11 @@ bot.on("messageCreate", (msg) => {
 	}
 });
 
-bot.on("gatewayError", (err) => {
-	console.log("An error has occurred! Please implement proper error handling!"); // TODO: Add this
-	console.log(err);
+bot.on("gatewayError", (error) => {
+	console.error(
+		`A gateway has occurred! Here are the details: \nError Type: ${error.type}\nError Message: ${error.message}\nError Timestamp:${error.timeStamp}\nError: ${error.error}\n`
+	);
+	console.log(error);
 });
 
 bot.on("commandError", (ctx, error) => {
@@ -799,20 +802,12 @@ class EvalCommand extends Command {
 		console.log(
 			`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
 		);
-		// TODO: Add error handling if the message is not sent
-		// try {
 		SendEmbed(
 			evalLoggingChannel!,
 			"Executing Eval Command",
 			`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
 			0x0000ff
 		);
-		// }
-		// catch (err) {
-		// console.log(`An error occurred while attempting to send a message.\nThe message attempted was: Log Message for Executing Eval Command.`)
-		// console.log(err)
-		// console.log("Error, might be 50001 Missing Access") // TODO: Add this
-		// }
 		try {
 			const evaluatedCode = eval(
 				ctx.argString.replace("```js", "").replace("```", "")
@@ -838,7 +833,6 @@ class EvalCommand extends Command {
 					color: 0xff0000,
 				})
 			);
-			// TODO: Add error handling if the message is not sent
 			SendEmbed(
 				evalLoggingChannel!,
 				"Eval Command Error",
@@ -1192,7 +1186,6 @@ class TimestampCommand extends Command {
 	description = "Generates a timestamp based on the input provided.";
 
 	async execute(ctx: CommandContext) {
-		// FIXME: Add an error if it's something like "-10s" instead of letting it be NaN
 		const userTimestamp = ctx.argString.split(" ")[0];
 		const preTimestamp = Math.floor(Date.now() / 1000);
 
@@ -1234,16 +1227,27 @@ class TimestampCommand extends Command {
 
 		const timestamp = preTimestamp + seconds + minutes + hours + days;
 
+		if (isNaN(timestamp)) {
+			await ctx.message.reply(
+				new Embed({
+					title: "Error",
+					description:
+						"Please enter a valid timestamp! (Examples: `30m` or `1h`) ",
+				})
+			);
+			return;
+		}
+
 		await ctx.message.reply(
 			new Embed({
 				title: "Result",
 				description: `<t:${timestamp}:d> \`<t:${timestamp}:d\`
-				<t:${timestamp}:D> \`<t:${timestamp}:D\`
-				<t:${timestamp}:t> \`<t:${timestamp}:t\`
-				<t:${timestamp}:T> \`<t:${timestamp}:T\`
-				<t:${timestamp}:f> \`<t:${timestamp}:f\`
-				<t:${timestamp}:F> \`<t:${timestamp}:F\`
-				<t:${timestamp}:R> \`<t:${timestamp}:R\`
+<t:${timestamp}:D> \`<t:${timestamp}:D>\`
+<t:${timestamp}:t> \`<t:${timestamp}:t>\`
+<t:${timestamp}:T> \`<t:${timestamp}:T>\`
+<t:${timestamp}:f> \`<t:${timestamp}:f>\`
+<t:${timestamp}:F> \`<t:${timestamp}:F>\`
+<t:${timestamp}:R> \`<t:${timestamp}:R>\`
 				`,
 				color: 0x00ff00,
 			})
