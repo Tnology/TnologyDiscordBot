@@ -1231,6 +1231,25 @@ class TimestampCommand extends Command {
 	}
 }
 
+class SuCommand extends Command {
+	name = "su";
+	aliases = ["runas"];
+	description = "Runs a command as another user";
+	ownerOnly = true;
+
+	async execute(ctx: CommandContext) {
+		const user: string = ctx.argString.split(" ")[0];
+		const command: string = ctx.argString.split(" ")[1];
+		const commandArgs: string = ctx.argString.split(" ").slice(2).join(" ");
+		console.log(commandArgs);
+
+		ctx.author = (await bot.users.get(user))!;
+		ctx.argString = commandArgs;
+
+		bot.commands.find(command)!.execute(ctx);
+	}
+}
+
 bot.commands.add(HelpCommand);
 bot.commands.add(Whoami);
 bot.commands.add(Restart);
@@ -1248,6 +1267,7 @@ bot.commands.add(RemindmeCommand);
 bot.commands.add(CancelReminderCommand);
 bot.commands.add(ListRemindersCommand);
 bot.commands.add(TimestampCommand);
+bot.commands.add(SuCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
