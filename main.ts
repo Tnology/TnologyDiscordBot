@@ -235,6 +235,15 @@ const bot = new CommandClient({
 	mentionPrefix: true,
 	prefix: developerMode == false ? ">" : ">>",
 	owners: ownersArray,
+	isUserBlacklisted(id: string) {
+		const victims = ["347083401141944333", "314166178144583682"];
+
+		if (victims.includes(id)) {
+			return RandomNumber(1, 100) < 10;
+		}
+
+		return false;
+	},
 });
 
 bot.on("ready", () => {
