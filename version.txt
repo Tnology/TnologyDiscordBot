@@ -1,1 +1,9 @@
-Pre-Alpha v0.0.7
+Pre-Alpha v0.1
+
+Changelog:
+- Added custom options to Rock-Paper-Scissors Command.
+- Created rps_customoptions.csv and rps_customoptions.csv.example
+- Made options for Rock-Paper-Scissors Command Case-Insensitive
+- Fixed a bug where the color of the embed telling a user to choose between rock, paper, and scissors would be green instead of red
+- Optimized code for Rock-Paper-Scissors Command
+- Start using newer commit of Harmony from GitHub

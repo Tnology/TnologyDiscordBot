@@ -4,12 +4,13 @@ import {
 	Command,
 	Embed,
 	CommandContext,
-} from "https://deno.land/x/harmony@v2.8.0/mod.ts";
+} from "https://raw.githubusercontent.com/harmonyland/harmony/daca400ae9feab19604381abddbdab16aa1ede2b/mod.ts";
 import {
 	isNumber,
 	isString,
 } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
+import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 
 // TODO: Add a send webhook command.
 // TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
@@ -358,6 +359,16 @@ bot.on("gatewayError", (error) => {
 });
 
 bot.on("commandError", (ctx, error) => {
+	if (
+		error.message.includes(
+			"No such file or directory (os error 2): open './rps_custom_options.csv'"
+		)
+	) {
+		console.log(
+			"\n***** Error: No custom RPS options file found! To stop seeing this error, please create the file and leave it empty. Refer to README.md for more information.*****\n"
+		);
+		return;
+	}
 	console.log("An error has occurred! Please implement proper error handling!");
 	ctx.message.reply(
 		new Embed({
@@ -368,7 +379,8 @@ bot.on("commandError", (ctx, error) => {
 	console.log(`Name of Error: ${error.name}`);
 	console.log(`Message of Error: ${error.message}`);
 	console.log(`Cause of Error: ${error.cause}`);
-	console.log(`Full Error: ${error}\n\n`);
+	console.log(`Error: ${error}\n`);
+	console.log(`Error Stack: ${error.stack}\n\n`);
 });
 
 class HelpCommand extends Command {
@@ -519,9 +531,95 @@ class RockPaperScissorsCommand extends Command {
 		"Lets you play a game of Rock, Paper, Scissors with the bot.\n**Syntax:** `rps <rock|paper|scissors>`";
 
 	async execute(ctx: CommandContext) {
-		const userChoice = ctx.argString.split(" ")[0];
-		console.log(userChoice);
+		const userChoice = ctx.argString.split(" ")[0].toLowerCase();
+		let customOptionsDisabled = false;
+		// console.log(userChoice); // DEBUG
+
+		const file = await Deno.open("./rps_custom_options.csv").catch((error) => {
+			if (
+				error.message.includes(
+					"No such file or directory (os error 2): open './rps_custom_options.csv'"
+				)
+			) {
+				console.log(
+					"\n***** Error: No custom RPS options file found! To stop seeing this error, please create the file and leave it empty. Refer to README.md for more information.*****\n"
+				);
+				customOptionsDisabled = true;
+			}
+		});
+
+		if (!customOptionsDisabled) {
+			var customOptions = [];
+			var acceptableCustomOptions = [
+				"rock",
+				"paper",
+				"scissors",
+				"everything",
+				"nothing",
+			];
+			const file = await Deno.open("./rps_custom_options.csv");
+			for await (const row of readCSV(file)) {
+				// console.log("row:");
+				// console.log(row);
+				let tempCounter = 1;
+				let tempName = "";
+				let tempWinsAgainst = "";
+				let tempLosesAgainst = "";
+				for await (const cell of row) {
+					if (tempCounter > 3) {
+						console.error(
+							`Error - Invalid CSV Format, Please refer to \"./rps_custom_options.csv.example\".\nRPS custom options will not work!`
+						);
+						customOptionsDisabled = true;
+						break;
+					} else if (tempCounter == 1) {
+						tempName = cell;
+					} else if (tempCounter == 2) {
+						if (!acceptableCustomOptions.includes(cell)) {
+							console.error(`Error - Invalid CSV Format. ${cell} of ${row} is not rock/paper/scissors/everything/nothing. 
+							Unfortunately, you cannot set custom options for what custom options win/lose against.\nRPS custom options will not work!`);
+							customOptionsDisabled = true;
+							break;
+						}
+						tempWinsAgainst = cell;
+					} else if (tempCounter == 3) {
+						if (!acceptableCustomOptions.includes(cell)) {
+							console.error(`Error - Invalid CSV Format. ${cell} of ${row} is not rock/paper/scissors/everything/nothing. 
+							Unfortunately, you cannot set custom options for what custom options win/lose against.\nRPS custom options will not work!`);
+							customOptionsDisabled = true;
+							break;
+						}
+						tempLosesAgainst = cell;
+					}
+					// console.log(`  cell: ${cell}`); // DEBUG
+					// console.log(`the cell is of type ${typeof cell}`); // DEBUG
+					// console.log(`the temp counter is ${tempCounter}`); // DEBUG
+					tempCounter++;
+				}
+				if (tempWinsAgainst == tempLosesAgainst && tempWinsAgainst != "") {
+					console.error(`Error - Invalid CSV Format. ${tempName} both wins against ${tempWinsAgainst}, but also loses against ${tempLosesAgainst}.
+					RPS custom options will not work!`);
+					customOptionsDisabled = true;
+				} else if (
+					(tempWinsAgainst == "everything" && tempLosesAgainst != "nothing") ||
+					(tempWinsAgainst == "nothing" && tempLosesAgainst != "everything")
+				) {
+					console.error(`Error - Invalid CSV Format. ${tempName} wins against ${tempWinsAgainst}, but the opposite is ${tempLosesAgainst}.
+					If everything or nothing is used for one option, the opposite must be used for the other option. So, if the bot wins against 
+					everything, it must lose against specifically nothing, and vice versa. RPS custom options will not work!`);
+				}
+				customOptions.push({
+					name: tempName,
+					winsAgainst: tempWinsAgainst,
+					losesAgainst: tempLosesAgainst,
+				});
+			}
+
+			file.close();
+		}
+
 		const botChoice = DetermineBotChoice(RandomNumber(1, 3));
+		let winner = "";
 		if (userChoice.length == 0) {
 			await ctx.message.reply(
 				new Embed({
@@ -534,7 +632,97 @@ class RockPaperScissorsCommand extends Command {
 			return;
 		}
 
+		// await ctx.message.reply(`user: ${userChoice}\nbot: ${botChoice}`); // DEBUG
 		if (userChoice == botChoice) {
+			winner = "tie";
+		} else if (userChoice == "rock") {
+			if (botChoice == "paper") {
+				winner = "bot";
+			} else if (botChoice == "scissors") {
+				winner = "user";
+			}
+		} else if (userChoice == "paper") {
+			if (botChoice == "rock") {
+				winner = "user";
+			} else if (botChoice == "scissors") {
+				winner = "bot";
+			}
+		} else if (userChoice == "scissors") {
+			if (botChoice == "rock") {
+				winner = "bot";
+			} else if (botChoice == "paper") {
+				winner = "user";
+			}
+		} else if (!customOptionsDisabled) {
+			let customOptionFound = false;
+			let customOption: any;
+			for (const optionIndex in customOptions) {
+				const optionIndexNum = Number(optionIndex);
+				if (customOptions[optionIndexNum].name == userChoice) {
+					customOptionFound = true;
+					customOption = customOptions[optionIndexNum];
+					break;
+				}
+			}
+			if (customOptionFound && !customOptionsDisabled) {
+				if (
+					customOption.losesAgainst == botChoice ||
+					customOption.losesAgainst == "everything"
+				) {
+					winner = "bot";
+				} else if (
+					customOption.winsAgainst == botChoice ||
+					customOption.winsAgainst == "everything"
+				) {
+					winner = "user";
+				} else {
+					winner = "tie";
+				}
+			} else {
+				await ctx.message.reply(
+					new Embed({
+						title: "Error!",
+						description:
+							"Please make a choice between rock, paper, and scissors.",
+						color: 0xff0000,
+					}),
+					{
+						allowedMentions: {
+							replied_user: true,
+							roles: [],
+						},
+					}
+				);
+				return;
+			}
+		}
+		if (winner == "bot") {
+			await ctx.message.reply(
+				new Embed({
+					title: "I Win!",
+					description: `You picked ${userChoice}. I picked ${botChoice}. I win!`,
+				}),
+				{
+					allowedMentions: {
+						replied_user: true,
+						roles: [],
+					},
+				}
+			);
+		} else if (winner == "user") {
+			await ctx.message.reply(
+				new Embed({
+					title: "You Win!",
+					description: `You picked ${userChoice}. I picked ${botChoice}. You win!`,
+				}),
+				{
+					allowedMentions: {
+						replied_user: true,
+						roles: [],
+					},
+				}
+			);
+		} else if (winner == "tie") {
 			await ctx.message.reply(
 				new Embed({
 					title: "Tie!",
@@ -547,113 +735,19 @@ class RockPaperScissorsCommand extends Command {
 						roles: [],
 					},
 				};
-			return;
-		} else if (userChoice == "rock") {
-			if (botChoice == "paper") {
-				await ctx.message.reply(
-					new Embed({
-						title: "I Win!",
-						description: `You picked ${userChoice}. I picked ${botChoice}. I win!`,
-					}),
-					{
-						allowedMentions: {
-							replied_user: true,
-							roles: [],
-						},
-					}
-				);
-				return;
-			} else if (botChoice == "scissors") {
-				await ctx.message.reply(
-					new Embed({
-						title: "You Win!",
-						description: `You picked ${userChoice}. I picked ${botChoice}. You win!`,
-					}),
-					{
-						allowedMentions: {
-							replied_user: true,
-							roles: [],
-						},
-					}
-				);
-				return;
-			}
-		} else if (userChoice == "paper") {
-			if (botChoice == "rock") {
-				await ctx.message.reply(
-					new Embed({
-						title: "You Win!",
-						description: `You picked ${userChoice}. I picked ${botChoice}. You win!`,
-					}),
-					{
-						allowedMentions: {
-							replied_user: true,
-							roles: [],
-						},
-					}
-				);
-				return;
-			} else if (botChoice == "scissors") {
-				await ctx.message.reply(
-					new Embed({
-						title: "I Win!",
-						description: `You picked ${userChoice}. I picked ${botChoice}. I win!`,
-					}),
-					{
-						allowedMentions: {
-							replied_user: true,
-							roles: [],
-						},
-					}
-				);
-				return;
-			}
-		} else if (userChoice == "scissors") {
-			if (botChoice == "rock") {
-				await ctx.message.reply(
-					new Embed({
-						title: "I Win!",
-						description: `You picked ${userChoice}. I picked ${botChoice}. I win!`,
-					}),
-					{
-						allowedMentions: {
-							replied_user: true,
-							roles: [],
-						},
-					}
-				);
-				return;
-			} else if (botChoice == "paper") {
-				await ctx.message.reply(
-					new Embed({
-						title: "You Win!",
-						description: `You picked ${userChoice}. I picked ${botChoice}. You win!`,
-					}),
-					{
-						allowedMentions: {
-							replied_user: true,
-							roles: [],
-						},
-					}
-				);
-				return;
-			}
 		} else {
 			await ctx.message.reply(
 				new Embed({
 					title: "Error!",
-					description:
-						"Please make a choice between rock, paper, and scissors.",
-					color: 0x00ff00,
-				}),
-				{
-					allowedMentions: {
-						replied_user: true,
-						roles: [],
-					},
-				}
+					description: `An unexpected error has occured. Please contact the developer.\n
+					**winner:** \`${winner}\`\n
+					**userChoice:** \`${userChoice}\`\n
+					**botChoice:** \`${botChoice}\`\n
+					**customOptionsDisabled:** \`${customOptionsDisabled}\`\n
+					`,
+					color: 0xff0000,
+				})
 			);
-			return;
 		}
 	}
 }
