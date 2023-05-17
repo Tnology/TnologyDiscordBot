@@ -781,8 +781,8 @@ class UserInfoCommand extends Command {
 		} catch {
 			// await ctx.message.reply(`${e}`) // TODO: Add to logging
 		}
-		// console.log("start") // DEBUG
-		// console.log(user) // DEBUG
+		// console.log("start"); // DEBUG
+		// console.log(user); // DEBUG
 
 		if (ctx.argString == "") {
 			user = await ctx.guild!.members.fetch(ctx.author.id);
@@ -1026,7 +1026,7 @@ class RemindmeCommand extends Command {
 	async execute(ctx: CommandContext) {
 		const preTimestamp = Math.floor(Date.now() / 1000);
 		const userTimestamp = ctx.argString.split(" ")[0];
-		const reason = ctx.argString.split(" ")[1];
+		const reason = ctx.argString.split(" ").slice(1).join(" ");
 		const currentReminderId = reminders.id;
 
 		if (userTimestamp == "") {

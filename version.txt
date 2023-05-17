@@ -1,5 +1,4 @@
-Pre-Alpha v0.1.2
+Pre-Alpha v0.1.3
 
 Changelog:
-- Add syntax to more command descriptions
-- Remove broken restart command
+- Fixed a bug where the reason of a reminder would only be the first word (it literally took me like 15-20 seconds to fix it lol)
