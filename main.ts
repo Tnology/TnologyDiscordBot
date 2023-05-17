@@ -14,6 +14,7 @@ import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 
 // TODO: Add a send webhook command.
 // TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
+// FIXME: There is a bug where a reminder reason might only be one word.
 
 await config({ export: true });
 
@@ -452,33 +453,6 @@ class Whoami extends Command {
 	}
 }
 
-class Restart extends Command {
-	name = "restart";
-	aliases = ["reboot"];
-	description = "This command doesn't even work.";
-	ownerOnly = true;
-
-	async execute(ctx: CommandContext) {
-		await ctx.message.reply(
-			new Embed({
-				title: "Restarting...",
-				description: "The bot is now restarting...",
-			})
-		);
-		bot.destroy();
-		bot.connect(token, [
-			GatewayIntents.GUILDS,
-			GatewayIntents.GUILD_MESSAGES,
-			GatewayIntents.GUILD_VOICE_STATES,
-			GatewayIntents.GUILD_PRESENCES,
-			GatewayIntents.GUILD_MEMBERS,
-			GatewayIntents.MESSAGE_CONTENT,
-			GatewayIntents.GUILD_EMOJIS_AND_STICKERS,
-			GatewayIntents.DIRECT_MESSAGES,
-		]);
-	}
-}
-
 class ShellCommand extends Command {
 	name = "shell";
 	aliases = ["sh", "shellcmd"];
@@ -799,7 +773,7 @@ class UserInfoCommand extends Command {
 	name = "userinfo";
 	aliases = ["ui", "whois", "about", "aboutuser"];
 	description =
-		"Lets you get information about a user.\n**Syntax:** `whois <user>`";
+		"Lets you get information about a user.\n**Syntax:** `userinfo <user>`";
 
 	async execute(ctx: CommandContext) {
 		try {
@@ -901,7 +875,7 @@ class UserInfoCommand extends Command {
 class EvalCommand extends Command {
 	name = "eval";
 	description =
-		"Lets you run TypeScript code with the bot. Owner only.\n`eval <code to evaluate>`";
+		"Lets you run TypeScript code with the bot. Owner only.\n**Syntax:** `eval <code to evaluate>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -977,7 +951,7 @@ class TopicCommand extends Command {
 		"topicidea",
 	];
 	description =
-		"Picks a topic from a list of topics that T_nology has created.";
+		"Picks a topic from a list of topics that T_nology has created.\n**Syntax:** `topic`";
 
 	async execute(ctx: CommandContext) {
 		const pickedTopic = topicArray[RandomNumber(0, topicArray.length - 1)];
@@ -994,7 +968,7 @@ class TopicCommand extends Command {
 class PingCommand extends Command {
 	name = "ping";
 	aliases = ["pong", "latency"];
-	description = "Gets the latency of the bot.";
+	description = "Gets the latency of the bot.\n**Syntax:** `ping`";
 
 	async execute(ctx: CommandContext) {
 		const messageCreatedTime = new Date();
@@ -1014,7 +988,8 @@ class PingCommand extends Command {
 class RandomNumberCommand extends Command {
 	name = "randomnumber";
 	aliases = ["rng", "choosenumber"];
-	description = "Chooses a number between the two parameters provided.";
+	description =
+		"Chooses a number between the two parameters provided.\n**Syntax:** `randomnumber <minimum> <maximum>`";
 
 	async execute(ctx: CommandContext) {
 		const lNum = Number(ctx.argString.split(" ")![0]);
@@ -1045,7 +1020,8 @@ class RandomNumberCommand extends Command {
 class RemindmeCommand extends Command {
 	name = "remindme";
 	aliases = ["setreminder", "reminderset"];
-	description = "Sets a reminder for you.";
+	description =
+		"Sets a reminder for you.\n**Syntax:** `remindme <timestamp> <reason>`";
 
 	async execute(ctx: CommandContext) {
 		const preTimestamp = Math.floor(Date.now() / 1000);
@@ -1149,7 +1125,7 @@ class CancelReminderCommand extends Command {
 	name = "cancelreminder";
 	aliases = ["remindercancel"];
 	description =
-		"This command is still under testing and bugs may occur. Please report any bugs to T_nology.";
+		"Cancels a reminder.\n**Syntax:** `cancelreminder <reminder id>`";
 
 	async execute(ctx: CommandContext) {
 		const userReminder = ctx.argString.split(" ")[0];
@@ -1216,7 +1192,7 @@ class CancelReminderCommand extends Command {
 class ListRemindersCommand extends Command {
 	name = "listreminders";
 	aliases = ["listreminder", "reminderlist", "reminderslist"];
-	description = "Lists current reminders";
+	description = "Lists current reminders\n**Syntax:** `listreminders`";
 
 	async execute(ctx: CommandContext) {
 		const unslicedUserReminders = [];
@@ -1289,7 +1265,8 @@ class ListRemindersCommand extends Command {
 class TimestampCommand extends Command {
 	name = "timestamp";
 	aliases = ["timestampgen", "gentimestamp", "generatetimestamp"];
-	description = "Generates a timestamp based on the input provided.";
+	description =
+		"Generates a timestamp based on the input provided.\n**Syntax:** `timestamp <timestamp>`";
 
 	async execute(ctx: CommandContext) {
 		const userTimestamp = ctx.argString.split(" ")[0];
@@ -1364,7 +1341,8 @@ class TimestampCommand extends Command {
 class SuCommand extends Command {
 	name = "su";
 	aliases = ["runas"];
-	description = "Runs a command as another user";
+	description =
+		"Runs a command as another user. Owner only.\n**Syntax:** `su <user mention> <command>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -1382,7 +1360,7 @@ class SuCommand extends Command {
 
 class VersionCommand extends Command {
 	name = "version";
-	description = "Gets the version of the bot.";
+	description = "Gets the version of the bot.\n**Syntax:** `version`";
 
 	async execute(ctx: CommandContext) {
 		await ctx.message.reply(
@@ -1397,7 +1375,6 @@ class VersionCommand extends Command {
 
 bot.commands.add(HelpCommand);
 bot.commands.add(Whoami);
-bot.commands.add(Restart);
 bot.commands.add(ShellCommand);
 bot.commands.add(RockPaperScissorsCommand);
 bot.commands.add(SayCommand);

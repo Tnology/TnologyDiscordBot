@@ -1,5 +1,5 @@
-Pre-Alpha v0.1.1
+Pre-Alpha v0.1.2
 
 Changelog:
-- Added the version of the bot to the bot ready message (fetched from first line of version.txt)
-- Added a "version" command to see the version of the bot
+- Add syntax to more command descriptions
+- Remove broken restart command
