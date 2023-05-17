@@ -17,6 +17,9 @@ import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 
 await config({ export: true });
 
+const versionFile = await Deno.readTextFile("./version.txt");
+const version = versionFile.split("\n")[0];
+
 const developerMode = Deno.env.get("DEV_MODE") == "true";
 
 const botStartLoggingChannel = Deno.env.get("BOT_START_CHANNEL");
@@ -252,12 +255,12 @@ bot.on("ready", () => {
 		? console.log(
 				`The bot is ready. The bot's info is the following:\nBot Username: ${
 					bot.user!.tag
-				}\nBot Owner(s): ${ownersArray}`
+				}\nBot Owner(s): ${ownersArray}\nVersion: ${version}`
 		  )
 		: console.log(
 				`The bot is ready and is in developer mode.\nBot Username: ${
 					bot.user!.tag
-				}\nBot Owner(s): ${ownersArray}`
+				}\nBot Owner(s): ${ownersArray}\nVersion: ${version}`
 		  );
 	botStartLoggingChannel != "-1"
 		? SendEmbed(
@@ -1377,6 +1380,21 @@ class SuCommand extends Command {
 	}
 }
 
+class VersionCommand extends Command {
+	name = "version";
+	description = "Gets the version of the bot.";
+
+	async execute(ctx: CommandContext) {
+		await ctx.message.reply(
+			new Embed({
+				title: "Version",
+				description: `The description of the bot is version ${version}.`,
+				color: 0x00ff00,
+			})
+		);
+	}
+}
+
 bot.commands.add(HelpCommand);
 bot.commands.add(Whoami);
 bot.commands.add(Restart);
@@ -1395,6 +1413,7 @@ bot.commands.add(CancelReminderCommand);
 bot.commands.add(ListRemindersCommand);
 bot.commands.add(TimestampCommand);
 bot.commands.add(SuCommand);
+bot.commands.add(VersionCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
