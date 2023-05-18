@@ -4,6 +4,7 @@ import {
 	Command,
 	Embed,
 	CommandContext,
+	Webhook,
 } from "https://raw.githubusercontent.com/harmonyland/harmony/daca400ae9feab19604381abddbdab16aa1ede2b/mod.ts";
 import {
 	isNumber,
@@ -11,6 +12,7 @@ import {
 } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
+import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
 
 // TODO: Add a send webhook command.
 // TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
@@ -1373,6 +1375,102 @@ class VersionCommand extends Command {
 	}
 }
 
+class SendWebhookCommand extends Command {
+	name = "notimplemented1";
+	aliases = ["webhook", "createwebhook"];
+	description =
+		"Sends a webhook in the channel. Owner only.\n**Syntax:** `sendwebhook <Channel> <Avatar URL Before Newline> <Name Between Newlines> <Message After Second Newline>`";
+	ownerOnly = true;
+
+	async execute(ctx: CommandContext) {
+		const name = ctx.argString.split("\n")[0];
+		const message = ctx.argString.split("\n")[1];
+		const avatar = ctx.argString.split("\n")[2];
+		let channel = ctx.message.mentions.channels.first();
+		let channelId;
+		if (name == undefined) {
+			await ctx.message.reply(
+				new Embed({
+					title: "Webhook Error",
+					description:
+						"There was an error sending the webhook.\nPlease enter a valid name.",
+					color: 0xff0000,
+				})
+			);
+			return;
+		} else if (message == undefined) {
+			await ctx.message.reply(
+				new Embed({
+					title: "Webhook Error",
+					description:
+						"There was an error sending the webhook.\nPlease enter a valid message.",
+					color: 0xff0000,
+				})
+			);
+			return;
+		} else if (avatar == undefined) {
+			await ctx.message.reply(
+				new Embed({
+					title: "Webhook Error",
+					description:
+						"There was an error sending a webhook.\nPlease enter a valid avatar URL. If you do not wish to use one, you may use `default` instead.",
+				})
+			);
+		} else if (channel == undefined) {
+			channelId = ctx.argString.split("\n")[3];
+			if (channelId == undefined) {
+				channelId = ctx.channel.id;
+			}
+		}
+		console.log(name);
+		console.log(message);
+		let webhook: Webhook | undefined = undefined;
+		let webhookExists = false;
+
+		try {
+			const webhooks = await ctx.channel.fetchWebhooks();
+			for (const webhookIndex in webhooks) {
+				if (webhooks[webhookIndex].name == name) {
+					webhookExists = true;
+					webhook = webhooks[webhookIndex];
+					break;
+				}
+			}
+		} catch {
+			webhookExists = false;
+		}
+
+		let createdWebhook;
+
+		if (!webhookExists && avatar == "default") {
+			createdWebhook = await Webhook.create(ctx.channel.id, ctx.client, {
+				name: "T_nology's Disc Bot",
+			});
+		} else if (!webhookExists) {
+			const avatarURL = encode(avatar);
+
+			createdWebhook = await Webhook.create(ctx.channel.id, ctx.client, {
+				name: "T_nology's Disc Bot",
+				avatar: `data:image/png;base64,${avatarURL}`, // Credit to @Blocksnmore (Bloxs) for the code.
+			});
+		} else if (webhook != undefined) {
+			webhook.send(message);
+		} else {
+			await ctx.message.reply(
+				`Error!\nMessage: ${message}\nWebhook: ${webhook}\nName: ${name}\nargString: ${ctx.argString}`
+			);
+		}
+
+		if (webhookExists) {
+			console.log(`The webhook exists.`);
+			webhook!.send(message);
+			return;
+		}
+
+		await ctx.message.reply("done!");
+	}
+}
+
 bot.commands.add(HelpCommand);
 bot.commands.add(Whoami);
 bot.commands.add(ShellCommand);
@@ -1391,6 +1489,7 @@ bot.commands.add(ListRemindersCommand);
 bot.commands.add(TimestampCommand);
 bot.commands.add(SuCommand);
 bot.commands.add(VersionCommand);
+bot.commands.add(SendWebhookCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
