@@ -5,6 +5,7 @@ import {
 	Embed,
 	CommandContext,
 	Webhook,
+	TextChannel,
 } from "https://raw.githubusercontent.com/harmonyland/harmony/daca400ae9feab19604381abddbdab16aa1ede2b/mod.ts";
 import {
 	isNumber,
@@ -1427,10 +1428,59 @@ class VersionCommand extends Command {
 }
 
 class SendWebhookCommand extends Command {
-	name = "notimplemented1";
+	name = "sendwebhook";
 	aliases = ["webhook", "createwebhook"];
+	ownerOnly = true;
+
+	async execute(ctx: CommandContext) {
+		const avatarURL = ctx.argString.split("\n")[0];
+		const channelArg = ctx.argString.split("\n")[1];
+		const name = ctx.argString.split("\n")[2];
+		const message = ctx.argString.split("\n")[3];
+		console.log(1);
+
+		const channel = (await ctx.guild?.channels.fetch(
+			channelArg
+		)) as unknown as TextChannel;
+		console.log(2);
+
+		const webhooks = await channel.fetchWebhooks();
+		// let webhook: Webhook | undefined = undefined;
+
+		const webhook = (await channel.fetchWebhooks())[0]!;
+		let createdWebhook: Webhook;
+
+		const avatar = encode(
+			new Uint8Array(await (await fetch(avatarURL)).arrayBuffer())
+		);
+
+		console.log(3);
+
+		if (webhook == undefined && avatarURL == "default") {
+			createdWebhook = await Webhook.create(channel, bot, {
+				name: name,
+			});
+			console.log(4);
+		} else if (webhook == undefined) {
+			createdWebhook = await Webhook.create(channel, bot, {
+				name: name,
+				avatar: `data:image/png;base64,${avatar}`,
+			});
+			console.log(5);
+		} else {
+			createdWebhook = webhook;
+			console.log(6);
+		}
+
+		createdWebhook.send(message);
+		console.log(7);
+	}
+}
+
+class SendWebhookOld extends Command {
+	name = "notimplemented1";
 	description =
-		"Sends a webhook in the channel. Owner only.\n**Syntax:** `sendwebhook <Channel> <Avatar URL Before Newline> <Name Between Newlines> <Message After Second Newline>`";
+		"Sends a webhook in the channel. Owner only.\n**Syntax:** `sendwebhook <Avatar URL>\\n<Channel>\\n<Name>\\n<Message>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -1485,45 +1535,50 @@ class SendWebhookCommand extends Command {
 		let webhook: Webhook | undefined = undefined;
 		let webhookExists = false;
 
+		const webhooks = await ctx.channel.fetchWebhooks();
+
 		try {
 			console.log(8);
-			const webhooks = await ctx.channel.fetchWebhooks();
 			console.log(9);
-			for (const webhookIndex in webhooks) {
-				console.log(10);
-				if (webhooks[webhookIndex].name == name) {
-					console.log(`11 - below is the webhook info`);
-					console.log(webhooks[webhookIndex]);
-					webhookExists = true;
-					webhook = webhooks[webhookIndex];
-					break;
-				}
-			}
+			// if (webhooks)
+			// for (const webhookIndex in webhooks) {
+			// console.log(webhooks[webhookIndex].name);
+			// console.log(name);
+			console.log(10);
+			// if (webhooks[webhookIndex].name == name) {
+			// console.log(`11 - below is the webhook info`);
+			// console.log(webhooks[webhookIndex]);
+			// webhookExists = true;
+			// webhook = webhooks[webhookIndex];
+			// break;
+			// }
+			// }
 		} catch (error) {
 			console.log(`12 - below logging is error:`);
 			console.log(error);
 			webhookExists = false;
 		}
 
-		let createdWebhook;
+		let createdWebhook: Webhook;
 		console.log(13);
 
-		if (!webhookExists && avatar == "default") {
+		if (webhooks && avatar == "default") {
 			console.log(14);
 			createdWebhook = await Webhook.create(ctx.channel.id, ctx.client, {
-				name: "T_nology's Disc Bot",
+				name: name,
 			});
 		} else if (!webhookExists) {
 			console.log(15);
-			const avatarURL = encode(avatar);
+			const avatarURL = encode(
+				new Uint8Array(await (await fetch(avatar)).arrayBuffer()) // Credit to @Blocksnmore (Bloxs) for this code as well he's pretty cool
+			);
 
 			createdWebhook = await Webhook.create(ctx.channel.id, ctx.client, {
-				name: "T_nology's Disc Bot",
+				name: name,
 				avatar: `data:image/png;base64,${avatarURL}`, // Credit to @Blocksnmore (Bloxs) for the code.
 			});
-		} else if (webhook != undefined) {
+		} else if (webhooks.length == 0) {
 			console.log(16);
-			webhook.send(message);
 		} else {
 			console.log(17);
 			await ctx.message.reply(
@@ -1538,7 +1593,9 @@ class SendWebhookCommand extends Command {
 			return;
 		}
 
-		await ctx.message.reply("done!");
+		createdWebhook!.send(message);
+
+		await ctx.message.reply("Bidome is my uncle");
 	}
 }
 
@@ -1560,8 +1617,9 @@ bot.commands.add(ListRemindersCommand);
 bot.commands.add(TimestampCommand);
 bot.commands.add(SuCommand);
 bot.commands.add(VersionCommand);
-bot.commands.add(SendWebhookCommand);
+bot.commands.add(SendWebhookOld);
 bot.commands.add(AwaitEvalCommand);
+bot.commands.add(SendWebhookCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 

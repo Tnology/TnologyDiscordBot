@@ -1,5 +1,5 @@
-Pre-Alpha v0.1.4
+Pre-Alpha v0.1.5
 
 Changelog:
-- Fixed wrong log being sent for eval command
-- Added 'aval' command, which uses await before eval()
+- Do more work on sendwebhook command
+- Credit to @Blocksnmore (Bloxs) for his help with the avatar URL
