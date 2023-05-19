@@ -1,5 +1,4 @@
-Pre-Alpha v0.1.5
+Pre-Alpha v0.1.6
 
 Changelog:
-- Do more work on sendwebhook command
-- Credit to @Blocksnmore (Bloxs) for his help with the avatar URL
+- Do a bit more work on the webhook command

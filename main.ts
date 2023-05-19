@@ -7,13 +7,11 @@ import {
 	Webhook,
 	TextChannel,
 } from "https://raw.githubusercontent.com/harmonyland/harmony/daca400ae9feab19604381abddbdab16aa1ede2b/mod.ts";
-import {
-	isNumber,
-	isString,
-} from "https://deno.land/x/redis@v0.25.1/stream.ts";
+import { isNumber, isString } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
+import { ModifyGuildTextBasedChannelPayload } from "https://raw.githubusercontent.com/harmonyland/harmony/daca400ae9feab19604381abddbdab16aa1ede2b/src/types/channel.ts";
 
 // TODO: Add a send webhook command.
 // TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
@@ -30,21 +28,15 @@ const botStartLoggingChannel = Deno.env.get("BOT_START_CHANNEL");
 const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL");
 const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL");
 
-const discussionThreadsEnabled =
-	Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true";
+const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true";
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
 
 let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
-const oneWordStoryLoggingChannel = Deno.env.get(
-	"ONE_WORD_STORY_LOGGING_CHANNEL"
-);
+const oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
 
 let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",");
-const twoWordStoryLoggingChannel = Deno.env.get(
-	"TWO_WORD_STORY_LOGGING_CHANNEL"
-);
-const botOverridesStoryChannels =
-	Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
+const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL");
+const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
 
 let reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
 
@@ -58,12 +50,7 @@ for (let i = 0; i < oneWordStoryChannels!.length; i++) {
 	}
 }
 
-function SendEmbed(
-	channelid: string,
-	title: string,
-	description: string,
-	color: number
-) {
+function SendEmbed(channelid: string, title: string, description: string, color: number) {
 	if (channelid == "-1") {
 		return false;
 	}
@@ -257,15 +244,9 @@ const bot = new CommandClient({
 bot.on("ready", () => {
 	developerMode == false
 		? console.log(
-				`The bot is ready. The bot's info is the following:\nBot Username: ${
-					bot.user!.tag
-				}\nBot Owner(s): ${ownersArray}\nVersion: ${version}`
+				`The bot is ready. The bot's info is the following:\nBot Username: ${bot.user!.tag}\nBot Owner(s): ${ownersArray}\nVersion: ${version}`
 		  )
-		: console.log(
-				`The bot is ready and is in developer mode.\nBot Username: ${
-					bot.user!.tag
-				}\nBot Owner(s): ${ownersArray}\nVersion: ${version}`
-		  );
+		: console.log(`The bot is ready and is in developer mode.\nBot Username: ${bot.user!.tag}\nBot Owner(s): ${ownersArray}\nVersion: ${version}`);
 	botStartLoggingChannel != "-1"
 		? SendEmbed(
 				botStartLoggingChannel!,
@@ -348,9 +329,7 @@ bot.on("messageCreate", (msg) => {
 							0xff0000
 						);
 					}
-					console.log(
-						`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`
-					);
+					console.log(`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`);
 					msg.delete();
 				}
 			}
@@ -366,11 +345,7 @@ bot.on("gatewayError", (error) => {
 });
 
 bot.on("commandError", (ctx, error) => {
-	if (
-		error.message.includes(
-			"No such file or directory (os error 2): open './rps_custom_options.csv'"
-		)
-	) {
+	if (error.message.includes("No such file or directory (os error 2): open './rps_custom_options.csv'")) {
 		console.log(
 			"\n***** Error: No custom RPS options file found! To stop seeing this error, please create the file and leave it empty. Refer to README.md for more information.*****\n"
 		);
@@ -400,9 +375,7 @@ class HelpCommand extends Command {
 
 		for (const commandIndex in ctx.client.commands.list.array()) {
 			const thisCommand = ctx.client.commands.list.array()[commandIndex];
-			fullCommandsArray.push(
-				`**\n${thisCommand.name}**\nAliases: ${thisCommand.aliases}\nDescription: ${thisCommand.description}\n`
-			); // 10/10 code
+			fullCommandsArray.push(`**\n${thisCommand.name}**\nAliases: ${thisCommand.aliases}\nDescription: ${thisCommand.description}\n`); // 10/10 code
 		}
 
 		const maxHelpPage = Math.ceil(fullCommandsArray.length / 5);
@@ -422,10 +395,7 @@ class HelpCommand extends Command {
 		const arrayIndexStart = helpPage * 5 - 5;
 		const arrayIndexEnd = helpPage * 5;
 
-		const commandsArray = fullCommandsArray.slice(
-			arrayIndexStart,
-			arrayIndexEnd
-		);
+		const commandsArray = fullCommandsArray.slice(arrayIndexStart, arrayIndexEnd);
 
 		const commandString = commandsArray.join("\n");
 
@@ -459,8 +429,7 @@ class Whoami extends Command {
 class ShellCommand extends Command {
 	name = "shell";
 	aliases = ["sh", "shellcmd"];
-	description =
-		"Executes a shell command. Owner only.\n**Syntax:** `shell <shell command to execute>`";
+	description = "Executes a shell command. Owner only.\n**Syntax:** `shell <shell command to execute>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -507,8 +476,7 @@ class ShellCommand extends Command {
 class RockPaperScissorsCommand extends Command {
 	name = "rps";
 	aliases = ["rockpaperscissors"];
-	description =
-		"Lets you play a game of Rock, Paper, Scissors with the bot.\n**Syntax:** `rps <rock|paper|scissors>`";
+	description = "Lets you play a game of Rock, Paper, Scissors with the bot.\n**Syntax:** `rps <rock|paper|scissors>`";
 
 	async execute(ctx: CommandContext) {
 		const userChoice = ctx.argString.split(" ")[0].toLowerCase();
@@ -516,11 +484,7 @@ class RockPaperScissorsCommand extends Command {
 		// console.log(userChoice); // DEBUG
 
 		const file = await Deno.open("./rps_custom_options.csv").catch((error) => {
-			if (
-				error.message.includes(
-					"No such file or directory (os error 2): open './rps_custom_options.csv'"
-				)
-			) {
+			if (error.message.includes("No such file or directory (os error 2): open './rps_custom_options.csv'")) {
 				console.log(
 					"\n***** Error: No custom RPS options file found! To stop seeing this error, please create the file and leave it empty. Refer to README.md for more information.*****\n"
 				);
@@ -530,13 +494,7 @@ class RockPaperScissorsCommand extends Command {
 
 		if (!customOptionsDisabled) {
 			var customOptions = [];
-			var acceptableCustomOptions = [
-				"rock",
-				"paper",
-				"scissors",
-				"everything",
-				"nothing",
-			];
+			var acceptableCustomOptions = ["rock", "paper", "scissors", "everything", "nothing"];
 			const file = await Deno.open("./rps_custom_options.csv");
 			for await (const row of readCSV(file)) {
 				// console.log("row:");
@@ -547,9 +505,7 @@ class RockPaperScissorsCommand extends Command {
 				let tempLosesAgainst = "";
 				for await (const cell of row) {
 					if (tempCounter > 3) {
-						console.error(
-							`Error - Invalid CSV Format, Please refer to \"./rps_custom_options.csv.example\".\nRPS custom options will not work!`
-						);
+						console.error(`Error - Invalid CSV Format, Please refer to \"./rps_custom_options.csv.example\".\nRPS custom options will not work!`);
 						customOptionsDisabled = true;
 						break;
 					} else if (tempCounter == 1) {
@@ -604,8 +560,7 @@ class RockPaperScissorsCommand extends Command {
 			await ctx.message.reply(
 				new Embed({
 					title: "Error!",
-					description:
-						"Please make a choice between rock, paper, and scissors.",
+					description: "Please make a choice between rock, paper, and scissors.",
 					color: 0xff0000,
 				})
 			);
@@ -645,15 +600,9 @@ class RockPaperScissorsCommand extends Command {
 				}
 			}
 			if (customOptionFound && !customOptionsDisabled) {
-				if (
-					customOption.losesAgainst == botChoice ||
-					customOption.losesAgainst == "everything"
-				) {
+				if (customOption.losesAgainst == botChoice || customOption.losesAgainst == "everything") {
 					winner = "bot";
-				} else if (
-					customOption.winsAgainst == botChoice ||
-					customOption.winsAgainst == "everything"
-				) {
+				} else if (customOption.winsAgainst == botChoice || customOption.winsAgainst == "everything") {
 					winner = "user";
 				} else {
 					winner = "tie";
@@ -662,8 +611,7 @@ class RockPaperScissorsCommand extends Command {
 				await ctx.message.reply(
 					new Embed({
 						title: "Error!",
-						description:
-							"Please make a choice between rock, paper, and scissors.",
+						description: "Please make a choice between rock, paper, and scissors.",
 						color: 0xff0000,
 					}),
 					{
@@ -735,8 +683,7 @@ class RockPaperScissorsCommand extends Command {
 class SayCommand extends Command {
 	name = "say";
 	aliases = ["echo"];
-	description =
-		"Makes the bot say something. Owner only.\n**Syntax:** `say <thing to say>`";
+	description = "Makes the bot say something. Owner only.\n**Syntax:** `say <thing to say>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -775,8 +722,7 @@ class UserInfoCommand extends Command {
 	// This is indeed the case. ^
 	name = "userinfo";
 	aliases = ["ui", "whois", "about", "aboutuser"];
-	description =
-		"Lets you get information about a user.\n**Syntax:** `userinfo <user>`";
+	description = "Lets you get information about a user.\n**Syntax:** `userinfo <user>`";
 
 	async execute(ctx: CommandContext) {
 		try {
@@ -792,15 +738,12 @@ class UserInfoCommand extends Command {
 		} else if (ctx.message.mentions.users.first() == undefined) {
 			if (ctx.argString.split(" ")[0].length > 1) {
 				// DEBUG // console.log(`Debug: ctx.argString.split(" ")[0].length > 1 - True // Argument: ${ctx.argString.split(" ")[0]} // Length: ${ctx.argString.split(" ")[0].length}`)
-				var user = (await ctx.guild!.members.resolve(
-					ctx.argString.split(" ")[0]
-				))!;
+				var user = (await ctx.guild!.members.resolve(ctx.argString.split(" ")[0]))!;
 				if (user == undefined) {
 					await ctx.message.reply(
 						new Embed({
 							title: "Error",
-							description:
-								"The user could not be found. Please make sure you are providing the right user.",
+							description: "The user could not be found. Please make sure you are providing the right user.",
 							color: 0xff0000,
 						})
 					);
@@ -808,9 +751,7 @@ class UserInfoCommand extends Command {
 			}
 		} else if (isString(ctx.message.mentions.users.first()!.username)) {
 			// console.log(`ctx.message.mentions.users.first()!.username is a string, is returned true.`) // DEBUG
-			user = await ctx.guild!.members.fetch(
-				ctx.message.mentions.users.first()!.id
-			);
+			user = await ctx.guild!.members.fetch(ctx.message.mentions.users.first()!.id);
 			// console.log("\n\nnext") // DEBUG
 			// console.log(user) // DEBUG
 		}
@@ -820,12 +761,8 @@ class UserInfoCommand extends Command {
 
 		// console.log(user!.id); // DEBUG
 		// console.log(`\n${typeof(user!)}`); // DEBUG
-		const serverJoinDate = `<t:${(
-			new Date(user!.joinedAt).getTime() / 1000
-		).toFixed(0)}:F>`;
-		const userJoinDate = `<t:${(
-			new Date(user!.timestamp).getTime() / 1000
-		).toFixed(0)}:F>`;
+		const serverJoinDate = `<t:${(new Date(user!.joinedAt).getTime() / 1000).toFixed(0)}:F>`;
+		const userJoinDate = `<t:${(new Date(user!.timestamp).getTime() / 1000).toFixed(0)}:F>`;
 		const userStatus = (await ctx.guild!.presences.fetch(user!.id))!.status;
 
 		// console.log(`\n\n\n\n\n\n\n\n\n\n${user!.user}\n\n${user!}\n\n${user!.user.id}\n\n${user!.user.tag}\n\n\n`) // DEBUG
@@ -877,14 +814,11 @@ class UserInfoCommand extends Command {
 
 class EvalCommand extends Command {
 	name = "eval";
-	description =
-		"Lets you run TypeScript code with the bot. Owner only.\n**Syntax:** `eval <code to evaluate>`";
+	description = "Lets you run TypeScript code with the bot. Owner only.\n**Syntax:** `eval <code to evaluate>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
-		console.log(
-			`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
-		);
+		console.log(`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`);
 		SendEmbed(
 			evalLoggingChannel!,
 			"Executing Eval Command",
@@ -892,9 +826,7 @@ class EvalCommand extends Command {
 			0x0000ff
 		);
 		try {
-			const evaluatedCode = eval(
-				ctx.argString.replace("```js", "").replace("```", "")
-			);
+			const evaluatedCode = eval(ctx.argString.replace("```js", "").replace("```", ""));
 			await ctx.message.reply(
 				new Embed({
 					title: "Output",
@@ -928,14 +860,11 @@ class EvalCommand extends Command {
 
 class AwaitEvalCommand extends Command {
 	name = "aval";
-	description =
-		"Lets you run awaited TypeScript code with the bot. Owner only.\n**Syntax:** `aval <code to evaluate>`";
+	description = "Lets you run awaited TypeScript code with the bot. Owner only.\n**Syntax:** `aval <code to evaluate>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
-		console.log(
-			`\n\n*****\nExecuting Aval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
-		);
+		console.log(`\n\n*****\nExecuting Aval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`);
 		SendEmbed(
 			evalLoggingChannel!,
 			"Executing Aval Command",
@@ -943,9 +872,7 @@ class AwaitEvalCommand extends Command {
 			0x0000ff
 		);
 		try {
-			const evaluatedCode = await eval(
-				ctx.argString.replace("```js", "").replace("```", "")
-			);
+			const evaluatedCode = await eval(ctx.argString.replace("```js", "").replace("```", ""));
 			await ctx.message.reply(
 				new Embed({
 					title: "Output",
@@ -986,26 +913,15 @@ class CoinflipCommand extends Command {
 		const result = RandomNumber(1, 2);
 
 		result == 1
-			? await ctx.message.reply(
-					new Embed({ title: "Heads!", description: "The result is heads." })
-			  )
-			: await ctx.message.reply(
-					new Embed({ title: "Tails!", description: "The result is tails." })
-			  );
+			? await ctx.message.reply(new Embed({ title: "Heads!", description: "The result is heads." }))
+			: await ctx.message.reply(new Embed({ title: "Tails!", description: "The result is tails." }));
 	}
 }
 
 class TopicCommand extends Command {
 	name = "topic";
-	aliases = [
-		"generatetopic",
-		"gentopic",
-		"topicgenerate",
-		"topicgen",
-		"topicidea",
-	];
-	description =
-		"Picks a topic from a list of topics that T_nology has created.\n**Syntax:** `topic`";
+	aliases = ["generatetopic", "gentopic", "topicgenerate", "topicgen", "topicidea"];
+	description = "Picks a topic from a list of topics that T_nology has created.\n**Syntax:** `topic`";
 
 	async execute(ctx: CommandContext) {
 		const pickedTopic = topicArray[RandomNumber(0, topicArray.length - 1)];
@@ -1029,9 +945,7 @@ class PingCommand extends Command {
 		await ctx.message.reply(
 			new Embed({
 				title: "🏓 **Pong!**",
-				description: `**Ping:** \`${
-					Date.now() - messageCreatedTime.getTime()
-				}\` ms\n**Websocket/Gateway Ping:** \`${
+				description: `**Ping:** \`${Date.now() - messageCreatedTime.getTime()}\` ms\n**Websocket/Gateway Ping:** \`${
 					ctx.message.client.gateway.ping
 				}\``,
 			})
@@ -1042,8 +956,7 @@ class PingCommand extends Command {
 class RandomNumberCommand extends Command {
 	name = "randomnumber";
 	aliases = ["rng", "choosenumber"];
-	description =
-		"Chooses a number between the two parameters provided.\n**Syntax:** `randomnumber <minimum> <maximum>`";
+	description = "Chooses a number between the two parameters provided.\n**Syntax:** `randomnumber <minimum> <maximum>`";
 
 	async execute(ctx: CommandContext) {
 		const lNum = Number(ctx.argString.split(" ")![0]);
@@ -1062,10 +975,7 @@ class RandomNumberCommand extends Command {
 		await ctx.message.reply(
 			new Embed({
 				title: "Random Number",
-				description: `I picked a number between ${lNum} and ${hNum}. The result is ${RandomNumber(
-					lNum,
-					hNum
-				)}`,
+				description: `I picked a number between ${lNum} and ${hNum}. The result is ${RandomNumber(lNum, hNum)}`,
 			})
 		);
 	}
@@ -1074,8 +984,7 @@ class RandomNumberCommand extends Command {
 class RemindmeCommand extends Command {
 	name = "remindme";
 	aliases = ["setreminder", "reminderset"];
-	description =
-		"Sets a reminder for you.\n**Syntax:** `remindme <timestamp> <reason>`";
+	description = "Sets a reminder for you.\n**Syntax:** `remindme <timestamp> <reason>`";
 
 	async execute(ctx: CommandContext) {
 		const preTimestamp = Math.floor(Date.now() / 1000);
@@ -1178,8 +1087,7 @@ class RemindmeCommand extends Command {
 class CancelReminderCommand extends Command {
 	name = "cancelreminder";
 	aliases = ["remindercancel"];
-	description =
-		"Cancels a reminder.\n**Syntax:** `cancelreminder <reminder id>`";
+	description = "Cancels a reminder.\n**Syntax:** `cancelreminder <reminder id>`";
 
 	async execute(ctx: CommandContext) {
 		const userReminder = ctx.argString.split(" ")[0];
@@ -1200,8 +1108,7 @@ class CancelReminderCommand extends Command {
 				await ctx.message.reply(
 					new Embed({
 						title: "Error",
-						description:
-							"Please provide a valid Reminder ID! Make sure this Reminder ID belongs to you if it exists",
+						description: "Please provide a valid Reminder ID! Make sure this Reminder ID belongs to you if it exists",
 						color: 0xff0000,
 					})
 				);
@@ -1292,10 +1199,7 @@ class ListRemindersCommand extends Command {
 		const arrayIndexStart = Number(userPage) * 5 - 5;
 		const arrayIndexEnd = Number(userPage) * 5 - 1;
 
-		const userReminders = unslicedUserReminders.slice(
-			arrayIndexStart,
-			arrayIndexEnd
-		);
+		const userReminders = unslicedUserReminders.slice(arrayIndexStart, arrayIndexEnd);
 
 		let reminderString = "Here is a list of your reminders: \n";
 
@@ -1319,8 +1223,7 @@ class ListRemindersCommand extends Command {
 class TimestampCommand extends Command {
 	name = "timestamp";
 	aliases = ["timestampgen", "gentimestamp", "generatetimestamp"];
-	description =
-		"Generates a timestamp based on the input provided.\n**Syntax:** `timestamp <timestamp>`";
+	description = "Generates a timestamp based on the input provided.\n**Syntax:** `timestamp <timestamp>`";
 
 	async execute(ctx: CommandContext) {
 		const userTimestamp = ctx.argString.split(" ")[0];
@@ -1368,8 +1271,7 @@ class TimestampCommand extends Command {
 			await ctx.message.reply(
 				new Embed({
 					title: "Error",
-					description:
-						"Please enter a valid timestamp! (Examples: `30m` or `1h`) ",
+					description: "Please enter a valid timestamp! (Examples: `30m` or `1h`) ",
 				})
 			);
 			return;
@@ -1395,8 +1297,7 @@ class TimestampCommand extends Command {
 class SuCommand extends Command {
 	name = "su";
 	aliases = ["runas"];
-	description =
-		"Runs a command as another user. Owner only.\n**Syntax:** `su <user mention> <command>`";
+	description = "Runs a command as another user. Owner only.\n**Syntax:** `su <user mention> <command>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -1434,25 +1335,40 @@ class SendWebhookCommand extends Command {
 
 	async execute(ctx: CommandContext) {
 		const avatarURL = ctx.argString.split("\n")[0];
-		const channelArg = ctx.argString.split("\n")[1];
+		const channelArg = ctx.argString.split("\n")[1].trim();
 		const name = ctx.argString.split("\n")[2];
 		const message = ctx.argString.split("\n")[3];
-		console.log(1);
+		// console.log(1);
+		// console.log(channelArg);
 
-		const channel = (await ctx.guild?.channels.fetch(
-			channelArg
-		)) as unknown as TextChannel;
-		console.log(2);
+		let channel = (await ctx.guild?.channels.fetch(ctx.channel.id)) as TextChannel;
 
-		const webhooks = await channel.fetchWebhooks();
+		// console.log(channelArg[0])
+		// console.log(channelArg[1])
+		// console.log(channelArg[channelArg.length - 1])
+
+		if (channelArg[0] == "<" && channelArg[1] == "#" && channelArg[channelArg.length - 1] == ">") {
+			console.log("1.1")
+			channel = (await ctx.guild?.channels.fetch(channelArg.slice(2, channelArg.length - 1))) as TextChannel;
+		} else {
+			console.log("1.2")
+			channel = (await ctx.guild?.channels.fetch(channelArg)) as TextChannel;
+		}
+
+		// console.log(2);
+
+		// const webhooks = await channel!.fetchWebhooks();
 		// let webhook: Webhook | undefined = undefined;
 
-		const webhook = (await channel.fetchWebhooks())[0]!;
+		const webhooks = (await channel!.fetchWebhooks());
+		const webhook = webhooks.find(
+			(hook: Webhook) => {hook?.token != undefined} // Credit to @Blocksnmore (Bloxs) for the code
+		)
+
+		// console.log("2.1")
 		let createdWebhook: Webhook;
 
-		const avatar = encode(
-			new Uint8Array(await (await fetch(avatarURL)).arrayBuffer())
-		);
+		const avatar = encode(new Uint8Array(await (await fetch(avatarURL)).arrayBuffer()));
 
 		console.log(3);
 
@@ -1479,8 +1395,7 @@ class SendWebhookCommand extends Command {
 
 class SendWebhookOld extends Command {
 	name = "notimplemented1";
-	description =
-		"Sends a webhook in the channel. Owner only.\n**Syntax:** `sendwebhook <Avatar URL>\\n<Channel>\\n<Name>\\n<Message>`";
+	description = "Sends a webhook in the channel. Owner only.\n**Syntax:** `sendwebhook <Avatar URL>\\n<Channel>\\n<Name>\\n<Message>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -1495,8 +1410,7 @@ class SendWebhookOld extends Command {
 			await ctx.message.reply(
 				new Embed({
 					title: "Webhook Error",
-					description:
-						"There was an error sending the webhook.\nPlease enter a valid name.",
+					description: "There was an error sending the webhook.\nPlease enter a valid name.",
 					color: 0xff0000,
 				})
 			);
@@ -1506,8 +1420,7 @@ class SendWebhookOld extends Command {
 			await ctx.message.reply(
 				new Embed({
 					title: "Webhook Error",
-					description:
-						"There was an error sending the webhook.\nPlease enter a valid message.",
+					description: "There was an error sending the webhook.\nPlease enter a valid message.",
 					color: 0xff0000,
 				})
 			);
@@ -1581,9 +1494,7 @@ class SendWebhookOld extends Command {
 			console.log(16);
 		} else {
 			console.log(17);
-			await ctx.message.reply(
-				`Error!\nMessage: ${message}\nWebhook: ${webhook}\nName: ${name}\nargString: ${ctx.argString}`
-			);
+			await ctx.message.reply(`Error!\nMessage: ${message}\nWebhook: ${webhook}\nName: ${name}\nargString: ${ctx.argString}`);
 		}
 
 		if (webhookExists) {
@@ -1643,10 +1554,7 @@ setInterval(async () => {
 		// console.log(reminders.reminders[reminder].Timestamp >= currentTime); // DEBUG
 		// console.log(currentTime); // DEBUG
 		// console.log(reminders.reminders[reminder].Timestamp); // DEBUG
-		if (
-			reminders.reminders[reminder].Expired == false &&
-			currentTime >= reminders.reminders[reminder].Timestamp
-		) {
+		if (reminders.reminders[reminder].Expired == false && currentTime >= reminders.reminders[reminder].Timestamp) {
 			// console.log("attempting")
 			const user = await bot.users.fetch(reminders.reminders[reminder].UserId);
 			const embed = new Embed({
@@ -1664,13 +1572,10 @@ setInterval(async () => {
 				)
 				.catch(async () => {
 					console.log("hi");
-					await bot.channels.sendMessage(
-						reminders.reminders[reminder].ChannelId,
-						{
-							content: `${user}`,
-							embeds: [embed],
-						}
-					);
+					await bot.channels.sendMessage(reminders.reminders[reminder].ChannelId, {
+						content: `${user}`,
+						embeds: [embed],
+					});
 				});
 			reminders.reminders[reminder].Expired = true;
 			// console.log("expired? yep") // DEBUG
