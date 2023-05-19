@@ -902,8 +902,59 @@ class EvalCommand extends Command {
 				})
 			);
 			SendEmbed(
-				shellLoggingChannel!,
-				"Executed Shell Command",
+				evalLoggingChannel!,
+				"Executed Eval Command",
+				`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n\n**Output:**\n\`\`\`js\n${evaluatedCode}\n\`\`\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+				0x00ff00
+			);
+		} catch (err) {
+			await ctx.message.reply(
+				new Embed({
+					title: "Error",
+					description: `\`\`\`${err}\`\`\``,
+					color: 0xff0000,
+				})
+			);
+			SendEmbed(
+				evalLoggingChannel!,
+				"Eval Command Error",
+				`Error Executing Code!\n**Author:** \`${ctx.author}\`\n**Error:** \`\`\`js\n${err}\n\`\`\``,
+				0xff0000
+			);
+		}
+	}
+}
+
+class AwaitEvalCommand extends Command {
+	name = "aval";
+	description =
+		"Lets you run awaited TypeScript code with the bot. Owner only.\n**Syntax:** `aval <code to evaluate>`";
+	ownerOnly = true;
+
+	async execute(ctx: CommandContext) {
+		console.log(
+			`\n\n*****\nExecuting Aval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`
+		);
+		SendEmbed(
+			evalLoggingChannel!,
+			"Executing Aval Command",
+			`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+			0x0000ff
+		);
+		try {
+			const evaluatedCode = await eval(
+				ctx.argString.replace("```js", "").replace("```", "")
+			);
+			await ctx.message.reply(
+				new Embed({
+					title: "Output",
+					description: `\`\`\`${evaluatedCode}\`\`\``,
+					color: 0x00ff00,
+				})
+			);
+			SendEmbed(
+				evalLoggingChannel!,
+				"Executed Aval Command",
 				`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n\n**Output:**\n\`\`\`js\n${evaluatedCode}\n\`\`\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
 				0x00ff00
 			);
@@ -1383,12 +1434,14 @@ class SendWebhookCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
-		const name = ctx.argString.split("\n")[0];
-		const message = ctx.argString.split("\n")[1];
-		const avatar = ctx.argString.split("\n")[2];
+		console.log(1);
+		const avatar = ctx.argString.split("\n")[0];
+		const name = ctx.argString.split("\n")[2];
+		const message = ctx.argString.split("\n")[3];
 		let channel = ctx.message.mentions.channels.first();
 		let channelId;
 		if (name == undefined) {
+			console.log(2);
 			await ctx.message.reply(
 				new Embed({
 					title: "Webhook Error",
@@ -1399,6 +1452,7 @@ class SendWebhookCommand extends Command {
 			);
 			return;
 		} else if (message == undefined) {
+			console.log(3);
 			await ctx.message.reply(
 				new Embed({
 					title: "Webhook Error",
@@ -1409,6 +1463,7 @@ class SendWebhookCommand extends Command {
 			);
 			return;
 		} else if (avatar == undefined) {
+			console.log(4);
 			await ctx.message.reply(
 				new Embed({
 					title: "Webhook Error",
@@ -1417,36 +1472,49 @@ class SendWebhookCommand extends Command {
 				})
 			);
 		} else if (channel == undefined) {
-			channelId = ctx.argString.split("\n")[3];
+			console.log(5);
+			channelId = ctx.argString.split("\n")[1];
 			if (channelId == undefined) {
+				console.log(6);
 				channelId = ctx.channel.id;
 			}
 		}
+		console.log(`7 - below 2 logs are of part 7:`);
 		console.log(name);
 		console.log(message);
 		let webhook: Webhook | undefined = undefined;
 		let webhookExists = false;
 
 		try {
+			console.log(8);
 			const webhooks = await ctx.channel.fetchWebhooks();
+			console.log(9);
 			for (const webhookIndex in webhooks) {
+				console.log(10);
 				if (webhooks[webhookIndex].name == name) {
+					console.log(`11 - below is the webhook info`);
+					console.log(webhooks[webhookIndex]);
 					webhookExists = true;
 					webhook = webhooks[webhookIndex];
 					break;
 				}
 			}
-		} catch {
+		} catch (error) {
+			console.log(`12 - below logging is error:`);
+			console.log(error);
 			webhookExists = false;
 		}
 
 		let createdWebhook;
+		console.log(13);
 
 		if (!webhookExists && avatar == "default") {
+			console.log(14);
 			createdWebhook = await Webhook.create(ctx.channel.id, ctx.client, {
 				name: "T_nology's Disc Bot",
 			});
 		} else if (!webhookExists) {
+			console.log(15);
 			const avatarURL = encode(avatar);
 
 			createdWebhook = await Webhook.create(ctx.channel.id, ctx.client, {
@@ -1454,14 +1522,17 @@ class SendWebhookCommand extends Command {
 				avatar: `data:image/png;base64,${avatarURL}`, // Credit to @Blocksnmore (Bloxs) for the code.
 			});
 		} else if (webhook != undefined) {
+			console.log(16);
 			webhook.send(message);
 		} else {
+			console.log(17);
 			await ctx.message.reply(
 				`Error!\nMessage: ${message}\nWebhook: ${webhook}\nName: ${name}\nargString: ${ctx.argString}`
 			);
 		}
 
 		if (webhookExists) {
+			console.log(18);
 			console.log(`The webhook exists.`);
 			webhook!.send(message);
 			return;
@@ -1490,6 +1561,7 @@ bot.commands.add(TimestampCommand);
 bot.commands.add(SuCommand);
 bot.commands.add(VersionCommand);
 bot.commands.add(SendWebhookCommand);
+bot.commands.add(AwaitEvalCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
