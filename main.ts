@@ -1335,13 +1335,56 @@ class SendWebhookCommand extends Command {
 
 	async execute(ctx: CommandContext) {
 		const avatarURL = ctx.argString.split("\n")[0];
-		const channelArg = ctx.argString.split("\n")[1].trim();
+		const channelArg = ctx.argString.split("\n")[1];
 		const name = ctx.argString.split("\n")[2];
-		const message = ctx.argString.split("\n")[3];
+		let message = ctx.argString.split("\n")[3];
 		// console.log(1);
 		// console.log(channelArg);
 
-		let channel = (await ctx.guild?.channels.fetch(ctx.channel.id)) as TextChannel;
+		let undefinedError: string | undefined;
+
+		if (name == undefined) {
+			undefinedError = "Please enter a message to be sent!";
+		} else if (message == undefined) {
+			undefinedError = "Please enter a name to use for the webhook!"
+		}
+
+		if (undefinedError != undefined) {
+			await ctx.message.reply(new Embed({
+				title: "Webhook Error",
+				description: undefinedError,
+				color: 0xFF0000,
+			}));
+			return;
+		}
+
+		try {
+			message = message.trim()
+		}
+		catch (error) {
+			if (error.message.includes("Cannot read properties of undefined (reading 'trim')")) {
+				await ctx.message.reply(new Embed({
+					title: "Webhook Error",
+					description: `An unexpected error has occurred.\n**Likely Cause of Error:** Entering an undefined message. Make sure you provide a message for the webhook to be sent!\n**For Developers:**\n\`\`\`js\n${error}\n\`\`\``,
+					color: 0xFF0000,
+				}))
+			}
+		}
+
+		let channel;
+
+		try { // FIXME: TEMPORARY CHECKPOINT: I put the error handling in the wrong spot but I have to go now
+			channel = (await ctx.guild?.channels.fetch(ctx.channel.id)) as TextChannel;
+		}
+		catch (error) {
+			if (error.message.includes("NUMBER_TYPE_COERCE: Value") && error.message.includes("is not a snowflake")) {
+				await ctx.message.reply(new Embed({
+					title: "Webhook Error",
+					description: "Please provide a valid channel to send a webhook in!",
+					color: 0xFF0000,
+				}))
+			}
+		}
 
 		// console.log(channelArg[0])
 		// console.log(channelArg[1])
@@ -1370,26 +1413,26 @@ class SendWebhookCommand extends Command {
 
 		const avatar = encode(new Uint8Array(await (await fetch(avatarURL)).arrayBuffer()));
 
-		console.log(3);
+		// console.log(3);
 
 		if (webhook == undefined && avatarURL == "default") {
 			createdWebhook = await Webhook.create(channel, bot, {
 				name: name,
 			});
-			console.log(4);
+			// console.log(4);s
 		} else if (webhook == undefined) {
 			createdWebhook = await Webhook.create(channel, bot, {
 				name: name,
 				avatar: `data:image/png;base64,${avatar}`,
 			});
-			console.log(5);
+			// console.log(5);
 		} else {
 			createdWebhook = webhook;
-			console.log(6);
+			// console.log(6);
 		}
 
 		createdWebhook.send(message);
-		console.log(7);
+		// console.log(7)s;
 	}
 }
 
