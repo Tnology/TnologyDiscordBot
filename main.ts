@@ -11,7 +11,6 @@ import { isNumber, isString } from "https://deno.land/x/redis@v0.25.1/stream.ts"
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
-import { ModifyGuildTextBasedChannelPayload } from "https://raw.githubusercontent.com/harmonyland/harmony/daca400ae9feab19604381abddbdab16aa1ede2b/src/types/channel.ts";
 
 // TODO: Add a send webhook command.
 // TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
@@ -37,6 +36,8 @@ const oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL"
 let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",");
 const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL");
 const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
+
+let usernameChangeLoggingChannel = Deno.env.get("USERNAME_CHANGE_LOGGING_CHANNEL");
 
 let reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
 
@@ -65,10 +66,20 @@ function SendEmbed(channelid: string, title: string, description: string, color:
 			})
 		)
 		.catch((error) => {
-			console.error(
-				`*****Embed Error*****\nAn error occurred attempting to send an embed.\n\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----Error Description-----\n${description}\n-----End Error Description-----\n\nAttempted Color: ${color}\n\nError: ${error}\n*****End Embed Error*****\n`
-			);
-			return false;
+			if (String(error).includes("(10003) Unknown Channel")) {
+				if (channelid == usernameChangeLoggingChannel) {
+					console.error(
+						`*****Embed Error*****\nAn error occurred attempting to send an embed.\n\nProblem: It appears that the Username Change Logging Channel cannot be found. Please check your .env file and the bot's permissions.\n\nOther Error Info:\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----Error Description-----\n${description}\n-----End Error Description-----\n\nAttempted Color: ${color}\n\nError: ${error}\nProblem (Repeated): It appears that the Username Change Logging Channel cannot be found. Please check your .env file and the bot's permissions.\n*****End Embed Error*****\n`
+					);
+					return false;
+				}
+			}
+			else {
+				console.error(
+					`*****Embed Error*****\nAn error occurred attempting to send an embed.\n\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----Error Description-----\n${description}\n-----End Error Description-----\n\nAttempted Color: ${color}\n\nError: ${error}\n*****End Embed Error*****\n`
+				);
+				return false;
+			}
 		});
 
 	return true;
@@ -265,6 +276,7 @@ bot.on("ready", () => {
 });
 
 bot.on("messageCreate", (msg) => {
+
 	if (discussionThreadsEnabled) {
 		if (discussionChannels!.includes(msg.channel.id)) {
 			msg.startThread({
@@ -364,6 +376,23 @@ bot.on("commandError", (ctx, error) => {
 	console.log(`Error: ${error}\n`);
 	console.log(`Error Stack: ${error.stack}\n\n`);
 });
+
+bot.on("userUpdate", (before, after) => {
+	if (before.tag != after.tag) {
+		if (usernameChangeLoggingChannel == "-1") {
+			return;
+		} else if (usernameChangeLoggingChannel == undefined) {
+			console.error(`Error - Username Change Logging Channel (${usernameChangeLoggingChannel}) is undefined. Please enter "-1" as your .env value if you wish to disable this.`);
+			return;
+		}
+		
+		SendEmbed(usernameChangeLoggingChannel, "Usernname Changed", `**Before:** ${before.tag}\n**After:** ${after.tag}`, 0x0000FFF);
+	}
+	else if (before.timestamp != after.timestamp || before.id != after.id) {
+		console.log(`This definitely shouldn't be happening! Somehow, a user updated their timestamp or ID!\nBefore Timestamp: ${before.timestamp}\nAfter Timestamp: ${after.timestamp}\nBefore ID: ${before.id}\nAfter ID: ${after.id}`)
+		// TODO: Add this specific message to shell + eval logging channels
+	}
+})
 
 class HelpCommand extends Command {
 	name = "help";
