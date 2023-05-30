@@ -11,6 +11,7 @@ import { isNumber, isString } from "https://deno.land/x/redis@v0.25.1/stream.ts"
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
+import { isDMChannel } from "https://deno.land/x/harmony@v2.8.0/src/utils/channelTypes.ts";
 
 // TODO: Add a send webhook command.
 // TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
@@ -26,6 +27,7 @@ const developerMode = Deno.env.get("DEV_MODE") == "true";
 const botStartLoggingChannel = Deno.env.get("BOT_START_CHANNEL");
 const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL");
 const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL");
+const dmLoggingChannel = Deno.env.get("DM_LOGGING_CHANNEL");
 
 const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true";
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
@@ -37,7 +39,9 @@ let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",");
 const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL");
 const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
 
-let usernameChangeLoggingChannel = Deno.env.get("USERNAME_CHANGE_LOGGING_CHANNEL");
+const usernameChangeLoggingChannel = Deno.env.get("USERNAME_CHANGE_LOGGING_CHANNEL");
+
+const disableBidomeStupidMessages = Deno.env.get("DISABLE_STUPID_BIDOME_MESSAGES") == "true";
 
 let reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
 
@@ -347,6 +351,17 @@ bot.on("messageCreate", (msg) => {
 			}
 		}
 	}
+
+	if (disableBidomeStupidMessages) {
+		if (msg.author.id == "778670182956531773" && msg.channel.id == "635483003686223913") {
+			msg.delete();
+			msg.author.send("nuh uh");
+		}
+	}
+
+	if (msg.channel.isDM() && dmLoggingChannel != "-1") {
+		SendEmbed(dmLoggingChannel!, "DM Received", `A DM has been received!\nUser: ${msg.author} (${msg.author.id})\nMessage Content: ${msg.content}`, 0x0000FF)
+	}
 });
 
 bot.on("gatewayError", (error) => {
@@ -512,7 +527,7 @@ class RockPaperScissorsCommand extends Command {
 		let customOptionsDisabled = false;
 		// console.log(userChoice); // DEBUG
 
-		const file = await Deno.open("./rps_custom_options.csv").catch((error) => {
+		const _file = await Deno.open("./rps_custom_options.csv").catch((error) => {
 			if (error.message.includes("No such file or directory (os error 2): open './rps_custom_options.csv'")) {
 				console.log(
 					"\n***** Error: No custom RPS options file found! To stop seeing this error, please create the file and leave it empty. Refer to README.md for more information.*****\n"

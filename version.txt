@@ -1,5 +1,6 @@
-Pre-Alpha v0.1.7
+Pre-Alpha v0.1.8
 
 Changelog:
-- Added Username Change Logging
-- Added USERNAME_CHANGE_LOGGING_CHANNEL to .env.example - Please update your .env file!
+- Added DM logging + DM Logging Channel
+- Added an event to detect bidome sending a stupid message in my server (go mald Blocksnmore)
+- Added two values to .env.example - please add these to your .env file! (DM logging channel can be set to "-1" to be disabled)
