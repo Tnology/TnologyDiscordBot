@@ -41,7 +41,7 @@ const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") =
 
 const usernameChangeLoggingChannel = Deno.env.get("USERNAME_CHANGE_LOGGING_CHANNEL");
 
-const disableBidomeStupidMessages = Deno.env.get("DISABLE_STUPID_BIDOME_MESSAGES") == "true";
+const disableBidomeStupidMessages = Deno.env.get("DISABLE_BIDOME_STUPID_MESSAGES") == "true";
 
 let reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
 
