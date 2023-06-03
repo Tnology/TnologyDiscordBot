@@ -11,8 +11,6 @@ import { isNumber, isString } from "https://deno.land/x/redis@v0.25.1/stream.ts"
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
-import { isDMChannel } from "https://deno.land/x/harmony@v2.8.0/src/utils/channelTypes.ts";
-
 // TODO: Add a send webhook command.
 // TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
 // FIXME: There is a bug where a reminder reason might only be one word.
@@ -1597,6 +1595,103 @@ class SendWebhookOld extends Command {
 	}
 }
 
+class DiceCommand extends Command {
+	name = "dice";
+	aliases = ["rolldice", "roll"];
+	description = "Rolls X amount of dice of Y sides.\n**Syntax:** `dice <Number of Dice>d<Number of Sides>`\n**Example:** `dice 2d6` (Rolls 2 dice with 6 sides)\n**Example 2:** `dice 2d6,2d4` (Rolls 2 dice with 6 sides, 2 dice with 4 sides)"
+
+	async execute(ctx: CommandContext) {
+		const diceSets = ctx.argString.split(","); // FIXME: What if there's no commas? Figure this out please.
+		// console.log(`diceSets is: ${diceSets}\ndiceSets joined: ${diceSets.join(", ")}\n`); // DEBUG
+
+		const finalSetsArray: any = []
+
+		for (const setIndex in diceSets) {
+			const set = diceSets[setIndex];
+			// console.log(`We are in the first for loop (const set in diceSets) - set is: ${set}\n`); // DEBUG
+
+			let setArray = set.split(""); // This takes the set and split each character into an array
+			// console.log(`setArray is equal to: ${setArray}`) // DEBUG
+			
+			let tempNumberOfDice = "";
+			let tempSides = ""; // This will be used after tempArray to determine the number of sides of the dice
+			let tempFinalArray: any = [] // This will be merged with the tempNumberofDice so the final array is:
+			// [
+			// 6, 4
+			//]
+			let reachedNumber = false;
+			for (const charIndex in setArray) {
+				const char = setArray[charIndex]
+				if (!reachedNumber && Number.isInteger(Number(char))) {
+					// console.log(`First if statement in the nested for loop. The char is: ${char}\n`); // DEBUG
+					tempNumberOfDice += char;
+				}
+				else if (!reachedNumber && char == "d") {
+					// console.log(`We've reached the number. The char is: ${char}\nThe tempNumberOfDice is: ${tempNumberOfDice}\n`); // DEBUG
+					tempFinalArray.push(Number(tempNumberOfDice))
+					reachedNumber = true;
+				}
+				else if (reachedNumber) {
+					// console.log(`We are in the reachedNumber else if statement. The char is: ${char}`) ;// DEBUG
+					tempSides += char;
+				}
+				else {
+					console.log(`Error!\nreachedNumber: ${reachedNumber}\ntempNumberOfDice: ${tempNumberOfDice}\ntempSides: ${tempSides}\ntempFinalArray: ${tempFinalArray}\nsetArray: ${setArray}`)
+				}
+			}
+			// console.log(`We have exited the nested for loop. The tempFinalArray is: ${tempFinalArray}\nThe tempSides is: ${tempSides}\n`); // DEBUG
+			tempFinalArray.push(Number(tempSides));
+			finalSetsArray.push(tempFinalArray);
+			// console.log(`We have just pushed tempFinalArray to setsArray. The setsArray is: ${finalSetsArray}\n`); // DEBUG
+		}
+
+		let finalResult = ""
+
+		for (const diceSetIndex in finalSetsArray) {
+			const diceSet = finalSetsArray[diceSetIndex];
+			// console.log(`We are now iterating for const diceSet in setsArray. diceSet is: ${diceSet} // setsArray is: ${finalSetsArray}\n`) // DEBUG
+			let diceResult: any = [];
+			for (let i = 0; i < Number(diceSet[1]); i++) {
+				// console.log(`We are now in the nested for loop. i is: ${i}`); // DEBUG
+				const chosenNumber = RandomNumber(1, Number(diceSet[0]));
+				// console.log(`We now have the chosen number. chosenNumber is: ${chosenNumber}`); // DEBUG
+				diceResult.push(chosenNumber);
+				// console.log(`We just pushed chosenNumber to diceResult. diceResult is: ${diceResult}\n`); // DEBUG
+			}
+			if (Number(diceSet[1]) < 1 || isNaN(Number(diceSet[1]))) {
+				await ctx.message.reply(new Embed({
+					title: "Dice Error",
+					description: "Please enter a valid amount of dice to roll!",
+					color: 0xFF0000,
+				}));
+				return;
+			}
+			else if (isNaN(Number(diceSet[0])) || diceSet[0] == "0") { // It appears that isNaN doesn't seem to work as a condition here because it seems to be 0 if a user does ">>dice d6"
+				await ctx.message.reply(new Embed({
+					title: "Dice Error",
+					description: "Please enter a valid amount of sides for the dice!",
+					color: 0xFF0000,
+				}));
+				return;
+			}
+			else if (diceSet[1] == "1") {
+				// console.log(`diceSet[1] is equal to 1 - diceSet is: ${diceSet}`); // DEBUG
+				finalResult += `I rolled a ${diceSet[0]} sided die. The result is ${diceResult[0]}.\n`
+			}
+			else {
+				// console.log(`diceSet[1] is not equal to 1 - diceSet is: ${diceSet}`); // DEBUG
+				finalResult += `I rolled ${diceSet[1]} ${diceSet[0]} sided dice. The results are ${diceResult.join(", ")}.\n`
+			}
+		}
+
+		await ctx.message.reply(new Embed({
+			title: "Dice Result",
+			description: `${finalResult}`,
+			color: 0x00FF00,
+		}))
+	}
+}
+
 bot.commands.add(HelpCommand);
 bot.commands.add(Whoami);
 bot.commands.add(ShellCommand);
@@ -1618,6 +1713,7 @@ bot.commands.add(VersionCommand);
 bot.commands.add(SendWebhookOld);
 bot.commands.add(AwaitEvalCommand);
 bot.commands.add(SendWebhookCommand);
+bot.commands.add(DiceCommand);
 
 const token = await Deno.readTextFile("./token.txt");
 
