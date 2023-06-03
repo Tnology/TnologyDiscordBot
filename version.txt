@@ -1,4 +1,8 @@
-Pre-Alpha v0.1.9-1
+Pre-Alpha v0.2.0
 
 Changelog:
-- HOTFIX: Found potential point of abuse - RandomNumber had no limits, which could cause the bot to crash. For now, there is a check to see if the numbers are over 10,000, and if so, nothing will happen. The next release will add a .env variable for the maximum.
+- Added a maximum random number value, please update your .env file!
+- Added a check to the RandomNumber function to see if the minimum value is greater than the maximum value
+- Added a check to the RandomNumber function to see if the minimum value or the maximum value is negative
+- Added the "channelid" parameter to the RandomNumber function so an error can be sent in a specific channel if it is provided. It is undefined by default, in which case a message will not be sent.
+- A negative number will now be returned when an error occurs in the RandomNumber function. A reference to the meanings of -1 through -5 can be found in comments above the RandomNumber function.

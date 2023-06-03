@@ -13,7 +13,6 @@ import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
 // TODO: Add a send webhook command.
 // TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
-// FIXME: There is a bug where a reminder reason might only be one word.
 
 await config({ export: true });
 
@@ -26,6 +25,16 @@ const botStartLoggingChannel = Deno.env.get("BOT_START_CHANNEL");
 const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL");
 const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL");
 const dmLoggingChannel = Deno.env.get("DM_LOGGING_CHANNEL");
+
+let maximumRandomNumber: number;
+
+if (Deno.env.get("MAXIMUM_RANDOM_NUMBER") == undefined || isNaN(Number(Deno.env.get("MAXIMUM_RANDOM_NUMBER")))) {
+	console.log("NOTICE: Either an invalid value or no value at all was given for the MAXIMUM_RANDOM_NUMBER value in your .env file! The default of 1,000,000 has been set.\nTo stop seeing this message, please set a proper value!");
+	maximumRandomNumber = 1000000;
+}
+else {
+	maximumRandomNumber = Number(Deno.env.get("MAXIMUM_RANDOM_NUMBER"));
+}
 
 const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true";
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
@@ -91,14 +100,66 @@ function SendEmbed(channelid: string, title: string, description: string, color:
 
 const ownersArray = Deno.env.get("OWNERS")?.split(",");
 
-function RandomNumber(min: number, max: number) {
-	if (min > 10000 || max > 10000) {
-		console.log(min)
-		console.log(max)
-		return 0;
+
+// NEGATIVE RETURN VALUES:
+// -1: The max parameter exceeded the maximumRandomNumber value.
+// -2: The min parameter is greater than the max parameter.
+// -3: A negative number was provided for the min or max parameter parameter.
+// -4: A negative number was provided for the max parameter. This case probably won't activate.
+// -5: Unknown Error.
+function RandomNumber(min: number, max: number, channelid: string | undefined=undefined) {
+	if (max > maximumRandomNumber) {
+		if (channelid != undefined) {
+			bot.channels.sendMessage(channelid, new Embed({
+				title: "Number Error",
+				description: `The maximum number provided is too high. You provided ${max}, but the maximum allowed is ${maximumRandomNumber}.`,
+				color: 0xFF0000,
+			}))
+		}
+		return -1;
 	}
-	else if (min < 10000 && max < 10000) {
+	else if (min > max) {
+		if (channelid != undefined) {
+			bot.channels.sendMessage(channelid, new Embed({
+				title: "Number Error",
+				description: "The minimum number provided is greater than the maximum number.",
+				color: 0xFF0000,
+			}))
+		}
+		return -2;
+	}
+	else if (min < 0) {
+		if (channelid != undefined) {
+			bot.channels.sendMessage(channelid, new Embed({
+				title: "Number Error",
+				description: "A negative number was provided for the minimum and/or maximum number.",
+				color: 0xFF0000,
+			}))
+		}
+		return -3;
+	}
+	else if (max < 0) {
+		if (channelid != undefined) {
+			bot.channels.sendMessage(channelid, new Embed({
+				title: "Number Error",
+				description: "A negative number was provided for the maximum number.",
+				color: 0xFF0000,
+			}))
+		}
+		return -4;
+	}
+	else if (max <= maximumRandomNumber) {
 		return Math.floor(Math.random() * (max - min + 1) + min);
+	}
+	else {
+		if (channelid != undefined) {
+			bot.channels.sendMessage(channelid, new Embed({
+				title: "Unknown Number Error",
+				description: `An unknown error has occured. If this continues happening, please contact the developer (T_nology).\n**min:** \`${min}\`\n**max:** \`${max}\`\n**maximumRandomNumber:** \`${maximumRandomNumber}\`\n**channelid:** ~${channelid}`,
+				color: 0xFF0000,
+			}))
+		}
+		return -5;
 	}
 }
 
@@ -1021,10 +1082,16 @@ class RandomNumberCommand extends Command {
 			return;
 		}
 
+		let randomNumber = RandomNumber(lNum, hNum, ctx.channel.id);
+
+		if (randomNumber < 0) {
+			return;
+		}
+
 		await ctx.message.reply(
 			new Embed({
 				title: "Random Number",
-				description: `I picked a number between ${lNum} and ${hNum}. The result is ${RandomNumber(lNum, hNum)}`,
+				description: `I picked a number between ${lNum} and ${hNum}. The result is ${randomNumber}`,
 			})
 		);
 	}
@@ -1668,7 +1735,7 @@ class DiceCommand extends Command {
 					}));
 					return;
 				}
-				const chosenNumber = RandomNumber(1, Number(diceSet[0]));
+				const chosenNumber = RandomNumber(1, Number(diceSet[0]), ctx.channel.id);
 				// console.log(`We now have the chosen number. chosenNumber is: ${chosenNumber}`); // DEBUG
 				diceResult.push(chosenNumber);
 				// console.log(`We just pushed chosenNumber to diceResult. diceResult is: ${diceResult}\n`); // DEBUG
