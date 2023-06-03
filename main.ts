@@ -92,7 +92,14 @@ function SendEmbed(channelid: string, title: string, description: string, color:
 const ownersArray = Deno.env.get("OWNERS")?.split(",");
 
 function RandomNumber(min: number, max: number) {
-	return Math.floor(Math.random() * (max - min + 1) + min);
+	if (min > 10000 || max > 10000) {
+		console.log(min)
+		console.log(max)
+		return 0;
+	}
+	else if (min < 10000 && max < 10000) {
+		return Math.floor(Math.random() * (max - min + 1) + min);
+	}
 }
 
 const topicArray = [
@@ -596,7 +603,7 @@ class RockPaperScissorsCommand extends Command {
 			file.close();
 		}
 
-		const botChoice = DetermineBotChoice(RandomNumber(1, 3));
+		const botChoice = DetermineBotChoice(RandomNumber(1, 3)!);
 		let winner = "";
 		if (userChoice.length == 0) {
 			await ctx.message.reply(
@@ -966,7 +973,7 @@ class TopicCommand extends Command {
 	description = "Picks a topic from a list of topics that T_nology has created.\n**Syntax:** `topic`";
 
 	async execute(ctx: CommandContext) {
-		const pickedTopic = topicArray[RandomNumber(0, topicArray.length - 1)];
+		const pickedTopic = topicArray[RandomNumber(0, topicArray.length - 1)!];
 
 		await ctx.message.reply(
 			new Embed({
@@ -1653,6 +1660,14 @@ class DiceCommand extends Command {
 			let diceResult: any = [];
 			for (let i = 0; i < Number(diceSet[1]); i++) {
 				// console.log(`We are now in the nested for loop. i is: ${i}`); // DEBUG
+				if (diceSet[0] > 10000) {
+					await ctx.message.reply(new Embed({
+						title: "Too Many Sides",
+						description: "I'm sorry, please use < 10000 sides.",
+						color: 0xFF0000,
+					}));
+					return;
+				}
 				const chosenNumber = RandomNumber(1, Number(diceSet[0]));
 				// console.log(`We now have the chosen number. chosenNumber is: ${chosenNumber}`); // DEBUG
 				diceResult.push(chosenNumber);
