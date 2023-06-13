@@ -314,7 +314,7 @@ async function SendWebhook(msg: any, allowedWords: number=0) {
 		const name = msg.author.username;
 		let message = msg.content;
 
-		if (msg.content.split(" ") != allowedWords) {
+		if (msg.content.split(" ").length != allowedWords) {
 			return;
 		}
 
