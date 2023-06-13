@@ -11,6 +11,7 @@ import { isNumber, isString } from "https://deno.land/x/redis@v0.25.1/stream.ts"
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
+
 // TODO: Add a send webhook command.
 // TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
 
@@ -44,6 +45,7 @@ const oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL"
 
 let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",");
 const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL");
+const storyWebhooksEnabled = Deno.env.get("STORY_WEBHOOKS") == "true";
 const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
 
 const usernameChangeLoggingChannel = Deno.env.get("USERNAME_CHANGE_LOGGING_CHANNEL");
@@ -305,6 +307,100 @@ function DetermineBotChoice(choiceNum: number) {
 	}
 }
 
+async function SendWebhook(msg: any, allowedWords: number=0) {
+	if (storyWebhooksEnabled) {
+		const avatarURL = `https://cdn.discordapp.com/avatars/${msg.author.id}/${msg.author.avatar}.jpeg`;
+		const channelArg = msg.channel.id;
+		const name = msg.author.username;
+		let message = msg.content;
+
+		try {
+			message = message.trim()
+		}
+		catch (error) {
+			if (error.message.includes("Cannot read properties of undefined (reading 'trim')")) {
+				console.log(`story error that cannot read properties of undefined reading 'trim', make sure the message isn't undefined\n ${error}`)
+				// await ctx.message.reply(new Embed({
+				// 	title: "Webhook Error",
+				// 	description: `An unexpected error has occurred.\n**Likely Cause of Error:** Entering an undefined message. Make sure you provide a message for the webhook to be sent!\n**For Developers:**\n\`\`\`js\n${error}\n\`\`\``,
+				// 	color: 0xFF0000,
+				// }))
+			}
+			else {
+				console.log(`unexpected story error:\n${error}`)
+			}
+		}
+
+		let channel;
+
+		try {
+			channel = (await msg.guild?.channels.fetch(msg.channel.id)) as unknown as TextChannel;
+		}
+		catch (error) {
+			if (error.message.includes("NUMBER_TYPE_COERCE: Value") && error.message.includes("is not a snowflake")) {
+				console.log("Send Webhook error")
+				console.log(error)
+				console.log(error.message)
+				// await msg.message.reply(new Embed({
+					// title: "Webhook Error",
+					// description: "Please provide a valid channel to send a webhook in!",
+					// color: 0xFF0000,
+				// }))
+			}
+		}
+
+		if (channelArg[0] == "<" && channelArg[1] == "#" && channelArg[channelArg.length - 1] == ">") {
+			// console.log(`1.1: ${channelArg}`) // DEBUG
+			channel = (await msg.guild?.channels.fetch(channelArg.slice(2, channelArg.length - 1))) as unknown as TextChannel;
+		} else {
+			// console.log(`1.2: ${channelArg}`) // DEBUG
+			channel = (await msg.guild?.channels.fetch(channelArg)) as unknown as TextChannel;
+		}
+
+		// console.log(2); // DEBUG
+
+		// const webhooks = await channel!.fetchWebhooks();
+		// let webhook: Webhook | undefined = undefined;
+
+		let webhook;
+		const webhooks = (await channel!.fetchWebhooks());
+		for (let webhookIndex in webhooks) {
+			if (webhooks[webhookIndex].token != undefined) {
+				webhook = webhooks[0]
+			}
+		}
+		// console.log(webhook); // DEBUG
+
+		// console.log("2.1") // DEBUG
+		let createdWebhook: Webhook;
+
+		const avatar = encode(new Uint8Array(await (await fetch(String(avatarURL))).arrayBuffer()));
+
+		// console.log(3);
+
+		if (webhook == undefined && String(avatarURL) == "default") {
+			// console.log("2.2") // DEBUG
+			createdWebhook = await Webhook.create(channel, bot, {
+				name: name,
+			});
+			// console.log(4);s
+		} else if (webhook == undefined) {
+			// console.log("2.3") // DEBUG
+			createdWebhook = await Webhook.create(channel, bot, {
+				name: name,
+				avatar: `data:image/png;base64,${avatar}`,
+			});
+			// console.log(5);
+		} else {
+			// console.log("2.4") // DEBUG
+			createdWebhook = webhook;
+			// console.log(6);
+		}
+
+		createdWebhook.send(message);
+	}
+}
+
 const bot = new CommandClient({
 	caseSensitive: false,
 	enableSlash: false,
@@ -347,6 +443,10 @@ bot.on("ready", () => {
 
 bot.on("messageCreate", (msg) => {
 
+	if (msg.webhookID) {
+		return;
+	}
+
 	if (discussionThreadsEnabled) {
 		if (discussionChannels!.includes(msg.channel.id)) {
 			msg.startThread({
@@ -356,6 +456,7 @@ bot.on("messageCreate", (msg) => {
 	}
 
 	if (!oneWordStoryChannels?.includes("-1")) {
+		let messageValid = true;
 		if (oneWordStoryChannels!.includes(msg.channel.id)) {
 			if (!(msg.content[0] == "/" && msg.content[1] == "/")) {
 				if (
@@ -375,18 +476,24 @@ bot.on("messageCreate", (msg) => {
 						SendEmbed(
 							oneWordStoryLoggingChannel!,
 							"One Word Story - Deleted",
-							`A message has been deleted from ${msg.channel.id}\n**Author:** ${msg.author}\n**Content:** ${msg.content}\n**Time:** ${msg.timestamp}`,
+							`A message has been deleted from <#${msg.channel.id}>\n**Author:** ${msg.author} ${msg.author.id})\n**Content:** ${msg.content}\n**Time:** ${msg.timestamp}`,
 							0xff0000
 						);
 					}
 
+					messageValid = false;
 					msg.delete();
 				}
+			}
+			if (storyWebhooksEnabled && messageValid && !(msg.content[0] == "/" && msg.content[1] == "/")) {
+				SendWebhook(msg, 1);
+				msg.delete();
 			}
 		}
 	}
 
 	if (!twoWordStoryChannels?.includes("-1")) {
+		let messageValid = true;
 		if (twoWordStoryChannels!.includes(msg.channel.id)) {
 			if (
 				!(
@@ -407,13 +514,18 @@ bot.on("messageCreate", (msg) => {
 						SendEmbed(
 							twoWordStoryLoggingChannel!,
 							"Two Word Story - Deleted",
-							`A message has been deleted from ${msg.channel.id}\n**Author:** ${msg.author}\n**Content:** ${msg.content}\n**Time:** ${msg.timestamp}`,
+							`A message has been deleted from <#${msg.channel.id}>\n**Author:** ${msg.author} (${msg.author.id})\n**Content:** ${msg.content}\n**Time:** ${msg.timestamp}`,
 							0xff0000
 						);
 					}
-					console.log(`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`);
+					// console.log(`Message has been deleted for having too many words\nType: Two Word Story\nMessage Content: ${msg.content}`);
+					messageValid = false;
 					msg.delete();
 				}
+			}
+			if (storyWebhooksEnabled && messageValid && !(msg.content[0] == "/" && msg.content[1] == "/")) {
+				SendWebhook(msg, 2);
+				msg.delete();
 			}
 		}
 	}

@@ -1,8 +1,6 @@
-Pre-Alpha v0.2.0
+Pre-Alpha v0.2.1
 
 Changelog:
-- Added a maximum random number value, please update your .env file!
-- Added a check to the RandomNumber function to see if the minimum value is greater than the maximum value
-- Added a check to the RandomNumber function to see if the minimum value or the maximum value is negative
-- Added the "channelid" parameter to the RandomNumber function so an error can be sent in a specific channel if it is provided. It is undefined by default, in which case a message will not be sent.
-- A negative number will now be returned when an error occurs in the RandomNumber function. A reference to the meanings of -1 through -5 can be found in comments above the RandomNumber function.
+- Fixed reminders.json.example to be a proper JSON file, sorry if this gave you any trouble!
+- Added a webhook system for the one/two word story channels. This is disabled by default and is enabled with the "STORY_WEBHOOKS" value in the .env file
+- Added "STORY_WEBHOOKS" value to .env.example - please update your .env file!
