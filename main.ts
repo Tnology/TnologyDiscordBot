@@ -399,7 +399,7 @@ async function SendWebhook(msg: any, allowedWords: number=0) {
 
 		// createdWebhook.send(message);
 		createdWebhook.send(message, {
-			avatar: avatar,
+			avatar: msg.author.avatarURL(),
 			name: name
 		})
 	}

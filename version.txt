@@ -1,4 +1,4 @@
-Pre-Alpha v0.2.2
+Pre-Alpha v0.2.3
 
 Changelog:
-- Added a fix for the story webhook feature where a webhook would not be sent if an existing webhook which was not created by the bot was fetched at index 0
+- Nevermind, that update just completely broke the story system. Now, however, things should hopefully be working.
