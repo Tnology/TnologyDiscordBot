@@ -1,6 +1,4 @@
-Pre-Alpha v0.2.1
+Pre-Alpha v0.2.2
 
 Changelog:
-- Fixed reminders.json.example to be a proper JSON file, sorry if this gave you any trouble!
-- Added a webhook system for the one/two word story channels. This is disabled by default and is enabled with the "STORY_WEBHOOKS" value in the .env file
-- Added "STORY_WEBHOOKS" value to .env.example - please update your .env file!
+- Added a fix for the story webhook feature where a webhook would not be sent if an existing webhook which was not created by the bot was fetched at index 0

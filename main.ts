@@ -365,8 +365,8 @@ async function SendWebhook(msg: any, allowedWords: number=0) {
 		let webhook;
 		const webhooks = (await channel!.fetchWebhooks());
 		for (let webhookIndex in webhooks) {
-			if (webhooks[webhookIndex].token != undefined) {
-				webhook = webhooks[0]
+			if (webhooks[webhookIndex].name == "TnologyBot") {
+				webhook = webhooks[webhookIndex];
 			}
 		}
 		// console.log(webhook); // DEBUG
@@ -381,14 +381,14 @@ async function SendWebhook(msg: any, allowedWords: number=0) {
 		if (webhook == undefined && String(avatarURL) == "default") {
 			// console.log("2.2") // DEBUG
 			createdWebhook = await Webhook.create(channel, bot, {
-				name: name,
+				name: "TnologyBot",
 			});
 			// console.log(4);s
 		} else if (webhook == undefined) {
 			// console.log("2.3") // DEBUG
 			createdWebhook = await Webhook.create(channel, bot, {
-				name: name,
-				avatar: `data:image/png;base64,${avatar}`,
+				name: "TnologyBot",
+				// avatar: `data:image/png;base64,${avatar}`, // FIXME: See if this works for making the bot's webhook
 			});
 			// console.log(5);
 		} else {
@@ -397,7 +397,11 @@ async function SendWebhook(msg: any, allowedWords: number=0) {
 			// console.log(6);
 		}
 
-		createdWebhook.send(message);
+		// createdWebhook.send(message);
+		createdWebhook.send(message, {
+			avatar: avatar,
+			name: name
+		})
 	}
 }
 
