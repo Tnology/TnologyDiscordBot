@@ -1,4 +1,4 @@
-Pre-Alpha v0.2.3
+Pre-Alpha v0.2.4
 
 Changelog:
-- Nevermind, that update just completely broke the story system. Now, however, things should hopefully be working.
+- Actually use the allowedWords parameter for the story webhook feature.
