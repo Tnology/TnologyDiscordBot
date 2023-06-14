@@ -786,7 +786,7 @@ class RockPaperScissorsCommand extends Command {
 
 		const botChoice = DetermineBotChoice(RandomNumber(1, 3)!);
 		let winner = "";
-		if (userChoice.length == 0) {
+		if (userChoice.length == 0 || ["rock", "paper", "scissors"].includes(userChoice)) {
 			await ctx.message.reply(
 				new Embed({
 					title: "Error!",
@@ -800,25 +800,41 @@ class RockPaperScissorsCommand extends Command {
 		// await ctx.message.reply(`user: ${userChoice}\nbot: ${botChoice}`); // DEBUG
 		if (userChoice == botChoice) {
 			winner = "tie";
-		} else if (userChoice == "rock") {
-			if (botChoice == "paper") {
-				winner = "bot";
-			} else if (botChoice == "scissors") {
-				winner = "user";
+		}
+		else if (userChoice == "rock" && botChoice == "paper" ||
+				userChoice == "paper" && botChoice == "scissors" || 
+				userChoice == "scissors" && botChoice == "rock" )
+			{
+				winner = "bot"
 			}
-		} else if (userChoice == "paper") {
-			if (botChoice == "rock") {
-				winner = "user";
-			} else if (botChoice == "scissors") {
-				winner = "bot";
+		else if (userChoice == "rock" && botChoice == "scissors" || 
+				userChoice == "paper" && botChoice == "rock" || 
+				userChoice == "scissors" && botChoice == "paper")
+			{
+				winner == "user"
 			}
-		} else if (userChoice == "scissors") {
-			if (botChoice == "rock") {
-				winner = "bot";
-			} else if (botChoice == "paper") {
-				winner = "user";
-			}
-		} else if (!customOptionsDisabled) {
+		// if (userChoice == botChoice) {
+		// 	winner = "tie";
+		// } else if (userChoice == "rock") {
+		// 	if (botChoice == "paper") {
+		// 		winner = "bot";
+		// 	} else if (botChoice == "scissors") {
+		// 		winner = "user";
+		// 	}
+		// } else if (userChoice == "paper") {
+		// 	if (botChoice == "rock") {
+		// 		winner = "user";
+		// 	} else if (botChoice == "scissors") {
+		// 		winner = "bot";
+		// 	}
+		// } else if (userChoice == "scissors") {
+		// 	if (botChoice == "rock") {
+		// 		winner = "bot";
+		// 	} else if (botChoice == "paper") {
+		// 		winner = "user";
+		// 	}
+		// }
+		 else if (!customOptionsDisabled) {
 			let customOptionFound = false;
 			let customOption: any;
 			for (const optionIndex in customOptions) {
@@ -897,12 +913,7 @@ class RockPaperScissorsCommand extends Command {
 			await ctx.message.reply(
 				new Embed({
 					title: "Error!",
-					description: `An unexpected error has occured. Please contact the developer.\n
-					**winner:** \`${winner}\`\n
-					**userChoice:** \`${userChoice}\`\n
-					**botChoice:** \`${botChoice}\`\n
-					**customOptionsDisabled:** \`${customOptionsDisabled}\`\n
-					`,
+					description: `An unexpected error has occured. Please contact the developer.\n**winner:** \`${winner}\`\n**userChoice:** \`${userChoice}\`\n**botChoice:** \`${botChoice}\`\n**customOptionsDisabled:** \`${customOptionsDisabled}\`\n`,
 					color: 0xff0000,
 				})
 			);

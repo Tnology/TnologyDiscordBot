@@ -1,4 +1,4 @@
-Pre-Alpha v0.2.4-1
+Pre-Alpha v0.2.5
 
 Changelog:
-- I forgot to add .length lol
+- Fixed a bug where the rock-paper-scissors command might return an improperly formatted error upon entering an invalid option
