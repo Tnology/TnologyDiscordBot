@@ -1,3 +1,14 @@
+// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
+// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
+// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
+// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
+// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
+// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
+// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
+// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
+// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
+// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
+
 import {
 	CommandClient,
 	GatewayIntents,
@@ -21,6 +32,21 @@ const versionFile = await Deno.readTextFile("./version.txt");
 const version = versionFile.split("\n")[0];
 
 const developerMode = Deno.env.get("DEV_MODE") == "true";
+
+let loggingLevel: string | undefined;
+
+try {
+	loggingLevel = Deno.env.get("LOGGING_LEVEL")!.toUpperCase();
+}
+catch (err) {
+	loggingLevel = undefined;
+}
+
+
+if (!["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"].includes(loggingLevel!) || loggingLevel == undefined) {
+	console.log(`\n*****LOGGING ALERT*****\n\n\nAn invalid value (or no value at all) has been provided for LOGGING_LEVEL in the .env file.\nPlease set a proper value! For now, the logging level will be set to INFO.\n\n\n*****LOGGING ALERT*****\n`)
+	loggingLevel = "INFO";
+}
 
 const botStartLoggingChannel = Deno.env.get("BOT_START_CHANNEL");
 const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL");
@@ -308,6 +334,7 @@ function DetermineBotChoice(choiceNum: number) {
 }
 
 async function SendWebhook(msg: any, allowedWords: number=0) {
+	LogDebug("The SendWebhook (asynchronous) function has been called!")
 	if (storyWebhooksEnabled) {
 		const avatarURL = `https://cdn.discordapp.com/avatars/${msg.author.id}/${msg.author.avatar}.jpeg`;
 		const channelArg = msg.channel.id;
@@ -354,14 +381,14 @@ async function SendWebhook(msg: any, allowedWords: number=0) {
 		}
 
 		if (channelArg[0] == "<" && channelArg[1] == "#" && channelArg[channelArg.length - 1] == ">") {
-			// console.log(`1.1: ${channelArg}`) // DEBUG
+			LogDebug(`SendWebhook Function 1.1: ${channelArg}`) // DEBUG
 			channel = (await msg.guild?.channels.fetch(channelArg.slice(2, channelArg.length - 1))) as unknown as TextChannel;
 		} else {
-			// console.log(`1.2: ${channelArg}`) // DEBUG
+			LogDebug(`SendWebhook Function 1.2: ${channelArg}`) // DEBUG
 			channel = (await msg.guild?.channels.fetch(channelArg)) as unknown as TextChannel;
 		}
 
-		// console.log(2); // DEBUG
+		LogDebug(`SendWebhook Function 2`); // DEBUG
 
 		// const webhooks = await channel!.fetchWebhooks();
 		// let webhook: Webhook | undefined = undefined;
@@ -373,30 +400,30 @@ async function SendWebhook(msg: any, allowedWords: number=0) {
 				webhook = webhooks[webhookIndex];
 			}
 		}
-		// console.log(webhook); // DEBUG
+		LogDebug(`SendWebhook Function > Webhook is: ${webhook}`); // DEBUG
 
-		// console.log("2.1") // DEBUG
+		LogDebug("SendWebhook Function 2.1") // DEBUG
 		let createdWebhook: Webhook;
 
 		const avatar = encode(new Uint8Array(await (await fetch(String(avatarURL))).arrayBuffer()));
 
-		// console.log(3);
+		LogDebug(`SendWebhook Function 2.1.1`);
 
 		if (webhook == undefined && String(avatarURL) == "default") {
-			// console.log("2.2") // DEBUG
+			LogDebug("SendWebhook Function 2.2") // DEBUG
 			createdWebhook = await Webhook.create(channel, bot, {
 				name: "TnologyBot",
 			});
-			// console.log(4);s
+			// console.log(4);
 		} else if (webhook == undefined) {
-			// console.log("2.3") // DEBUG
+			LogDebug("SendWebhook Function 2.3") // DEBUG
 			createdWebhook = await Webhook.create(channel, bot, {
 				name: "TnologyBot",
 				// avatar: `data:image/png;base64,${avatar}`, // FIXME: See if this works for making the bot's webhook
 			});
 			// console.log(5);
 		} else {
-			// console.log("2.4") // DEBUG
+			LogDebug("SendWebhook Function 2.4") // DEBUG
 			createdWebhook = webhook;
 			// console.log(6);
 		}
@@ -408,6 +435,55 @@ async function SendWebhook(msg: any, allowedWords: number=0) {
 		})
 	}
 }
+
+function GetFormattedTime(timestamp: number | string) {
+	timestamp = Number(timestamp);
+	return new Date(timestamp).toString().split(" GMT")[0];
+}
+
+function LogCritical(message: string) {
+	// This will always log.
+	console.log(`\n\n*****CRITICAL ERROR*****\n\nA critical error has occurred. Please contact the developer!\nTime: ${GetFormattedTime(Date.now())}\nMessage:\n${message}\n\n************************`);
+	return;
+}
+
+function LogError(message: string) {
+	// This will log if the logging level is: CRITICAL, ERROR
+	if (!["ERROR", "WARNING", "INFO", "DEBUG"].includes(loggingLevel!)) {
+		return -1;
+	}
+	console.log(`\n\n${GetFormattedTime(Date.now())} | [ERROR]: ${message}`);
+	return;
+}
+
+function LogWarning(message: string) {
+	// This will log if the logging level is: CRITICAL, ERROR, WARNING
+	if (!["WARNING", "INFO", "DEBUG"].includes(loggingLevel!)) {
+		return -1;
+	}
+	console.log(`\n\n${GetFormattedTime(Date.now())} | [WARNING]: ${message}`);
+	return;
+}
+
+function LogInfo(message: string) {
+	// This will log if the logging level is: CRITICAL, ERROR, WARNING, INFO
+	if (!["INFO", "DEBUG"].includes(loggingLevel!)) {
+		return -1;
+	}
+	console.log(`\n\n${GetFormattedTime(Date.now())} | [INFO]: ${message}`);
+	return;
+}
+
+function LogDebug(message: string) {
+	// This will log if the logging level is: CRITICAL, ERROR, WARNING, INFO, DEBUG
+	if (loggingLevel != "DEBUG") {
+		return -1;
+	}
+	console.log(`\n\n${GetFormattedTime(Date.now())} | [DEBUG]: ${message}`);
+	return;
+}
+
+
 
 const bot = new CommandClient({
 	caseSensitive: false,
@@ -709,9 +785,10 @@ class RockPaperScissorsCommand extends Command {
 	description = "Lets you play a game of Rock, Paper, Scissors with the bot.\n**Syntax:** `rps <rock|paper|scissors>`";
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The RockPaperScissors command has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const userChoice = ctx.argString.split(" ")[0].toLowerCase();
 		let customOptionsDisabled = false;
-		// console.log(userChoice); // DEBUG
+		LogDebug(`RockPaperScissorsCommand userChoice: ${userChoice}`); // DEBUG
 
 		const _file = await Deno.open("./rps_custom_options.csv").catch((error) => {
 			if (error.message.includes("No such file or directory (os error 2): open './rps_custom_options.csv'")) {
@@ -757,9 +834,9 @@ class RockPaperScissorsCommand extends Command {
 						}
 						tempLosesAgainst = cell;
 					}
-					// console.log(`  cell: ${cell}`); // DEBUG
-					// console.log(`the cell is of type ${typeof cell}`); // DEBUG
-					// console.log(`the temp counter is ${tempCounter}`); // DEBUG
+					LogDebug(`RockPaperScissors Command > cell: ${cell}`); // DEBUG
+					LogDebug(`RockPaperScissors Command > the cell is of type ${typeof cell}`); // DEBUG
+					LogDebug(`RockPaperScissors Command > the temp counter is ${tempCounter}`); // DEBUG
 					tempCounter++;
 				}
 				if (tempWinsAgainst == tempLosesAgainst && tempWinsAgainst != "") {
@@ -798,6 +875,7 @@ class RockPaperScissorsCommand extends Command {
 		}
 
 		// await ctx.message.reply(`user: ${userChoice}\nbot: ${botChoice}`); // DEBUG
+		LogDebug(`RockPaperScissorsCommand > userChoice: ${userChoice} | botChoice: ${botChoice}`);
 		if (userChoice == botChoice) {
 			winner = "tie";
 		}
@@ -928,6 +1006,7 @@ class SayCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The SayCommand command has begun execution! (Command Author ID: ${ctx.author.id})`);
 		await ctx.message.channel.send(`${ctx.argString}`);
 	}
 }
@@ -940,14 +1019,15 @@ class SendEmbedCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The SendEmbedCommand command has begun execution! (Command Author ID: ${ctx.author.id})`);
 		// const channelArg = ctx.argString.split(" ")[0]; // DEBUG
 		const channel = ctx.message.mentions.channels.first();
 		const cmdArgs: string = ctx.argString.split(" ").splice(1).join(" ");
-		// console.log(cmdArgs); // DEBUG
+		LogDebug(`SendEmbedCommand > cmdArgs: ${cmdArgs}`); // DEBUG
 		const title = cmdArgs.split("\n")[0];
-		// console.log("A"); // DEBUG
+		LogDebug("SendEmbedCommand > A"); // DEBUG
 		console.log(title);
-		// console.log("B"); // DEBUG
+		LogDebug("SendEmbedCommand > B"); // DEBUG
 		const description = cmdArgs.split("\n")[1];
 		await channel!.send(
 			new Embed({
@@ -966,6 +1046,7 @@ class UserInfoCommand extends Command {
 	description = "Lets you get information about a user.\n**Syntax:** `userinfo <user>`";
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The UserInfoCommand command has begun execution! (Command Author ID: ${ctx.author.id})`);
 		try {
 			user = await ctx.guild!.members.fetch(ctx.argString.split(" ")[0]);
 		} catch {
@@ -975,10 +1056,13 @@ class UserInfoCommand extends Command {
 		// console.log(user); // DEBUG
 
 		if (ctx.argString == "") {
+			LogDebug(`UserInfoCommand > ctx.argString is equal to "" (ctx.argString == "")`)
 			user = await ctx.guild!.members.fetch(ctx.author.id);
 		} else if (ctx.message.mentions.users.first() == undefined) {
+			LogDebug(`UserInfoCommand > This condition is true: ctx.message.mentions.users.first() == undefined`)
 			if (ctx.argString.split(" ")[0].length > 1) {
-				// DEBUG // console.log(`Debug: ctx.argString.split(" ")[0].length > 1 - True // Argument: ${ctx.argString.split(" ")[0]} // Length: ${ctx.argString.split(" ")[0].length}`)
+				LogDebug(`UserInfoCommand > Within the previous condition, this condition is true: ctx.argString.split(" ")[0].length > 1`)
+				LogDebug(`UserInfoCommand > ctx.argString.split(" ")[0].length > 1 - True // Argument: ${ctx.argString.split(" ")[0]} // Length: ${ctx.argString.split(" ")[0].length}`)
 				var user = (await ctx.guild!.members.resolve(ctx.argString.split(" ")[0]))!;
 				if (user == undefined) {
 					await ctx.message.reply(
@@ -991,23 +1075,23 @@ class UserInfoCommand extends Command {
 				}
 			}
 		} else if (isString(ctx.message.mentions.users.first()!.username)) {
-			// console.log(`ctx.message.mentions.users.first()!.username is a string, is returned true.`) // DEBUG
+			LogDebug(`SendEmbedCommand > ctx.message.mentions.users.first()!.username is a string, is returned true.`) // DEBUG
 			user = await ctx.guild!.members.fetch(ctx.message.mentions.users.first()!.id);
-			// console.log("\n\nnext") // DEBUG
-			// console.log(user) // DEBUG
+			LogDebug("SendEmbedCommand > next") // DEBUG
+			LogDebug(`SendEmbedCommand > user: ${user}`) // DEBUG
 		}
-		// console.log("now mentions") // DEBUG
-		// console.log(ctx.message.mentions.users.first()) // DEBUG
-		// console.log(`typeof = ${typeof(ctx.message.mentions.users.first())}`) // DEBUG
+		LogDebug("SendEmbedCommand > now mentions") // DEBUG
+		LogDebug(`SendEmbedCommand > first message mention: ${ctx.message.mentions.users.first()}`) // DEBUG
+		LogDebug(`SendEmbedCommand > typeof = ${typeof(ctx.message.mentions.users.first())}`) // DEBUG
 
-		// console.log(user!.id); // DEBUG
-		// console.log(`\n${typeof(user!)}`); // DEBUG
+		LogDebug(`SendEmbedCommand > user id: ${user!.id}`); // DEBUG
+		LogDebug(`SendEmbedCommand > typeof user: \n${typeof(user!)}`); // DEBUG
 		const serverJoinDate = `<t:${(new Date(user!.joinedAt).getTime() / 1000).toFixed(0)}:F>`;
 		const userJoinDate = `<t:${(new Date(user!.timestamp).getTime() / 1000).toFixed(0)}:F>`;
 		const userStatus = (await ctx.guild!.presences.fetch(user!.id))!.status;
 
-		// console.log(`\n\n\n\n\n\n\n\n\n\n${user!.user}\n\n${user!}\n\n${user!.user.id}\n\n${user!.user.tag}\n\n\n`) // DEBUG
-		// console.log(`\n\n\nnow the user\n\n${user!}\ntypeof = ${typeof(user!)}\n\n`) // DEBUG
+		LogDebug(`SendEmbedCommand > \n\n\n\n\n\n\n\n\n\n${user!.user}\n\n${user!}\n\n${user!.user.id}\n\n${user!.user.tag}\n\n\n`) // DEBUG
+		LogDebug(`SendEmbedCommand > \n\n\nnow the user\n\n${user!}\ntypeof = ${typeof(user!)}\n\n`) // DEBUG
 
 		// if (user!.user.username == undefined) {
 		// await ctx.message.reply(`user.user == undefined (double equals)\n value: ${user!.user.username}`)
@@ -1059,6 +1143,7 @@ class EvalCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The EvalCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		console.log(`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`);
 		SendEmbed(
 			evalLoggingChannel!,
@@ -1105,6 +1190,7 @@ class AwaitEvalCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The Aval command has begun execution! (Command Author ID: ${ctx.author.id})`);
 		console.log(`\n\n*****\nExecuting Aval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`);
 		SendEmbed(
 			evalLoggingChannel!,
@@ -1151,6 +1237,7 @@ class CoinflipCommand extends Command {
 	aliases = ["flipcoin", "iamtryingtoresolveadebateaboutsomethingwithafriend"];
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The CoinflipCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const result = RandomNumber(1, 2);
 
 		result == 1
@@ -1165,6 +1252,7 @@ class TopicCommand extends Command {
 	description = "Picks a topic from a list of topics that T_nology has created.\n**Syntax:** `topic`";
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The TopicCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const pickedTopic = topicArray[RandomNumber(0, topicArray.length - 1)!];
 
 		await ctx.message.reply(
@@ -1182,6 +1270,7 @@ class PingCommand extends Command {
 	description = "Gets the latency of the bot.\n**Syntax:** `ping`";
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The PingCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const messageCreatedTime = new Date();
 		await ctx.message.reply(
 			new Embed({
@@ -1200,6 +1289,7 @@ class RandomNumberCommand extends Command {
 	description = "Chooses a number between the two parameters provided.\n**Syntax:** `randomnumber <minimum> <maximum>`";
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The RandomNumberCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const lNum = Number(ctx.argString.split(" ")![0]);
 		const hNum = Number(ctx.argString.split(" ")[1]);
 		if (isNaN(lNum) || isNaN(hNum)) {
@@ -1234,6 +1324,7 @@ class RemindmeCommand extends Command {
 	description = "Sets a reminder for you.\n**Syntax:** `remindme <timestamp> <reason>`";
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The RemindmeCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const preTimestamp = Math.floor(Date.now() / 1000);
 		const userTimestamp = ctx.argString.split(" ")[0];
 		const reason = ctx.argString.split(" ").slice(1).join(" ");
@@ -1268,15 +1359,15 @@ class RemindmeCommand extends Command {
 
 		let temporaryNumber = "0";
 
-		// console.log(userTimestamp.length) // DEBUG
-		// console.log(userTimestamp.length < 0) // DEBUG
+		LogDebug(`RemindmeCommand > userTimestamp.length: ${userTimestamp.length}`) // DEBUG
+		LogDebug(`RemindmeCommand > whether or not userTimestamp.length < 0: ${userTimestamp.length < 0}`) // DEBUG
 
 		const letterArray = ["s", "m", "h", "d"];
 
 		for (let index = 0; userTimestamp.length > index; index++) {
-			// console.log(`We are currently at index ${index} - The character is ${ctx.argString[index]}`) // DEBUG
+			LogDebug(`RemindmeCommand > We are currently at index ${index} - The character is ${ctx.argString[index]}`) // DEBUG
 			if (!letterArray.includes(userTimestamp[index])) {
-				// console.log(`Not equals, ${userTimestamp[index]} @ index ${index}`) // DEBUG
+				LogDebug(`RemindmeCommand > Not equals, ${userTimestamp[index]} @ index ${index}`) // DEBUG
 				temporaryNumber += userTimestamp[index];
 			}
 			if (userTimestamp[index] == "s") {
@@ -1289,10 +1380,10 @@ class RemindmeCommand extends Command {
 				hours += 3600 * Number(temporaryNumber);
 				temporaryNumber = "0";
 			} else if (userTimestamp[index] == "d") {
-				// console.log(temporaryNumber) // DEBUG
-				// console.log(Number(temporaryNumber)) // DEBUG
+				LogDebug(`RemindmeCommand > temporaryNumber: ${temporaryNumber}`) // DEBUG
+				LogDebug(`RemindmeCommand > Number(temporaryNumber): ${Number(temporaryNumber)}`) // DEBUG
 				days += 86400 * Number(temporaryNumber);
-				// console.log(days) // DEBUG
+				LogDebug(`RemindmeCommand > days: ${days}`) // DEBUG
 				temporaryNumber = "0";
 			}
 		}
@@ -1307,7 +1398,7 @@ class RemindmeCommand extends Command {
 			ChannelId: ctx.channel.id,
 		};
 
-		// console.log(reminders.reminders[(currentReminderId + 1)]) // DEBUG
+		LogDebug(`RemindmeCommand > reminders.reminders[(currentReminderId + 1)]: ${reminders.reminders[(currentReminderId + 1)]}`) // DEBUG
 
 		reminders.id += 1;
 
@@ -1337,6 +1428,7 @@ class CancelReminderCommand extends Command {
 	description = "Cancels a reminder.\n**Syntax:** `cancelreminder <reminder id>`";
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The CancelReminderCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const userReminder = ctx.argString.split(" ")[0];
 
 		if (userReminder == "") {
@@ -1403,6 +1495,7 @@ class ListRemindersCommand extends Command {
 	description = "Lists current reminders\n**Syntax:** `listreminders`";
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The ListRemindersCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const unslicedUserReminders = [];
 		let userPage = Number(ctx.argString.split(" ")[0]);
 
@@ -1473,13 +1566,14 @@ class TimestampCommand extends Command {
 	description = "Generates a timestamp based on the input provided.\n**Syntax:** `timestamp <timestamp>`";
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The TimestampCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const userTimestamp = ctx.argString.split(" ")[0];
 		const preTimestamp = Math.floor(Date.now() / 1000);
 
 		let temporaryNumber = "0";
 
-		// console.log(userTimestamp.length) // DEBUG
-		// console.log(userTimestamp.length < 0) // DEBUG
+		LogDebug(`TimestampCommand > userTimestamp.length: ${userTimestamp.length}`) // DEBUG
+		LogDebug(`TimestampCommand > userTimestamp.length < 0: ${userTimestamp.length < 0}`) // DEBUG
 
 		let seconds = 0;
 		let minutes = 0;
@@ -1489,9 +1583,9 @@ class TimestampCommand extends Command {
 		const letterArray = ["s", "m", "h", "d"];
 
 		for (let index = 0; userTimestamp.length > index; index++) {
-			// console.log(`We are currently at index ${index} - The character is ${ctx.argString[index]}`) // DEBUG
+			LogDebug(`TimestampCommand > We are currently at index ${index} - The character is ${ctx.argString[index]}`) // DEBUG
 			if (!letterArray.includes(userTimestamp[index])) {
-				// console.log(`Not equals, ${userTimestamp[index]} @ index ${index}`) // DEBUG
+				LogDebug(`TimestampCommand > Not equals, ${userTimestamp[index]} @ index ${index}`) // DEBUG
 				temporaryNumber += userTimestamp[index];
 			}
 			if (userTimestamp[index] == "s") {
@@ -1504,10 +1598,10 @@ class TimestampCommand extends Command {
 				hours += 3600 * Number(temporaryNumber);
 				temporaryNumber = "0";
 			} else if (userTimestamp[index] == "d") {
-				// console.log(temporaryNumber) // DEBUG
-				// console.log(Number(temporaryNumber)) // DEBUG
+				LogDebug(`TimestampCommand > temporaryNumber: ${temporaryNumber}`) // DEBUG
+				LogDebug(`TimestampCommand > Number(temporaryNumber): ${Number(temporaryNumber)}`) // DEBUG
 				days += 86400 * Number(temporaryNumber);
-				// console.log(days) // DEBUG
+				LogDebug(`TimestampCommand > days: ${days}`) // DEBUG
 				temporaryNumber = "0";
 			}
 		}
@@ -1548,6 +1642,7 @@ class SuCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The SuCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const user: string = ctx.argString.split(" ")[0];
 		const command: string = ctx.argString.split(" ")[1];
 		const commandArgs: string = ctx.argString.split(" ").slice(2).join(" ");
@@ -1565,6 +1660,7 @@ class VersionCommand extends Command {
 	description = "Gets the version of the bot.\n**Syntax:** `version`";
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The VersionCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		await ctx.message.reply(
 			new Embed({
 				title: "Version",
@@ -1581,12 +1677,13 @@ class SendWebhookCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The SendWebhookCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const avatarURL = ctx.argString.split("\n")[0];
 		const channelArg = ctx.argString.split("\n")[1];
 		const name = ctx.argString.split("\n")[2];
 		let message = ctx.argString.split("\n")[3];
-		// console.log(1);
-		// console.log(channelArg);
+		LogDebug(`SendWebhookCommand > 1`);
+		LogDebug(`SendWebhookCommand > channelArg: ${channelArg}`);
 
 		let undefinedError: string | undefined;
 
@@ -1633,19 +1730,19 @@ class SendWebhookCommand extends Command {
 			}
 		}
 
-		// console.log(channelArg[0])
-		// console.log(channelArg[1])
-		// console.log(channelArg[channelArg.length - 1])
+		LogDebug(`SendWebhookCommand > channelArg[0]: ${channelArg[0]}`)
+		LogDebug(`SendWebhookCommand > channelArg[1]: ${channelArg[1]}`)
+		LogDebug(`SendWebhookCommand > channelArg[channelARg.length - 1]: ${channelArg[channelArg.length - 1]}`)
 
 		if (channelArg[0] == "<" && channelArg[1] == "#" && channelArg[channelArg.length - 1] == ">") {
-			console.log("1.1")
+			LogDebug("SendWebhookCommand > 1.1")
 			channel = (await ctx.guild?.channels.fetch(channelArg.slice(2, channelArg.length - 1))) as TextChannel;
 		} else {
-			console.log("1.2")
+			LogDebug("SendWebhookCommand > 1.2")
 			channel = (await ctx.guild?.channels.fetch(channelArg)) as TextChannel;
 		}
 
-		// console.log(2);
+		LogDebug(`SendWebhookCommand > 2`);
 
 		// const webhooks = await channel!.fetchWebhooks();
 		// let webhook: Webhook | undefined = undefined;
@@ -1655,18 +1752,18 @@ class SendWebhookCommand extends Command {
 			(hook: Webhook) => {hook?.token != undefined} // Credit to @Blocksnmore (Bloxs) for the code
 		)
 
-		// console.log("2.1")
+		LogDebug("SendWebhookCommand > 2.1")
 		let createdWebhook: Webhook;
 
 		const avatar = encode(new Uint8Array(await (await fetch(avatarURL)).arrayBuffer()));
 
-		// console.log(3);
+		LogDebug("SendWebhookCommand > 3");
 
 		if (webhook == undefined && avatarURL == "default") {
 			createdWebhook = await Webhook.create(channel, bot, {
 				name: name,
 			});
-			// console.log(4);s
+			// console.log(4);
 		} else if (webhook == undefined) {
 			createdWebhook = await Webhook.create(channel, bot, {
 				name: name,
@@ -1679,7 +1776,7 @@ class SendWebhookCommand extends Command {
 		}
 
 		createdWebhook.send(message);
-		// console.log(7)s;
+		// console.log(7);
 	}
 }
 
@@ -1689,6 +1786,7 @@ class SendWebhookOld extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The SendWebhookOld command has begun execution! (Command Author ID: ${ctx.author.id})`);
 		console.log(1);
 		const avatar = ctx.argString.split("\n")[0];
 		const name = ctx.argString.split("\n")[2];
@@ -1806,17 +1904,18 @@ class DiceCommand extends Command {
 	description = "Rolls X amount of dice of Y sides.\n**Syntax:** `dice <Number of Dice>d<Number of Sides>`\n**Example:** `dice 2d6` (Rolls 2 dice with 6 sides)\n**Example 2:** `dice 2d6,2d4` (Rolls 2 dice with 6 sides, 2 dice with 4 sides)"
 
 	async execute(ctx: CommandContext) {
+		LogDebug(`The DiceCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		const diceSets = ctx.argString.split(","); // FIXME: What if there's no commas? Figure this out please.
-		// console.log(`diceSets is: ${diceSets}\ndiceSets joined: ${diceSets.join(", ")}\n`); // DEBUG
+		LogDebug(`DiceCommand > diceSets is: ${diceSets}\ndiceSets joined: ${diceSets.join(", ")}\n`); // DEBUG
 
 		const finalSetsArray: any = []
 
 		for (const setIndex in diceSets) {
 			const set = diceSets[setIndex];
-			// console.log(`We are in the first for loop (const set in diceSets) - set is: ${set}\n`); // DEBUG
+			LogDebug(`DiceCommand > We are in the first for loop (const set in diceSets) - set is: ${set}\n`); // DEBUG
 
 			let setArray = set.split(""); // This takes the set and split each character into an array
-			// console.log(`setArray is equal to: ${setArray}`) // DEBUG
+			LogDebug(`DiceCommand > setArray is equal to: ${setArray}`) // DEBUG
 			
 			let tempNumberOfDice = "";
 			let tempSides = ""; // This will be used after tempArray to determine the number of sides of the dice
@@ -1828,36 +1927,36 @@ class DiceCommand extends Command {
 			for (const charIndex in setArray) {
 				const char = setArray[charIndex]
 				if (!reachedNumber && Number.isInteger(Number(char))) {
-					// console.log(`First if statement in the nested for loop. The char is: ${char}\n`); // DEBUG
+					LogDebug(`DiceCommand > First if statement in the nested for loop. The char is: ${char}\n`); // DEBUG
 					tempNumberOfDice += char;
 				}
 				else if (!reachedNumber && char == "d") {
-					// console.log(`We've reached the number. The char is: ${char}\nThe tempNumberOfDice is: ${tempNumberOfDice}\n`); // DEBUG
+					LogDebug(`DiceCommand > We've reached the number. The char is: ${char}\nThe tempNumberOfDice is: ${tempNumberOfDice}\n`); // DEBUG
 					tempFinalArray.push(Number(tempNumberOfDice))
 					reachedNumber = true;
 				}
 				else if (reachedNumber) {
-					// console.log(`We are in the reachedNumber else if statement. The char is: ${char}`) ;// DEBUG
+					LogDebug(`DiceCommand > We are in the reachedNumber else if statement. The char is: ${char}`) ;// DEBUG
 					tempSides += char;
 				}
 				else {
 					console.log(`Error!\nreachedNumber: ${reachedNumber}\ntempNumberOfDice: ${tempNumberOfDice}\ntempSides: ${tempSides}\ntempFinalArray: ${tempFinalArray}\nsetArray: ${setArray}`)
 				}
 			}
-			// console.log(`We have exited the nested for loop. The tempFinalArray is: ${tempFinalArray}\nThe tempSides is: ${tempSides}\n`); // DEBUG
+			LogDebug(`DiceCommand > We have exited the nested for loop. The tempFinalArray is: ${tempFinalArray}\nThe tempSides is: ${tempSides}\n`); // DEBUG
 			tempFinalArray.push(Number(tempSides));
 			finalSetsArray.push(tempFinalArray);
-			// console.log(`We have just pushed tempFinalArray to setsArray. The setsArray is: ${finalSetsArray}\n`); // DEBUG
+			LogDebug(`DiceCommand > We have just pushed tempFinalArray to setsArray. The setsArray is: ${finalSetsArray}\n`); // DEBUG
 		}
 
 		let finalResult = ""
 
 		for (const diceSetIndex in finalSetsArray) {
 			const diceSet = finalSetsArray[diceSetIndex];
-			// console.log(`We are now iterating for const diceSet in setsArray. diceSet is: ${diceSet} // setsArray is: ${finalSetsArray}\n`) // DEBUG
+			LogDebug(`DiceCommand > We are now iterating for const diceSet in setsArray. diceSet is: ${diceSet} // setsArray is: ${finalSetsArray}\n`) // DEBUG
 			let diceResult: any = [];
 			for (let i = 0; i < Number(diceSet[1]); i++) {
-				// console.log(`We are now in the nested for loop. i is: ${i}`); // DEBUG
+				LogDebug(`DiceCommand > We are now in the nested for loop. i is: ${i}`); // DEBUG
 				if (diceSet[0] > 10000) {
 					await ctx.message.reply(new Embed({
 						title: "Too Many Sides",
@@ -1867,9 +1966,9 @@ class DiceCommand extends Command {
 					return;
 				}
 				const chosenNumber = RandomNumber(1, Number(diceSet[0]), ctx.channel.id);
-				// console.log(`We now have the chosen number. chosenNumber is: ${chosenNumber}`); // DEBUG
+				LogDebug(`DiceCommand > We now have the chosen number. chosenNumber is: ${chosenNumber}`); // DEBUG
 				diceResult.push(chosenNumber);
-				// console.log(`We just pushed chosenNumber to diceResult. diceResult is: ${diceResult}\n`); // DEBUG
+				LogDebug(`DiceCommand > We just pushed chosenNumber to diceResult. diceResult is: ${diceResult}\n`); // DEBUG
 			}
 			if (Number(diceSet[1]) < 1 || isNaN(Number(diceSet[1]))) {
 				await ctx.message.reply(new Embed({
@@ -1888,11 +1987,11 @@ class DiceCommand extends Command {
 				return;
 			}
 			else if (diceSet[1] == "1") {
-				// console.log(`diceSet[1] is equal to 1 - diceSet is: ${diceSet}`); // DEBUG
+				LogDebug(`DiceCommand > diceSet[1] is equal to 1 - diceSet is: ${diceSet}`); // DEBUG
 				finalResult += `I rolled a ${diceSet[0]} sided die. The result is ${diceResult[0]}.\n`
 			}
 			else {
-				// console.log(`diceSet[1] is not equal to 1 - diceSet is: ${diceSet}`); // DEBUG
+				LogDebug(`DiceCommand > diceSet[1] is not equal to 1 - diceSet is: ${diceSet}`); // DEBUG
 				finalResult += `I rolled ${diceSet[1]} ${diceSet[0]} sided dice. The results are ${diceResult.join(", ")}.\n`
 			}
 		}
