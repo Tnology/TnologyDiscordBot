@@ -1,4 +1,4 @@
-Pre-Alpha v0.2.5
+Pre-Alpha v0.2.5-1
 
 Changelog:
-- Fixed a bug where the rock-paper-scissors command might return an improperly formatted error upon entering an invalid option
+- Fixed the broken bugfix with the RPS command

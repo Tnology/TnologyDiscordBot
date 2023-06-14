@@ -786,7 +786,7 @@ class RockPaperScissorsCommand extends Command {
 
 		const botChoice = DetermineBotChoice(RandomNumber(1, 3)!);
 		let winner = "";
-		if (userChoice.length == 0 || ["rock", "paper", "scissors"].includes(userChoice)) {
+		if (userChoice.length == 0 || !["rock", "paper", "scissors"].includes(userChoice)) {
 			await ctx.message.reply(
 				new Embed({
 					title: "Error!",
