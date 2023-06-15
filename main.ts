@@ -1,14 +1,3 @@
-// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
-// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
-// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
-// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
-// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
-// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
-// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
-// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
-// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
-// TODO: Add the Discord-specific logging system for each channel in Pre-Alpha v0.2.7! I am putting these comments up here so I don't forget!
-
 import {
 	CommandClient,
 	GatewayIntents,
@@ -39,7 +28,13 @@ try {
 	loggingLevel = Deno.env.get("LOGGING_LEVEL")!.toUpperCase();
 }
 catch (err) {
-	loggingLevel = undefined;
+	if (err.message.includes("Cannot read properties of undefined")) {
+		loggingLevel = undefined;
+	}
+	else {
+		console.log(`Critical Error - The logging level cannot be properly set! Please contact the developer!\nError: ${err}\nError Message: ${err.message}\n`);
+		loggingLevel = undefined;
+	}
 }
 
 
@@ -48,10 +43,93 @@ if (!["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"].includes(loggingLevel!) |
 	loggingLevel = "INFO";
 }
 
+const criticalChannel = Deno.env.get("CRITICAL_LOGGING_CHANNEL");
+const errorChannel = Deno.env.get("ERROR_LOGGING_CHANNEL");
+const warningChannel = Deno.env.get("WARNING_LOGGING_CHANNEL");
+const infoChannel = Deno.env.get("INFO_LOGGING_CHANNEL");
+const debugChannel = Deno.env.get("DEBUG_LOGGING_CHANNEL");
+
 const botStartLoggingChannel = Deno.env.get("BOT_START_CHANNEL");
 const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL");
 const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL");
 const dmLoggingChannel = Deno.env.get("DM_LOGGING_CHANNEL");
+
+function LogCritical(message: string) {
+	// This will always log.
+	console.log(`\n\n*****CRITICAL ERROR*****\n\nA critical error has occurred. Please contact the developer if this causes an issue!\nTime: ${GetFormattedTime(Date.now())}\nMessage:\n${message}\n\n************************`);
+	if (criticalChannel != "-1" && criticalChannel != undefined) {
+		SendEmbed(criticalChannel, "‼️ Critical Error!", `A critical error has occured. Please contact the developer if this causes an issue!\n**Time:** <t:${Date.now()}>\n**Message:**\n\`\`\`\n${message}\n\`\`\`\n`, 0x550000)
+	}
+	return;
+}
+
+function LogError(message: string) {
+	// This will log if the logging level is: CRITICAL, ERROR
+	if (!["ERROR", "WARNING", "INFO", "DEBUG"].includes(loggingLevel!)) {
+		return -1;
+	}
+	if (errorChannel != "-1" && errorChannel != undefined) {
+		SendEmbed(errorChannel, "⛔ Error", `An error has occured.\n**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0xFF0000);
+	}
+	let messageArray = message.split("\n").slice(1);
+	let finalOutput = `${GetFormattedTime(Date.now())} | [ERROR]: ${message.split("\n")[0]}\n`;
+	for (let lineIndex in messageArray) {
+		finalOutput += `  > ${GetFormattedTime(Date.now())} | [ERROR]: ${messageArray[lineIndex]}\n`;
+	}
+	console.log(finalOutput);
+	return;
+}
+
+function LogWarning(message: string) {
+	// This will log if the logging level is: CRITICAL, ERROR, WARNING
+	if (!["WARNING", "INFO", "DEBUG"].includes(loggingLevel!)) {
+		return -1;
+	}
+	if (warningChannel != "-1" && warningChannel != undefined) {
+		SendEmbed(warningChannel, "⚠️ Warning", `A warning has occurred.\n**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0xFFFF00);
+	}
+	let messageArray = message.split("\n").slice(1);
+	let finalOutput = `${GetFormattedTime(Date.now())} | [WARNING]: ${message.split("\n")[0]}\n`;
+	for (let lineIndex in messageArray) {
+		finalOutput += `  > ${GetFormattedTime(Date.now())} | [WARNING]: ${messageArray[lineIndex]}\n`;
+	}
+	console.log(finalOutput);
+	return;
+}
+
+function LogInfo(message: string) {
+	// This will log if the logging level is: CRITICAL, ERROR, WARNING, INFO
+	if (!["INFO", "DEBUG"].includes(loggingLevel!)) {
+		return -1;
+	}
+	if (infoChannel != "-1" && infoChannel != undefined) {
+		SendEmbed(infoChannel, "ℹ️ Info", `Information has been logged.\n**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0x0000FF);
+	}
+	let messageArray = message.split("\n").slice(1);
+	let finalOutput = `${GetFormattedTime(Date.now())} | [INFO]: ${message.split("\n")[0]}\n`;
+	for (let lineIndex in messageArray) {
+		finalOutput += `  > ${GetFormattedTime(Date.now())} | [INFO]: ${messageArray[lineIndex]}\n`;
+	}
+	console.log(finalOutput);
+	return;
+}
+
+function LogDebug(message: string) {
+	// This will log if the logging level is: CRITICAL, ERROR, WARNING, INFO, DEBUG
+	if (loggingLevel != "DEBUG") {
+		return -1;
+	}
+	if (debugChannel != "-1" && debugChannel != undefined) {
+		SendEmbed(debugChannel, "🔰 Debug", `**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0x5555FF);
+	}
+	let messageArray = message.split("\n").slice(1);
+	let finalOutput = `${GetFormattedTime(Date.now())} | [DEBUG]: ${message.split("\n")[0]}\n`;
+	for (let lineIndex in messageArray) {
+		finalOutput += `  > ${GetFormattedTime(Date.now())} | [DEBUG]: ${messageArray[lineIndex]}\n`;
+	}
+	console.log(finalOutput);
+	return;
+}
 
 let maximumRandomNumber: number;
 
@@ -80,11 +158,25 @@ const disableBidomeStupidMessages = Deno.env.get("DISABLE_BIDOME_STUPID_MESSAGES
 
 let reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
 
-for (let i = 0; i < oneWordStoryChannels!.length; i++) {
-	if (twoWordStoryChannels!.includes(oneWordStoryChannels![i])) {
-		console.error(
-			`Error: Channel is used for both one-word and two-word story channel! Please fix this in your .env file!\nOne-Word and Two-Word Story Channels have been disabled.`
-		);
+try {
+	for (let i = 0; i < oneWordStoryChannels!.length; i++) {
+		if (twoWordStoryChannels!.includes(oneWordStoryChannels![i])) {
+			LogError(
+				`Error: Channel is used for both one-word and two-word story channel! Please fix this in your .env file!\nOne-Word and Two-Word Story Channels have been disabled.`
+			);
+			oneWordStoryChannels = ["-1"];
+			twoWordStoryChannels = ["-1"];
+		}
+	}
+}
+catch (error) {
+	if (error.message.includes("Cannot read properties of undefined")) {
+		LogError(`Error checking for conflicting channels between one word and two word story channels! Please ensure you have proper values set. To disable this feature, set the values to -1. Refer to .env.example for more information.\nOne Word Story and Two Word Story have been disabled.`);
+		oneWordStoryChannels = ["-1"];
+		twoWordStoryChannels = ["-1"];
+	}
+	else {
+		LogCritical(`An unknown error occurred while attempting to check for conflicting channels between one word story and two word story! Please contact the developer!\nError: ${error}\nError Message: ${error.message}\nError Stack: ${error.stack}`)
 		oneWordStoryChannels = ["-1"];
 		twoWordStoryChannels = ["-1"];
 	}
@@ -95,7 +187,8 @@ function SendEmbed(channelid: string, title: string, description: string, color:
 		return false;
 	}
 
-	bot.channels
+	try {
+		bot.channels
 		.sendMessage(
 			channelid,
 			new Embed({
@@ -105,21 +198,31 @@ function SendEmbed(channelid: string, title: string, description: string, color:
 			})
 		)
 		.catch((error) => {
-			if (String(error).includes("(10003) Unknown Channel")) {
-				if (channelid == usernameChangeLoggingChannel) {
-					console.error(
-						`*****Embed Error*****\nAn error occurred attempting to send an embed.\n\nProblem: It appears that the Username Change Logging Channel cannot be found. Please check your .env file and the bot's permissions.\n\nOther Error Info:\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----Error Description-----\n${description}\n-----End Error Description-----\n\nAttempted Color: ${color}\n\nError: ${error}\nProblem (Repeated): It appears that the Username Change Logging Channel cannot be found. Please check your .env file and the bot's permissions.\n*****End Embed Error*****\n`
-					);
-					return false;
-				}
-			}
-			else {
-				console.error(
-					`*****Embed Error*****\nAn error occurred attempting to send an embed.\n\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----Error Description-----\n${description}\n-----End Error Description-----\n\nAttempted Color: ${color}\n\nError: ${error}\n*****End Embed Error*****\n`
+			// if (String(error).includes("(10003) Unknown Channel")) {
+			// 	if (channelid == usernameChangeLoggingChannel) {
+			// 		console.error(
+			// 			`*****Embed Error*****\nAn error occurred attempting to send an embed.\n\nProblem: It appears that the Username Change Logging Channel cannot be found. Please check your .env file and the bot's permissions.\n\nOther Error Info:\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----Error Description-----\n${description}\n-----End Error Description-----\n\nAttempted Color: ${color}\n\nError: ${error}\nProblem (Repeated): It appears that the Username Change Logging Channel cannot be found. Please check your .env file and the bot's permissions.\n*****End Embed Error*****\n`
+			// 		);
+			// 		return false;
+			// 	}
+			// }
+			// else {
+				LogError(
+					`Embed Error: An error occurred attempting to send an embed.\nAttempted Channel ID: ${channelid}\nAttempted Title: ${title}\n\n-----Attempted Description-----\n${description}\n-----End Attempted Description-----\n\nAttempted Color: ${color}\n\nError: ${error}\n*****End Embed Error*****\n`
 				);
 				return false;
-			}
+			// }
 		});
+	}
+	catch (error) {
+		if (error.message.includes("Cannot access 'bot' before initialization")) {
+			return false;
+		}
+		else {
+			LogCritical(`A critical error occurred in the SendEmbed function!\nError: ${error}\nError Message: ${error.message}\nError Stack: ${error.stack}\n`)
+		}
+	}
+	
 
 	return true;
 }
@@ -328,7 +431,7 @@ function DetermineBotChoice(choiceNum: number) {
 		case 3:
 			return "scissors";
 		default:
-			console.log("yeah this wasn't meant to happen lol");
+			LogError(`An error has occurred!\nError Details:\nFunction "DetermineBotChoice" returned an invalid value!\nExpected Values: 1, 2, 3\nReturned Value: ${choiceNum}\nPlease report this to the developer!`);
 			return "error";
 	}
 }
@@ -441,49 +544,6 @@ function GetFormattedTime(timestamp: number | string) {
 	return new Date(timestamp).toString().split(" GMT")[0];
 }
 
-function LogCritical(message: string) {
-	// This will always log.
-	console.log(`\n\n*****CRITICAL ERROR*****\n\nA critical error has occurred. Please contact the developer!\nTime: ${GetFormattedTime(Date.now())}\nMessage:\n${message}\n\n************************`);
-	return;
-}
-
-function LogError(message: string) {
-	// This will log if the logging level is: CRITICAL, ERROR
-	if (!["ERROR", "WARNING", "INFO", "DEBUG"].includes(loggingLevel!)) {
-		return -1;
-	}
-	console.log(`\n\n${GetFormattedTime(Date.now())} | [ERROR]: ${message}`);
-	return;
-}
-
-function LogWarning(message: string) {
-	// This will log if the logging level is: CRITICAL, ERROR, WARNING
-	if (!["WARNING", "INFO", "DEBUG"].includes(loggingLevel!)) {
-		return -1;
-	}
-	console.log(`\n\n${GetFormattedTime(Date.now())} | [WARNING]: ${message}`);
-	return;
-}
-
-function LogInfo(message: string) {
-	// This will log if the logging level is: CRITICAL, ERROR, WARNING, INFO
-	if (!["INFO", "DEBUG"].includes(loggingLevel!)) {
-		return -1;
-	}
-	console.log(`\n\n${GetFormattedTime(Date.now())} | [INFO]: ${message}`);
-	return;
-}
-
-function LogDebug(message: string) {
-	// This will log if the logging level is: CRITICAL, ERROR, WARNING, INFO, DEBUG
-	if (loggingLevel != "DEBUG") {
-		return -1;
-	}
-	console.log(`\n\n${GetFormattedTime(Date.now())} | [DEBUG]: ${message}`);
-	return;
-}
-
-
 
 const bot = new CommandClient({
 	caseSensitive: false,
@@ -504,10 +564,10 @@ const bot = new CommandClient({
 
 bot.on("ready", () => {
 	developerMode == false
-		? console.log(
+		? LogInfo(
 				`The bot is ready. The bot's info is the following:\nBot Username: ${bot.user!.tag}\nBot Owner(s): ${ownersArray}\nVersion: ${version}`
 		  )
-		: console.log(`The bot is ready and is in developer mode.\nBot Username: ${bot.user!.tag}\nBot Owner(s): ${ownersArray}\nVersion: ${version}`);
+		: LogInfo(`The bot is ready and is in developer mode.\nBot Username: ${bot.user!.tag}\nBot Owner(s): ${ownersArray}\nVersion: ${version}`);
 	botStartLoggingChannel != "-1"
 		? SendEmbed(
 				botStartLoggingChannel!,
@@ -531,13 +591,21 @@ bot.on("messageCreate", (msg) => {
 		return;
 	}
 
-	if (discussionThreadsEnabled) {
-		if (discussionChannels!.includes(msg.channel.id)) {
-			msg.startThread({
-				name: "Discussion Thread",
-			});
+	// try {
+		if (discussionThreadsEnabled) {
+			if (discussionChannels!.includes(msg.channel.id)) {
+				msg.startThread({
+					name: "Discussion Thread",
+				});
+			}
 		}
-	}
+	// }
+	// catch (error) {
+		// if (!error.message.includes("Cannot read properties of undefined")) {
+			// LogCritical(`Critical Error in the bot.on messageCreate event!\nError: ${error}\nError Message: ${error.message}\nError Stack: ${error.stack}`)
+		// }
+	// }
+
 
 	if (!oneWordStoryChannels?.includes("-1")) {
 		let messageValid = true;
@@ -627,49 +695,41 @@ bot.on("messageCreate", (msg) => {
 });
 
 bot.on("gatewayError", (error) => {
-	console.error(
-		`A gateway has occurred! Here are the details: \nError Type: ${error.type}\nError Message: ${error.message}\nError Timestamp:${error.timeStamp}\nError: ${error.error}\n`
-	);
-	console.log(error);
+	LogError(`A gateway error has occurred!\nError Type: ${error.type}\nError Message: ${error.message}\nError Timestamp: ${error.timeStamp}\nError: ${error.error}\n`)
 });
 
 bot.on("commandError", (ctx, error) => {
 	if (error.message.includes("No such file or directory (os error 2): open './rps_custom_options.csv'")) {
-		console.log(
+		LogError(
 			"\n***** Error: No custom RPS options file found! To stop seeing this error, please create the file and leave it empty. Refer to README.md for more information.*****\n"
 		);
 		return;
 	}
-	console.log("An error has occurred! Please implement proper error handling!");
+	LogError(`An error has occurred!\nName of Error: ${error.name}\nMessage of Error: ${error.message}\nCause of Error: ${error.cause}\nError: ${error}\nError Stack:\n${error.stack}\n\n`);
 	ctx.message.reply(
 		new Embed({
 			title: "Error!",
 			description: `An unexpected error has occurred. Please contact the developer if you believe this shouldn't happen!\n**Error:** \`${error.name}\`\n**Error Cause:** \`${error.cause}\`\n**Full Error:**\n\`\`\`js\n${error.stack}\n\`\`\``,
 		})
 	);
-	console.log(`Name of Error: ${error.name}`);
-	console.log(`Message of Error: ${error.message}`);
-	console.log(`Cause of Error: ${error.cause}`);
-	console.log(`Error: ${error}\n`);
-	console.log(`Error Stack: ${error.stack}\n\n`);
 });
 
-bot.on("userUpdate", (before, after) => {
-	if (before.tag != after.tag) {
-		if (usernameChangeLoggingChannel == "-1") {
-			return;
-		} else if (usernameChangeLoggingChannel == undefined) {
-			console.error(`Error - Username Change Logging Channel (${usernameChangeLoggingChannel}) is undefined. Please enter "-1" as your .env value if you wish to disable this.`);
-			return;
-		}
+// bot.on("userUpdate", (before, after) => {
+// 	if (before.tag != after.tag) {
+// 		if (usernameChangeLoggingChannel == "-1") {
+// 			return;
+// 		} else if (usernameChangeLoggingChannel == undefined) {
+// 			console.error(`Error - Username Change Logging Channel (${usernameChangeLoggingChannel}) is undefined. Please enter "-1" as your .env value if you wish to disable this.`);
+// 			return;
+// 		}
 		
-		SendEmbed(usernameChangeLoggingChannel, "Usernname Changed", `**Before:** ${before.tag}\n**After:** ${after.tag}`, 0x0000FFF);
-	}
-	else if (before.timestamp != after.timestamp || before.id != after.id) {
-		console.log(`This definitely shouldn't be happening! Somehow, a user updated their timestamp or ID!\nBefore Timestamp: ${before.timestamp}\nAfter Timestamp: ${after.timestamp}\nBefore ID: ${before.id}\nAfter ID: ${after.id}`)
+// 		SendEmbed(usernameChangeLoggingChannel, "Usernname Changed", `**Before:** ${before.tag}\n**After:** ${after.tag}`, 0x0000FFF);
+// 	}
+// 	else if (before.timestamp != after.timestamp || before.id != after.id) {
+		// console.log(`This definitely shouldn't be happening! Somehow, a user updated their timestamp or ID!\nBefore Timestamp: ${before.timestamp}\nAfter Timestamp: ${after.timestamp}\nBefore ID: ${before.id}\nAfter ID: ${after.id}`)
 		// TODO: Add this specific message to shell + eval logging channels
-	}
-})
+	// }
+// })
 
 class HelpCommand extends Command {
 	name = "help";
@@ -812,14 +872,14 @@ class RockPaperScissorsCommand extends Command {
 				let tempLosesAgainst = "";
 				for await (const cell of row) {
 					if (tempCounter > 3) {
-						console.error(`Error - Invalid CSV Format, Please refer to \"./rps_custom_options.csv.example\".\nRPS custom options will not work!`);
+						LogError(`RPS Error - Invalid CSV Format, please refer to \"./rps_custom_options.csv.example\".\nRPS custom options will not work!`);
 						customOptionsDisabled = true;
 						break;
 					} else if (tempCounter == 1) {
 						tempName = cell;
 					} else if (tempCounter == 2) {
 						if (!acceptableCustomOptions.includes(cell)) {
-							console.error(`Error - Invalid CSV Format. ${cell} of ${row} is not rock/paper/scissors/everything/nothing. 
+							LogError(`RPS Error - Invalid CSV Format. ${cell} of ${row} is not rock/paper/scissors/everything/nothing. 
 							Unfortunately, you cannot set custom options for what custom options win/lose against.\nRPS custom options will not work!`);
 							customOptionsDisabled = true;
 							break;
@@ -827,7 +887,7 @@ class RockPaperScissorsCommand extends Command {
 						tempWinsAgainst = cell;
 					} else if (tempCounter == 3) {
 						if (!acceptableCustomOptions.includes(cell)) {
-							console.error(`Error - Invalid CSV Format. ${cell} of ${row} is not rock/paper/scissors/everything/nothing. 
+							LogError(`Error - Invalid CSV Format. ${cell} of ${row} is not rock/paper/scissors/everything/nothing. 
 							Unfortunately, you cannot set custom options for what custom options win/lose against.\nRPS custom options will not work!`);
 							customOptionsDisabled = true;
 							break;
@@ -840,14 +900,14 @@ class RockPaperScissorsCommand extends Command {
 					tempCounter++;
 				}
 				if (tempWinsAgainst == tempLosesAgainst && tempWinsAgainst != "") {
-					console.error(`Error - Invalid CSV Format. ${tempName} both wins against ${tempWinsAgainst}, but also loses against ${tempLosesAgainst}.
+					LogError(`RPS Error - Invalid CSV Format. ${tempName} both wins against ${tempWinsAgainst}, but also loses against ${tempLosesAgainst}.
 					RPS custom options will not work!`);
 					customOptionsDisabled = true;
 				} else if (
 					(tempWinsAgainst == "everything" && tempLosesAgainst != "nothing") ||
 					(tempWinsAgainst == "nothing" && tempLosesAgainst != "everything")
 				) {
-					console.error(`Error - Invalid CSV Format. ${tempName} wins against ${tempWinsAgainst}, but the opposite is ${tempLosesAgainst}.
+					LogError(`RPS Error - Invalid CSV Format. ${tempName} wins against ${tempWinsAgainst}, but the opposite is ${tempLosesAgainst}.
 					If everything or nothing is used for one option, the opposite must be used for the other option. So, if the bot wins against 
 					everything, it must lose against specifically nothing, and vice versa. RPS custom options will not work!`);
 				}
@@ -1145,12 +1205,22 @@ class EvalCommand extends Command {
 	async execute(ctx: CommandContext) {
 		LogDebug(`The EvalCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		console.log(`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`);
-		SendEmbed(
-			evalLoggingChannel!,
-			"Executing Eval Command",
-			`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
-			0x0000ff
-		);
+		if (developerMode) {
+			SendEmbed(
+				evalLoggingChannel!,
+				"Executing Eval Command (Dev)",
+				`**Author:** ${ctx.author} (**User:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+				0x0000ff
+			);
+		}
+		else {
+			SendEmbed(
+				evalLoggingChannel!,
+				"Executing Eval Command",
+				`**Author:** ${ctx.author} (**User:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+				0x0000ff
+			);
+		}
 		try {
 			const evaluatedCode = eval(ctx.argString.replace("```js", "").replace("```", ""));
 			await ctx.message.reply(
@@ -1160,12 +1230,22 @@ class EvalCommand extends Command {
 					color: 0x00ff00,
 				})
 			);
-			SendEmbed(
-				evalLoggingChannel!,
-				"Executed Eval Command",
-				`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n\n**Output:**\n\`\`\`js\n${evaluatedCode}\n\`\`\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
-				0x00ff00
-			);
+			if (developerMode) {
+				SendEmbed(
+					evalLoggingChannel!,
+					"Executed Eval Command (Dev)",
+					`**Author:** ${ctx.author} (**User:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n\n**Output:**\n\`\`\`js\n${evaluatedCode}\n\`\`\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+					0x00ff00
+				);
+			}
+			else {
+				SendEmbed(
+					evalLoggingChannel!,
+					"Executed Eval Command",
+					`**Author:** ${ctx.author} (**User:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n\n**Output:**\n\`\`\`js\n${evaluatedCode}\n\`\`\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+					0x00ff00
+				);
+			}
 		} catch (err) {
 			await ctx.message.reply(
 				new Embed({
@@ -1174,12 +1254,22 @@ class EvalCommand extends Command {
 					color: 0xff0000,
 				})
 			);
-			SendEmbed(
-				evalLoggingChannel!,
-				"Eval Command Error",
-				`Error Executing Code!\n**Author:** \`${ctx.author}\`\n**Error:** \`\`\`js\n${err}\n\`\`\``,
-				0xff0000
-			);
+			if (developerMode) {
+				SendEmbed(
+					evalLoggingChannel!,
+					"Eval Command Error (Dev)",
+					`Error Executing Code!\n**Author:** \`${ctx.author}\`\n**Error:** \`\`\`js\n${err}\n\`\`\``,
+					0xff0000
+				);
+			}
+			else {
+				SendEmbed(
+					evalLoggingChannel!,
+					"Eval Command Error",
+					`Error Executing Code!\n**Author:** \`${ctx.author}\`\n**Error:** \`\`\`js\n${err}\n\`\`\``,
+					0xff0000
+				);
+			}
 		}
 	}
 }
@@ -1192,12 +1282,23 @@ class AwaitEvalCommand extends Command {
 	async execute(ctx: CommandContext) {
 		LogDebug(`The Aval command has begun execution! (Command Author ID: ${ctx.author.id})`);
 		console.log(`\n\n*****\nExecuting Aval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`);
-		SendEmbed(
-			evalLoggingChannel!,
-			"Executing Aval Command",
-			`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
-			0x0000ff
-		);
+		if (developerMode) {
+			SendEmbed(
+				evalLoggingChannel!,
+				"Executing Aval Command (Dev)",
+				`**Author:** ${ctx.author} (**User:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+				0x0000ff
+			);
+		}
+		else {
+			SendEmbed(
+				evalLoggingChannel!,
+				"Executing Aval Command",
+				`**Author:** ${ctx.author} (**User:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+				0x0000ff
+			);
+		}
+
 		try {
 			const evaluatedCode = await eval(ctx.argString.replace("```js", "").replace("```", ""));
 			await ctx.message.reply(
@@ -1207,12 +1308,22 @@ class AwaitEvalCommand extends Command {
 					color: 0x00ff00,
 				})
 			);
-			SendEmbed(
-				evalLoggingChannel!,
-				"Executed Aval Command",
-				`**Author:** ${ctx.author} (**User ID:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n\n**Output:**\n\`\`\`js\n${evaluatedCode}\n\`\`\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
-				0x00ff00
-			);
+			if (developerMode) {
+				SendEmbed(
+					evalLoggingChannel!,
+					"Executed Aval Command (Dev)",
+					`**Author:** ${ctx.author} (**User:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n\n**Output:**\n\`\`\`js\n${evaluatedCode}\n\`\`\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+					0x00ff00
+				);
+			}
+			else {
+				SendEmbed(
+					evalLoggingChannel!,
+					"Executed Aval Command",
+					`**Author:** ${ctx.author} (**User:** \`${ctx.author.tag}\` // **User ID:** \`${ctx.author.id}\`\n\n**Output:**\n\`\`\`js\n${evaluatedCode}\n\`\`\`\n**Code:**\n\`\`\`js\n${ctx.argString}\n\`\`\``,
+					0x00ff00
+				);
+			}
 		} catch (err) {
 			await ctx.message.reply(
 				new Embed({
@@ -1221,12 +1332,22 @@ class AwaitEvalCommand extends Command {
 					color: 0xff0000,
 				})
 			);
-			SendEmbed(
-				evalLoggingChannel!,
-				"Eval Command Error",
-				`Error Executing Code!\n**Author:** \`${ctx.author}\`\n**Error:** \`\`\`js\n${err}\n\`\`\``,
-				0xff0000
-			);
+			if (developerMode) {
+				SendEmbed(
+					evalLoggingChannel!,
+					"Eval Command Error (Dev)",
+					`Error Executing Code!\n**Author:** \`${ctx.author}\`\n**Error:** \`\`\`js\n${err}\n\`\`\``,
+					0xff0000
+				);
+			}
+			else {
+				SendEmbed(
+					evalLoggingChannel!,
+					"Eval Command Error",
+					`Error Executing Code!\n**Author:** \`${ctx.author}\`\n**Error:** \`\`\`js\n${err}\n\`\`\``,
+					0xff0000
+				);
+			}
 		}
 	}
 }
@@ -1780,124 +1901,6 @@ class SendWebhookCommand extends Command {
 	}
 }
 
-class SendWebhookOld extends Command {
-	name = "notimplemented1";
-	description = "Sends a webhook in the channel. Owner only.\n**Syntax:** `sendwebhook <Avatar URL>\\n<Channel>\\n<Name>\\n<Message>`";
-	ownerOnly = true;
-
-	async execute(ctx: CommandContext) {
-		LogDebug(`The SendWebhookOld command has begun execution! (Command Author ID: ${ctx.author.id})`);
-		console.log(1);
-		const avatar = ctx.argString.split("\n")[0];
-		const name = ctx.argString.split("\n")[2];
-		const message = ctx.argString.split("\n")[3];
-		let channel = ctx.message.mentions.channels.first();
-		let channelId;
-		if (name == undefined) {
-			console.log(2);
-			await ctx.message.reply(
-				new Embed({
-					title: "Webhook Error",
-					description: "There was an error sending the webhook.\nPlease enter a valid name.",
-					color: 0xff0000,
-				})
-			);
-			return;
-		} else if (message == undefined) {
-			console.log(3);
-			await ctx.message.reply(
-				new Embed({
-					title: "Webhook Error",
-					description: "There was an error sending the webhook.\nPlease enter a valid message.",
-					color: 0xff0000,
-				})
-			);
-			return;
-		} else if (avatar == undefined) {
-			console.log(4);
-			await ctx.message.reply(
-				new Embed({
-					title: "Webhook Error",
-					description:
-						"There was an error sending a webhook.\nPlease enter a valid avatar URL. If you do not wish to use one, you may use `default` instead.",
-				})
-			);
-		} else if (channel == undefined) {
-			console.log(5);
-			channelId = ctx.argString.split("\n")[1];
-			if (channelId == undefined) {
-				console.log(6);
-				channelId = ctx.channel.id;
-			}
-		}
-		console.log(`7 - below 2 logs are of part 7:`);
-		console.log(name);
-		console.log(message);
-		let webhook: Webhook | undefined = undefined;
-		let webhookExists = false;
-
-		const webhooks = await ctx.channel.fetchWebhooks();
-
-		try {
-			console.log(8);
-			console.log(9);
-			// if (webhooks)
-			// for (const webhookIndex in webhooks) {
-			// console.log(webhooks[webhookIndex].name);
-			// console.log(name);
-			console.log(10);
-			// if (webhooks[webhookIndex].name == name) {
-			// console.log(`11 - below is the webhook info`);
-			// console.log(webhooks[webhookIndex]);
-			// webhookExists = true;
-			// webhook = webhooks[webhookIndex];
-			// break;
-			// }
-			// }
-		} catch (error) {
-			console.log(`12 - below logging is error:`);
-			console.log(error);
-			webhookExists = false;
-		}
-
-		let createdWebhook: Webhook;
-		console.log(13);
-
-		if (webhooks && avatar == "default") {
-			console.log(14);
-			createdWebhook = await Webhook.create(ctx.channel.id, ctx.client, {
-				name: name,
-			});
-		} else if (!webhookExists) {
-			console.log(15);
-			const avatarURL = encode(
-				new Uint8Array(await (await fetch(avatar)).arrayBuffer()) // Credit to @Blocksnmore (Bloxs) for this code as well he's pretty cool
-			);
-
-			createdWebhook = await Webhook.create(ctx.channel.id, ctx.client, {
-				name: name,
-				avatar: `data:image/png;base64,${avatarURL}`, // Credit to @Blocksnmore (Bloxs) for the code.
-			});
-		} else if (webhooks.length == 0) {
-			console.log(16);
-		} else {
-			console.log(17);
-			await ctx.message.reply(`Error!\nMessage: ${message}\nWebhook: ${webhook}\nName: ${name}\nargString: ${ctx.argString}`);
-		}
-
-		if (webhookExists) {
-			console.log(18);
-			console.log(`The webhook exists.`);
-			webhook!.send(message);
-			return;
-		}
-
-		createdWebhook!.send(message);
-
-		await ctx.message.reply("Bidome is my uncle");
-	}
-}
-
 class DiceCommand extends Command {
 	name = "dice";
 	aliases = ["rolldice", "roll"];
@@ -1940,7 +1943,7 @@ class DiceCommand extends Command {
 					tempSides += char;
 				}
 				else {
-					console.log(`Error!\nreachedNumber: ${reachedNumber}\ntempNumberOfDice: ${tempNumberOfDice}\ntempSides: ${tempSides}\ntempFinalArray: ${tempFinalArray}\nsetArray: ${setArray}`)
+					LogError(`DiceCommand Error!\nreachedNumber: ${reachedNumber}\ntempNumberOfDice: ${tempNumberOfDice}\ntempSides: ${tempSides}\ntempFinalArray: ${tempFinalArray}\nsetArray: ${setArray}`)
 				}
 			}
 			LogDebug(`DiceCommand > We have exited the nested for loop. The tempFinalArray is: ${tempFinalArray}\nThe tempSides is: ${tempSides}\n`); // DEBUG
@@ -2022,7 +2025,6 @@ bot.commands.add(ListRemindersCommand);
 bot.commands.add(TimestampCommand);
 bot.commands.add(SuCommand);
 bot.commands.add(VersionCommand);
-bot.commands.add(SendWebhookOld);
 bot.commands.add(AwaitEvalCommand);
 bot.commands.add(SendWebhookCommand);
 bot.commands.add(DiceCommand);

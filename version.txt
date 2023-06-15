@@ -1,8 +1,9 @@
-Pre-Alpha v0.2.6
+Pre-Alpha v0.2.7
 
 Changelog:
-- Added a LOGGING_LEVEL value to .env.example, please update your .env file!
-- Added a logging system with the following logging levels: CRITICAL, ERROR, WARNING, INFO, and DEBUG
-- Uncommented debug console.log()s and replaced them with calls to the LogDebug() function, so they will be seen if the LOGGING_LEVEL .env value is set to "DEBUG"
-- Note that only the debug logging is being used for now. However, other logging types will be used in future versions (such as the bot start message being an INFO message)
-- Discord channels for each specific logging type is planned for Pre-Alpha v0.2.7. Please make sure you have set either your desired channels or "-1" to disable these based on the .env.example file!
+- Added the logging channel system. Please update your .env file according to .env.example if you haven't already!
+- Eval/Aval Logging will now include "(Dev)" in the title if the bot is in developer mode.
+- Migrated some console.log() errors to the new error logging system.
+- Removed the old SendWebhook command, as it's unused and serves no purpose.
+- Fixed a crash which would occur if "ONE_WORD_STORY_CHANNELS" and/or "TWO_WORD_STORY_CHANNELS" was not present in the .env file.
+- Fixed a crash which would occur if "DISCUSSION_CHANNELS" was not present in the .env file while "ENABLE_DISCUSSION_THREADS" is set to "true"
