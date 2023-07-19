@@ -689,7 +689,7 @@ bot.on("messageCreate", (msg) => {
 		}
 	}
 
-	if (msg.channel.isDM() && dmLoggingChannel != "-1") {
+	if (msg.channel.isDM() && dmLoggingChannel != "-1" && msg.author.id != bot.user!.id) {
 		SendEmbed(dmLoggingChannel!, "DM Received", `A DM has been received!\nUser: ${msg.author} (${msg.author.id})\nMessage Content: ${msg.content}`, 0x0000FF)
 	}
 });
@@ -1424,7 +1424,7 @@ class RandomNumberCommand extends Command {
 			return;
 		}
 
-		let randomNumber = RandomNumber(lNum, hNum, ctx.channel.id);
+		const randomNumber = RandomNumber(lNum, hNum, ctx.channel.id);
 
 		if (randomNumber < 0) {
 			return;

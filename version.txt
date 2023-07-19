@@ -1,9 +1,4 @@
-Pre-Alpha v0.2.7
+Pre-Alpha v0.2.7-1
 
 Changelog:
-- Added the logging channel system. Please update your .env file according to .env.example if you haven't already!
-- Eval/Aval Logging will now include "(Dev)" in the title if the bot is in developer mode.
-- Migrated some console.log() errors to the new error logging system.
-- Removed the old SendWebhook command, as it's unused and serves no purpose.
-- Fixed a crash which would occur if "ONE_WORD_STORY_CHANNELS" and/or "TWO_WORD_STORY_CHANNELS" was not present in the .env file.
-- Fixed a crash which would occur if "DISCUSSION_CHANNELS" was not present in the .env file while "ENABLE_DISCUSSION_THREADS" is set to "true"
+- Small Bugfix
