@@ -11,6 +11,7 @@ import { isNumber, isString } from "https://deno.land/x/redis@v0.25.1/stream.ts"
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
+import { uptime } from "https://deno.land/std@0.173.0/node/os.ts";
 
 // TODO: Add a send webhook command.
 // TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
@@ -1776,22 +1777,6 @@ class SuCommand extends Command {
 	}
 }
 
-class VersionCommand extends Command {
-	name = "version";
-	description = "Gets the version of the bot.\n**Syntax:** `version`";
-
-	async execute(ctx: CommandContext) {
-		LogDebug(`The VersionCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
-		await ctx.message.reply(
-			new Embed({
-				title: "Version",
-				description: `The description of the bot is version ${version}.`,
-				color: 0x00ff00,
-			})
-		);
-	}
-}
-
 class SendWebhookCommand extends Command {
 	name = "sendwebhook";
 	aliases = ["webhook", "createwebhook"];
@@ -2007,6 +1992,22 @@ class DiceCommand extends Command {
 	}
 }
 
+class BotInfoCommand extends Command {
+	name = "botinfo";
+	aliases = ["version", "uptime", "info", "mem", "memory", "ram"];
+
+	// TODO: Make the OS uptime display properly with days/hours/minutes. My laptop battery is at 10% and I have to get this commit pushed so I'll do it later.
+
+	async execute(ctx: CommandContext) {
+		LogDebug(`The BotInfoCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
+		await ctx.message.reply(new Embed({
+			title: "Bot Info",
+			description: `**OS Uptime:** ${uptime} Seconds\n**Memory Usage:** ${Math.round(Deno.memoryUsage().heapTotal / 1000000)} MB\n**Bot Version:** ${version}`,
+			color: 0x00FF00,
+		}))
+	}
+}
+
 bot.commands.add(HelpCommand);
 bot.commands.add(Whoami);
 bot.commands.add(ShellCommand);
@@ -2024,10 +2025,10 @@ bot.commands.add(CancelReminderCommand);
 bot.commands.add(ListRemindersCommand);
 bot.commands.add(TimestampCommand);
 bot.commands.add(SuCommand);
-bot.commands.add(VersionCommand);
 bot.commands.add(AwaitEvalCommand);
 bot.commands.add(SendWebhookCommand);
 bot.commands.add(DiceCommand);
+bot.commands.add(BotInfoCommand)
 
 const token = await Deno.readTextFile("./token.txt");
 

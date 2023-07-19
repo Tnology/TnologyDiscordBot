@@ -1,4 +1,5 @@
-Pre-Alpha v0.2.7-1
+Pre-Alpha v0.2.8
 
 Changelog:
-- Small Bugfix
+- Added BotInfo Command with OS uptime, bot memory usage, and the bot version.
+- Removed the Version Command in favor of the BotInfo command; "version" is now an alias of "botinfo"
