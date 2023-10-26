@@ -11,6 +11,25 @@ If you have found a security vulnerability, please let T_nology know (preferably
 - **Alternative Method:** If you do not wish to create a Management Ticket in the Discord server, or you are unable to do so, you can email T_nology at `tnology55@gmail.com`.<br>
 - **Other Alternative Method:** You can create a GitHub issue with the "Security Vulnerability" label.<br>
 
+# Setting up the Bot
+### Requirements:
+  - [Deno](https://docs.deno.com/runtime/manual/getting_started/installation)
+  - Windows 10, Windows 11, or Linux
+    - The only tested Linux distribution is Rocky Linux. It should work on any common distribution - feel free to create a GitHub Issue if something distro-specific is happening.
+    - MacOS _might_ be supported, but it's currently untested.
+### Setting up the Bot:
+  - Clone the repository
+  - Create a `reminders.json` file and add the following to it:
+    ```
+    {
+        
+    }
+    ```
+  - Create a `token.txt` file and add only your bot's token to it.
+  - Create the file `rps_custom_options.csv`
+  - Create the file `.env` and have it be in the format of `.env.example`
+  - To run the bot, run `deno run -A main.ts`
+    - If you don't want to use the `-A` flag, you can just give it the flags it needs.
 
 # Configuring the Bot
 
@@ -23,7 +42,7 @@ To configure the bot, please create a `.env` file (with this specific name). I w
 - For any version of the bot before Monday, May 15th, 2023, refer to it by the first seven (7) letters of the hash of that commit, a dot, and the commit summary in quotes.
   - **Example 1:** 1f1a66f."Add Shell Command + Bot Start Logging"
   - **Example 2:** fd80eda."Initial commit"
-- For any version from Monday, May 15th, 2023, up until now, refer to it by the version found in `version.txt`(e.g. Pre-Alpha v0.0.1)
+- For any version from Monday, May 15th, 2023, up until now, refer to it by the version found in `version.txt` (e.g. Pre-Alpha v0.0.1)
 
 
 # Custom RPS Options

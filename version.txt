@@ -1,5 +1,8 @@
-Pre-Alpha v0.2.8
+Pre-Alpha v0.2.9
 
 Changelog:
-- Added BotInfo Command with OS uptime, bot memory usage, and the bot version.
-- Removed the Version Command in favor of the BotInfo command; "version" is now an alias of "botinfo"
+- I'm back after not having done programming for a long time. I have since pretty much forgotten JavaScript/TypeScript, but I'll try to relearn when I have free time.
+- I'm a university student now, so I don't have as much free time as I used to.
+- I understand that there are a ton of issues with the bot and that it's extremely unstable. This is why it's in the Pre-Alpha stage.
+- However, that's not an excuse for how unusable it is. Hopefully I can find time at some point to relearn at least a little bit of JS/TS and work on the bot.
+- Updated the README file.

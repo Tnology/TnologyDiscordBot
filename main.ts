@@ -13,8 +13,15 @@ import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
 import { uptime } from "https://deno.land/std@0.173.0/node/os.ts";
 
+// FIXME: The bot crashes if there is no reminders.json file, but there is no proper error handling. Add error handling.
+// FIXME: Create the reminders.json file to begin with. The error handling is just in case that fails.
+// FIXME: If the reminders.json file exists but is empty, the bot crashes. Add error handling for this.
+// FIXME: The bot crashes if there is no token.txt file. Add error handling.
+// FIXME: Create the token.txt file for the bot if it doesn't exist already. The error handling is just in case that fails.
+// FIXME: There is an embed error output to the console when first starting up the bot. Please fix this.
+// FIXME: The bot errors if the rps_custom_options.csv file doesn't exist. Add error handling so it treats it as if the file is empty.
+
 // TODO: Add a send webhook command.
-// TODO: See if renaming variables works with VS Code. If not, disable Deno linting.
 
 await config({ export: true });
 
