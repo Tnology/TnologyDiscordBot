@@ -14,7 +14,7 @@ import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
 import { uptime } from "https://deno.land/std@0.173.0/node/os.ts";
 
 // FIXME: The bot crashes if there is no reminders.json file, but there is no proper error handling. Add error handling.
-// FIXME: Create the reminders.json file to begin with. The error handling is just in case that fails.
+// Should Be Fixed: Create the reminders.json file to begin with. The error handling is just in case that fails.
 // FIXME: If the reminders.json file exists but is empty, the bot crashes. Add error handling for this.
 // FIXME: The bot crashes if there is no token.txt file. Add error handling.
 // FIXME: Create the token.txt file for the bot if it doesn't exist already. The error handling is just in case that fails.
@@ -160,11 +160,43 @@ const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL"
 const storyWebhooksEnabled = Deno.env.get("STORY_WEBHOOKS") == "true";
 const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
 
-const usernameChangeLoggingChannel = Deno.env.get("USERNAME_CHANGE_LOGGING_CHANNEL");
+// const usernameChangeLoggingChannel = Deno.env.get("USERNAME_CHANGE_LOGGING_CHANNEL"); // TODO:
 
 const disableBidomeStupidMessages = Deno.env.get("DISABLE_BIDOME_STUPID_MESSAGES") == "true";
 
-let reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
+let reminders: any;
+
+try {
+    reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
+}
+catch (error) {
+    if (error.message.includes("The system cannot find the file specified.")) {
+        LogWarning("The reminders.json file was not found. As a result, the bot will attempt to create a file.");
+        try {
+            const remindersTemp = {}
+            Deno.writeTextFile("./reminders.json", JSON.stringify(remindersTemp));
+            reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
+        }
+        catch (fileCreationError) {
+            LogCritical(`A severe critical error has occurred and the bot will now shut down. Did you give the bot permission to write the file? Please contact T_nology if this is unexpected behavior and if the bot is not modified. \
+            fileCreationError: ${fileCreationError} \
+            fileCreationError.name: ${fileCreationError.name} \
+            fileCreationError.message: ${fileCreationError.message} \
+            fileCreationError.stack: ${fileCreationError.stack}
+            `)
+        }
+    }
+    else {
+        LogCritical(`An unexpected critical error occured where the reminders.json file could not be accessed. Does the bot have read access to the file? If you have not modified the code and are not expecting this error, please notify T_nology. \
+        Error Information: \
+        error: ${error} \
+        error.name: ${error.name} \
+        error.message: ${error.message} \
+        error.stack: ${error.stack}
+        `)
+    }
+}
+
 
 try {
 	for (let i = 0; i < oneWordStoryChannels!.length; i++) {
@@ -2053,38 +2085,48 @@ bot.connect(token, [
 setInterval(async () => {
 	const currentTime = Math.floor(Date.now() / 1000);
 
-	for (const reminder in reminders.reminders) {
-		// console.log("checking") // DEBUG
-		// console.log(reminders.reminders[reminder].Expired == false); // DEBUG
-		// console.log(reminders.reminders[reminder].Timestamp >= currentTime); // DEBUG
-		// console.log(currentTime); // DEBUG
-		// console.log(reminders.reminders[reminder].Timestamp); // DEBUG
-		if (reminders.reminders[reminder].Expired == false && currentTime >= reminders.reminders[reminder].Timestamp) {
-			// console.log("attempting")
-			const user = await bot.users.fetch(reminders.reminders[reminder].UserId);
-			const embed = new Embed({
-				title: "Reminder",
-				description: `<t:${reminders.reminders[reminder].Timestamp}:R> you asked to be reminded about:\n\`\`\`\n${reminders.reminders[reminder].Reason}\n\`\`\``,
-				color: 0x00ff00,
-			});
-			user
-				.send(
-					new Embed({
-						title: "Reminder",
-						description: `<t:${reminders.reminders[reminder].Timestamp}:R> you asked to be reminded about:\n\`\`\`\n${reminders.reminders[reminder].Reason}\n\`\`\``,
-						color: 0x00ff00,
-					})
-				)
-				.catch(async () => {
-					console.log("hi");
-					await bot.channels.sendMessage(reminders.reminders[reminder].ChannelId, {
-						content: `${user}`,
-						embeds: [embed],
-					});
-				});
-			reminders.reminders[reminder].Expired = true;
-			// console.log("expired? yep") // DEBUG
-		}
-		Deno.writeTextFile("./reminders.json", JSON.stringify(reminders));
-	}
+    try {
+        for (const reminder in reminders.reminders) {
+            // console.log("checking") // DEBUG
+            // console.log(reminders.reminders[reminder].Expired == false); // DEBUG
+            // console.log(reminders.reminders[reminder].Timestamp >= currentTime); // DEBUG
+            // console.log(currentTime); // DEBUG
+            // console.log(reminders.reminders[reminder].Timestamp); // DEBUG
+            if (reminders.reminders[reminder].Expired == false && currentTime >= reminders.reminders[reminder].Timestamp) {
+                // console.log("attempting")
+                const user = await bot.users.fetch(reminders.reminders[reminder].UserId);
+                const embed = new Embed({
+                    title: "Reminder",
+                    description: `<t:${reminders.reminders[reminder].Timestamp}:R> you asked to be reminded about:\n\`\`\`\n${reminders.reminders[reminder].Reason}\n\`\`\``,
+                    color: 0x00ff00,
+                });
+                user
+                    .send(
+                        new Embed({
+                            title: "Reminder",
+                            description: `<t:${reminders.reminders[reminder].Timestamp}:R> you asked to be reminded about:\n\`\`\`\n${reminders.reminders[reminder].Reason}\n\`\`\``,
+                            color: 0x00ff00,
+                        })
+                    )
+                    .catch(async () => {
+                        console.log("hi");
+                        await bot.channels.sendMessage(reminders.reminders[reminder].ChannelId, {
+                            content: `${user}`,
+                            embeds: [embed],
+                        });
+                    });
+                reminders.reminders[reminder].Expired = true;
+                // console.log("expired? yep") // DEBUG
+            }
+            Deno.writeTextFile("./reminders.json", JSON.stringify(reminders));
+        }
+    }
+	catch (readRemindersFileError) {
+        if (readRemindersFileError.message.contains("Cannot read properties of undefined")) {
+            // Add {} to the reminders.json file
+        }
+        else {
+            // This is a major problem, handle this as a critical error.
+        }
+    }
 }, 2500);
