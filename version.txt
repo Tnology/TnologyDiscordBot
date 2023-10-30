@@ -1,5 +1,4 @@
-Pre-Alpha v0.3.0-Pre1
+Pre-Alpha v0.3.0-Pre1.1
 
 Changelog:
-- I've had a couple of few-minute segments for me to write some code in class before class starts, I'm only pushing this to make sure it's published to GitHub.
-- This is not nearly completed, I only added a few lines of code.
+- Fixed some broken things because I never tested any of my code. I had like 5 minutes to try running the bot and fixing the code, so hopefully the code works now. If not, I'll fix it later.

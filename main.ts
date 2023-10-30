@@ -178,20 +178,31 @@ catch (error) {
             reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
         }
         catch (fileCreationError) {
-            LogCritical(`A severe critical error has occurred and the bot will now shut down. Did you give the bot permission to write the file? Please contact T_nology if this is unexpected behavior and if the bot is not modified. \
-            fileCreationError: ${fileCreationError} \
-            fileCreationError.name: ${fileCreationError.name} \
-            fileCreationError.message: ${fileCreationError.message} \
+            LogCritical(`A severe critical error has occurred and the bot will now shut down. Did you give the bot permission to write the file? Please contact T_nology if this is unexpected behavior and if the bot is not modified. \n
+            fileCreationError: ${fileCreationError} \n
+            fileCreationError.name: ${fileCreationError.name} \n
+            fileCreationError.message: ${fileCreationError.message} \n
             fileCreationError.stack: ${fileCreationError.stack}
             `)
         }
     }
+    else if (error.message.includes("Unexpected end of JSON input")) {
+        LogWarning(`The reminders.json file appears to be empty. Writing to the file for you.`)
+        const remindersTemp = {}
+        Deno.writeTextFile("./reminders.json", JSON.stringify(remindersTemp));
+        console.log("123")
+        console.log(await Deno.readTextFile("./reminders.json"))
+        console.log("456")
+        reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
+        LogInfo(`The reminders.json file appears to have been written to successfully - the content is: \n
+        await Deno.readTextFile("./reminders.json") - ${await Deno.readTextFile("./reminders.json")}`)
+    }
     else {
-        LogCritical(`An unexpected critical error occured where the reminders.json file could not be accessed. Does the bot have read access to the file? If you have not modified the code and are not expecting this error, please notify T_nology. \
-        Error Information: \
-        error: ${error} \
-        error.name: ${error.name} \
-        error.message: ${error.message} \
+        LogCritical(`An unexpected critical error occured where the reminders.json file could not be accessed. Does the bot have read access to the file? If you have not modified the code and are not expecting this error, please notify T_nology. \n
+        Error Information: \n
+        error: ${error} \n
+        error.name: ${error.name} \n
+        error.message: ${error.message} \n
         error.stack: ${error.stack}
         `)
     }
@@ -2122,7 +2133,7 @@ setInterval(async () => {
         }
     }
 	catch (readRemindersFileError) {
-        if (readRemindersFileError.message.contains("Cannot read properties of undefined")) {
+        if (readRemindersFileError.message.includes("Cannot read properties of undefined")) {
             // Add {} to the reminders.json file
         }
         else {
