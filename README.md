@@ -19,12 +19,6 @@ If you have found a security vulnerability, please let T_nology know (preferably
     - MacOS _might_ be supported, but it's currently untested.
 ### Setting up the Bot:
   - Clone the repository
-  - Create a `reminders.json` file and add the following to it:
-    ```
-    {
-        
-    }
-    ```
   - Create a `token.txt` file and add only your bot's token to it.
   - Create the file `rps_custom_options.csv`
   - Create the file `.env` and have it be in the format of `.env.example`
