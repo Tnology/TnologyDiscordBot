@@ -12,14 +12,7 @@ import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
 import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
 import { uptime } from "https://deno.land/std@0.173.0/node/os.ts";
-
-// FIXME: The bot crashes if there is no reminders.json file, but there is no proper error handling. Add error handling.
-// Should Be Fixed: Create the reminders.json file to begin with. The error handling is just in case that fails.
-// FIXME: If the reminders.json file exists but is empty, the bot crashes. Add error handling for this.
-// FIXME: The bot crashes if there is no token.txt file. Add error handling.
-// FIXME: Create the token.txt file for the bot if it doesn't exist already. The error handling is just in case that fails.
-// FIXME: There is an embed error output to the console when first starting up the bot. Please fix this.
-// FIXME: The bot errors if the rps_custom_options.csv file doesn't exist. Add error handling so it treats it as if the file is empty.
+import { exit } from "https://deno.land/std@0.173.0/node/process.ts";
 
 // TODO: Add a send webhook command.
 
@@ -28,7 +21,7 @@ await config({ export: true });
 const versionFile = await Deno.readTextFile("./version.txt");
 const version = versionFile.split("\n")[0];
 
-const developerMode = Deno.env.get("DEV_MODE") == "true";
+const developerMode = Deno.env.get("DEV_MODE")?.split("#")[0].trim() == "true";
 
 let loggingLevel: string | undefined;
 
@@ -57,10 +50,10 @@ const warningChannel = Deno.env.get("WARNING_LOGGING_CHANNEL");
 const infoChannel = Deno.env.get("INFO_LOGGING_CHANNEL");
 const debugChannel = Deno.env.get("DEBUG_LOGGING_CHANNEL");
 
-const botStartLoggingChannel = Deno.env.get("BOT_START_CHANNEL");
-const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL");
-const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL");
-const dmLoggingChannel = Deno.env.get("DM_LOGGING_CHANNEL");
+const botStartLoggingChannel = Deno.env.get("BOT_START_LOGGING_CHANNEL")?.split("#")[0];
+const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL")?.split("#")[0];
+const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL")?.split("#")[0];
+const dmLoggingChannel = Deno.env.get("DM_LOGGING_CHANNEL")?.split("#")[0];
 
 function LogCritical(message: string) {
 	// This will always log.
@@ -79,9 +72,9 @@ function LogError(message: string) {
 	if (errorChannel != "-1" && errorChannel != undefined) {
 		SendEmbed(errorChannel, "⛔ Error", `An error has occured.\n**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0xFF0000);
 	}
-	let messageArray = message.split("\n").slice(1);
+	const messageArray = message.split("\n").slice(1); // if this has an issue, change from "const messageArray" to "let messageArray"
 	let finalOutput = `${GetFormattedTime(Date.now())} | [ERROR]: ${message.split("\n")[0]}\n`;
-	for (let lineIndex in messageArray) {
+	for (const lineIndex in messageArray) { // if lineIndex has an issue, change from "const lineIndex" to "let lineIndex"
 		finalOutput += `  > ${GetFormattedTime(Date.now())} | [ERROR]: ${messageArray[lineIndex]}\n`;
 	}
 	console.log(finalOutput);
@@ -96,9 +89,9 @@ function LogWarning(message: string) {
 	if (warningChannel != "-1" && warningChannel != undefined) {
 		SendEmbed(warningChannel, "⚠️ Warning", `A warning has occurred.\n**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0xFFFF00);
 	}
-	let messageArray = message.split("\n").slice(1);
+	const messageArray = message.split("\n").slice(1); // if messageArray has an issue, change "const messageArray" to "let messageArray"
 	let finalOutput = `${GetFormattedTime(Date.now())} | [WARNING]: ${message.split("\n")[0]}\n`;
-	for (let lineIndex in messageArray) {
+	for (const lineIndex in messageArray) { // if lineIndex has an issue, change "const lineIndex" to "let lineIndex"
 		finalOutput += `  > ${GetFormattedTime(Date.now())} | [WARNING]: ${messageArray[lineIndex]}\n`;
 	}
 	console.log(finalOutput);
@@ -113,9 +106,9 @@ function LogInfo(message: string) {
 	if (infoChannel != "-1" && infoChannel != undefined) {
 		SendEmbed(infoChannel, "ℹ️ Info", `Information has been logged.\n**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0x0000FF);
 	}
-	let messageArray = message.split("\n").slice(1);
+	const messageArray = message.split("\n").slice(1); // if messageArray has an issue, change "const messageArray" to "let messageArray"
 	let finalOutput = `${GetFormattedTime(Date.now())} | [INFO]: ${message.split("\n")[0]}\n`;
-	for (let lineIndex in messageArray) {
+	for (const lineIndex in messageArray) { // if lineIndex has an issue, change "const lineIndex" to "let lineIndex"
 		finalOutput += `  > ${GetFormattedTime(Date.now())} | [INFO]: ${messageArray[lineIndex]}\n`;
 	}
 	console.log(finalOutput);
@@ -130,9 +123,9 @@ function LogDebug(message: string) {
 	if (debugChannel != "-1" && debugChannel != undefined) {
 		SendEmbed(debugChannel, "🔰 Debug", `**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0x5555FF);
 	}
-	let messageArray = message.split("\n").slice(1);
+	const messageArray = message.split("\n").slice(1); // if messageArray has an issue, change "const messageArray" to "let messageArray"
 	let finalOutput = `${GetFormattedTime(Date.now())} | [DEBUG]: ${message.split("\n")[0]}\n`;
-	for (let lineIndex in messageArray) {
+	for (const lineIndex in messageArray) { // if lineIndex has an issue, change "const lineIndex" to "let lineIndex"
 		finalOutput += `  > ${GetFormattedTime(Date.now())} | [DEBUG]: ${messageArray[lineIndex]}\n`;
 	}
 	console.log(finalOutput);
@@ -141,28 +134,35 @@ function LogDebug(message: string) {
 
 let maximumRandomNumber: number;
 
-if (Deno.env.get("MAXIMUM_RANDOM_NUMBER") == undefined || isNaN(Number(Deno.env.get("MAXIMUM_RANDOM_NUMBER")))) {
-	console.log("NOTICE: Either an invalid value or no value at all was given for the MAXIMUM_RANDOM_NUMBER value in your .env file! The default of 1,000,000 has been set.\nTo stop seeing this message, please set a proper value!");
+if (Deno.env.get("MAXIMUM_RANDOM_NUMBER") == undefined || isNaN(Number(Deno.env.get("MAXIMUM_RANDOM_NUMBER")?.split("#")[0]))) {
+	LogError("NOTICE: Either an invalid value or no value at all was given for the MAXIMUM_RANDOM_NUMBER value in your .env file! The default of 1,000,000 has been set.\nTo stop seeing this message, please set a proper value!");
 	maximumRandomNumber = 1000000;
 }
 else {
-	maximumRandomNumber = Number(Deno.env.get("MAXIMUM_RANDOM_NUMBER"));
+	maximumRandomNumber = Number(Deno.env.get("MAXIMUM_RANDOM_NUMBER")?.split("#")[0]);
 }
 
-const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS") == "true";
-const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split(",");
+const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS")?.split("#")[0].trim() == "true";
+const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split("#")[0].trim().split(",");
 
-let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split(",");
-const oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL");
+let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split("#")[0].trim().split(",");
+const oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL")!.trim().split("#")[0];
 
-let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split(",");
-const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL");
-const storyWebhooksEnabled = Deno.env.get("STORY_WEBHOOKS") == "true";
-const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS") == "true";
+let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split("#")[0].trim().split(",");
+const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL")!.trim().split("#")[0];
+
+const storyWebhooksEnabled = Deno.env.get("STORY_WEBHOOKS")?.split("#")[0].trim() == "true";
+const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS")?.split("#")[0].trim() == "true";
+const ownersOverrideStoryChannels = Deno.env.get("OWNERS_OVERRIDE_STORY_CHANNELS")?.split("#")[0].trim() == "true";
+
+const storyChannelsOverrideList: string[] | undefined = Deno.env.get("STORY_CHANNEL_USER_OVERRIDE")?.split("#")[0].trim().split(",");
+
+const evalEnabled = Deno.env.get("EVAL_DISABLED")?.split("#")[0].trim() == "false";
+const avalEnabled = Deno.env.get("AVAL_DISABLED")?.split("#")[0].trim() == "false";
+const shellEnabled = Deno.env.get("SHELL_DISABLED")?.split("#")[0].trim() == "false";
+
 
 // const usernameChangeLoggingChannel = Deno.env.get("USERNAME_CHANGE_LOGGING_CHANNEL"); // TODO:
-
-const disableBidomeStupidMessages = Deno.env.get("DISABLE_BIDOME_STUPID_MESSAGES") == "true";
 
 let reminders: any;
 
@@ -173,12 +173,16 @@ catch (error) {
     if (error.message.includes("The system cannot find the file specified.")) {
         LogWarning("The reminders.json file was not found. As a result, the bot will attempt to create a file.");
         try {
+            console.log("123 1")
             const remindersTemp = {}
+            console.log("123 2")
             Deno.writeTextFile("./reminders.json", JSON.stringify(remindersTemp));
+            console.log("123 3")
             reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
+            console.log("123 4")
         }
         catch (fileCreationError) {
-            LogCritical(`A severe critical error has occurred and the bot will now shut down. Did you give the bot permission to write the file? Please contact T_nology if this is unexpected behavior and if the bot is not modified. \n
+            LogCritical(`A severe critical error has occurred. Did you give the bot permission to write the file? Please contact T_nology if this is unexpected behavior and if the bot is not modified. \n
             fileCreationError: ${fileCreationError} \n
             fileCreationError.name: ${fileCreationError.name} \n
             fileCreationError.message: ${fileCreationError.message} \n
@@ -190,12 +194,18 @@ catch (error) {
         LogWarning(`The reminders.json file appears to be empty. Writing to the file for you.`)
         const remindersTemp = {}
         Deno.writeTextFile("./reminders.json", JSON.stringify(remindersTemp));
-        console.log("123")
+        LogDebug(`Debug Code: 131 | It appears that the file has been written to because an error doesn't seem to have been thrown.`)
         console.log(await Deno.readTextFile("./reminders.json"))
-        console.log("456")
         reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
-        LogInfo(`The reminders.json file appears to have been written to successfully - the content is: \n
-        await Deno.readTextFile("./reminders.json") - ${await Deno.readTextFile("./reminders.json")}`)
+        LogInfo(`The reminders.json file appears to have been written to successfully - here is the content: \n
+        ${await Deno.readTextFile("./reminders.json")}`)
+    }
+    else if (error.message.includes("is not valid JSON") || 
+        error.message.includes("Expected property name or") || 
+        (error.message.includes("Expected") && "after property name in JSON at") || 
+        error.message.includes("Unterminated string in JSON at")) {
+            LogCritical(`The reminders.json file appears to have invalid data. Is it in proper JSON format?\nIn case you don't want your file overwritten, the bot will now shut down. Please rename your reminders.json file to something else, fix the file, or delete it.`)
+            exit(1)
     }
     else {
         LogCritical(`An unexpected critical error occured where the reminders.json file could not be accessed. Does the bot have read access to the file? If you have not modified the code and are not expecting this error, please notify T_nology. \n
@@ -345,133 +355,25 @@ function RandomNumber(min: number, max: number, channelid: string | undefined=un
 	}
 }
 
-const topicArray = [
-	"the weather",
-	"news about intel",
-	"news about AMD",
-	"news about NVIDIA",
-	"news about Apple",
-	"news about Samsung",
-	"news about Google",
-	"news about Microsoft",
-	"news about Sony",
-	"news about Nintendo",
-	"news about Facebook/Meta",
-	"news about Amazon",
-	"talking about Elon Musk",
-	"what programming language is the best",
-	"what web development framework is the best",
-	"what programming language is the worst",
-	"what web development framework is the worst",
-	"Minecraft",
-	"An interesting fact that not everyone knows about you",
-	"Your favorite video game(s)",
-	"Your favorite movie(s)",
-	"Do you have a 3D Printer? If so, what have you printed?",
-	"Is Moore's law dead?",
-	"Do you use GitHub Copilot?",
-	"How important is responsive design in web develpment (for mobile devices and whatnot)?",
-	"Are MacBooks/iMacs worth it?",
-	"Which is better - iOS or Android?",
-	"What email client do you use?",
-	"What are some good Linux distributions?",
-	"Which is better - Windows, macOS, or Linux?",
-	"Are Chromebooks good?",
-	"What is some software that you wish worked on Linux (properly)?",
-	"Is TikTok a threat to national security?",
-	"Is the US government spying on us?",
-	"Should healthcare be free in the United States?",
-	"Is Communism a good idea?",
-	"Is Socialism a good idea?",
-	"Is GitHub or GitLab better?",
-	"Is Discord or Guilded better?",
-	"Are Telegram or Signal good alternatives to SMS Messaging?",
-	"Is TypeScript better than JavaScript?",
-	"Is Deno better than Node.js?",
-	"Is Rust better than C++?",
-	"How many words per minute do you get typing on a keyboard?",
-	"Should America's education system be revamped?",
-	"How much memory do you have in your computer?",
-	"What phone do you have?",
-	"Is tax theft?",
-	"Should land be a commodity to be bought and sold?",
-	"Is Canada real?",
-	"Is Australia real?",
-	"What are some features that Discord should add?",
-	"Is Discord Nitro worth it?",
-	"Should prisons be based on rehabilitation as opposed to punishment?",
-	"Is water wet?",
-	"Who are some YouTubers that you watch?",
-	"How are you?",
-	"How did you come up with your username?",
-	"What are your favorite foods?",
-	"What are your favorite drinks?",
-	"What are your favorite snacks?",
-	"What are your favorite desserts?",
-	"How many digits of pi do you memorize?",
-	"What time zone are you in?",
-	"Do you eat meat?",
-	"Is your main computer a desktop or a laptop?",
-	"Should seeds be able to be patented?",
-	"Do you touch grass?",
-	"Should teachers have guns at schools?",
-	"What flavors of ice cream do you like?",
-	"Should the United States disband political parties?",
-	"Has Elon Musk made any good decisions for Twitter while owning it?",
-	"Can macaroni and cheese be a Thanksgiving food?",
-	"Is soup a drink?",
-	"Is cereal a soup?",
-	"Is a hot dog a taco?\nBy the way - https://cuberule.com/",
-	"Do you use Guilded?",
-	"What is a movie that has a sequel as good as the original?",
-	"What books have you read?",
-	"What web browser do you use?",
-	"Should it be required by law for companies to give consumers the right to repair? If so, should consumers also get the right to documentation/instructions on how to repair the products?",
-	"Are you good at math?",
-	"What (spoken) languages do you know?",
-	"Is Windows 11 better than Windows 10?",
-	"Did you ever use Windows XP? If so, did you ever use it on an actual machine (outside of a VM)?",
-	"Is it transphobic to have a preference to not date those who are transgender?",
-	"Do you like s'mores?",
-	"Do you like tacos?",
-	"Do you like pizza?",
-	"Do you like burgers?",
-	"What's a popular food that you have never tried?",
-	"Do you like salad?",
-	"Do you sleep with any light on in the room (e.g. TV or lamp)?",
-	"What FOV do you play Minecraft at?",
-	"What's a good tip you have learned for software development?",
-	"Should airplanes be legally required to always have a doctor on board?",
-	"Do you have any USB Flash Drives?",
-	"How do you feel about NFTs and cryptocurrency?",
-	"Is hardware-based authentication (such as YubiKeys) a good idea for two-factor authentication?",
-	"Is it a good idea to use a password manager?",
-	"Do you use a VPN? If so, what VPN do you use?",
-	"Should it be illegal to raise a child vegan?",
-	"Should the US use the Metric System?",
-	"Your username is now a shop, what do you sell?",
-	"You are hanging down from a tall building, and you are holding onto your profile picture. Do you trust it to not let go?",
-	"Should Discord allow client modifications?",
-	"Is a 360Hz monitor worth it?",
-	"What is the refresh rate of your monitor?",
-	"Which is better: WinRaR or 7Zip?",
-	"Is bacon good on cheeseburgers?",
-	"Is pineapple good on pizza?",
-	"Do you prefer your keyboard to have a numberpad or be TKL?",
-	"Are oatmeal raisin cookies good?",
-	"How many hours of sleep do you typically get each night?",
-	'Does the "militia" in the Second Amendment of the United States Constitution refer to the people?',
-	"Suppose you have an old boat, the wood of whioch starts to rot out every now and then. If you slowly replace the wood plank by plank, by the time every plank has been replaced, is it still the same boat?",
-	"Is it okay to use a VPN to bypass a website's region lock?",
-	"Have you ever donated to Wikipedia? Do you ever plan on donating to it in the future?",
-	"Is it okay to pirate software if you own a license for it?",
-	"Is it okay to pirate games if they are no longer obtainable?",
-	"Have you ever built a PC? Do you ever plan on building a PC in the future?",
-	"Should you strive to make code that is optimized for performance or readability?",
-	"Are you in a relationship?",
-	"Do you have an antivirus? If so, what antivirus do you have?",
-	"Do you use an adblocker? If so, what adblocker do you use?",
-];
+let topicArray: any;
+
+try {
+    const topics = await Deno.readTextFile("topics.txt");
+    topicArray = topics.split("\n");
+}
+catch (getTopicsError) {
+    topicArray = ["How are you?"]
+    if (getTopicsError.message.includes("(os error 2):")) {
+        LogError(`The topics.txt file was not found. To stop seeing this error, please create the topics.txt file.`)
+    }
+    else {
+        LogError(`An error occurred while trying to get topics from the topics.txt file. Please make sure that your topics are seperated by newlines.\n 
+        getTopicsError: ${getTopicsError} \n
+        getTopicsError.message: ${getTopicsError.message} \n
+        getTopicsError.stack: ${getTopicsError.stack}`)
+    }
+}
+
 
 function DetermineBotChoice(choiceNum: number) {
 	switch (choiceNum) {
@@ -661,6 +563,7 @@ bot.on("messageCreate", (msg) => {
 	if (!oneWordStoryChannels?.includes("-1")) {
 		let messageValid = true;
 		if (oneWordStoryChannels!.includes(msg.channel.id)) {
+            LogDebug(`Debug Code: 141`)
 			if (!(msg.content[0] == "/" && msg.content[1] == "/")) {
 				if (
 					msg.content.split(" ").length > 1 ||
@@ -672,9 +575,20 @@ bot.on("messageCreate", (msg) => {
 					//console.log(`Message has been deleted for having too many words\nType: One Word Story\nMessage Content: ${msg.content}`);
 					if (botOverridesStoryChannels) {
 						if (msg.author.bot) {
+                            LogDebug(`A bot has sent a message in a one word story channel. botOverideStoryChannels is set to ${botOverridesStoryChannels}, so the bot's message will not be affected.`)
 							return 1;
 						}
 					}
+                    if (ownersOverrideStoryChannels) {
+                        if (ownersArray?.includes(msg.author.id)) {
+                            LogDebug(`An owner has sent a message in a one word story channel. ownersOverrideStoryChannels is set to ${ownersOverrideStoryChannels}, so the owner's's message will not be affected.`)
+                            return 1;
+                        }
+                    }
+                    if (storyChannelsOverrideList! != undefined && storyChannelsOverrideList.includes(msg.author.id)) {
+                        LogDebug(`A user on the storyChannelsOverrideList has sent a message in a one word story channel. | storyChannelsOverrideList != undefined: ${storyChannelsOverrideList != undefined} | storyChannelsOverrideList: ${storyChannelsOverrideList} | storyChannelOverrideList.includes(msg.author.id): ${storyChannelsOverrideList.includes(msg.author.id)}`)
+                        return 1;
+                    }
 					if (oneWordStoryLoggingChannel != "-1") {
 						SendEmbed(
 							oneWordStoryLoggingChannel!,
@@ -688,7 +602,10 @@ bot.on("messageCreate", (msg) => {
 					msg.delete();
 				}
 			}
+            LogDebug(`Debug Code: 142`)
+            console.log(storyWebhooksEnabled)
 			if (storyWebhooksEnabled && messageValid && !(msg.content[0] == "/" && msg.content[1] == "/")) {
+                LogDebug(`Debug Code: 143`)
 				SendWebhook(msg, 1);
 				msg.delete();
 			}
@@ -710,9 +627,20 @@ bot.on("messageCreate", (msg) => {
 				if (msg.content.split(" ").length > 2) {
 					if (botOverridesStoryChannels) {
 						if (msg.author.bot) {
+                            LogDebug(`A bot has sent a message in a two word story channel. botOverideStoryChannels is set to ${botOverridesStoryChannels}, so the bot's message will not be affected.`)
 							return 1;
 						}
 					}
+                    if (ownersOverrideStoryChannels) {
+                        if (ownersArray?.includes(msg.author.id)) {
+                            LogDebug(`An owner has sent a message in a two word story channel. ownersOverrideStoryChannels is set to ${ownersOverrideStoryChannels}, so the owner's's message will not be affected.`)
+                            return 1;
+                        }
+                    }
+                    if (storyChannelsOverrideList! != undefined && storyChannelsOverrideList.includes(msg.author.id)) {
+                        LogDebug(`A user on the storyChannelsOverrideList has sent a message in a two word story channel. | storyChannelsOverrideList != undefined: ${storyChannelsOverrideList != undefined} | storyChannelsOverrideList: ${storyChannelsOverrideList} | storyChannelOverrideList.includes(msg.author.id): ${storyChannelsOverrideList.includes(msg.author.id)}`)
+                        return 1;
+                    }
 					if (twoWordStoryLoggingChannel != "-1") {
 						SendEmbed(
 							twoWordStoryLoggingChannel!,
@@ -733,13 +661,6 @@ bot.on("messageCreate", (msg) => {
 		}
 	}
 
-	if (disableBidomeStupidMessages) {
-		if (msg.author.id == "778670182956531773" && msg.channel.id == "635483003686223913") {
-			msg.delete();
-			msg.author.send("nuh uh");
-		}
-	}
-
 	if (msg.channel.isDM() && dmLoggingChannel != "-1" && msg.author.id != bot.user!.id) {
 		SendEmbed(dmLoggingChannel!, "DM Received", `A DM has been received!\nUser: ${msg.author} (${msg.author.id})\nMessage Content: ${msg.content}`, 0x0000FF)
 	}
@@ -749,8 +670,12 @@ bot.on("gatewayError", (error) => {
 	LogError(`A gateway error has occurred!\nError Type: ${error.type}\nError Message: ${error.message}\nError Timestamp: ${error.timeStamp}\nError: ${error.error}\n`)
 });
 
+bot.on("error", (error) => {
+    LogCritical(`A critical error has occurred.\nerror: ${error}\nerror.message: ${error.message}\nerror.stack: ${error.stack}`)
+})
+
 bot.on("commandError", (ctx, error) => {
-	if (error.message.includes("No such file or directory (os error 2): open './rps_custom_options.csv'")) {
+	if (error.message.includes("No such file or directory (os error 2): open './rps_custom_options.csv'") || error.message.includes("The system cannot find the file specified. (os error 2): open './rps_custom_options.csv'")) {
 		LogError(
 			"\n***** Error: No custom RPS options file found! To stop seeing this error, please create the file and leave it empty. Refer to README.md for more information.*****\n"
 		);
@@ -850,6 +775,14 @@ class ShellCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
+        if (!shellEnabled) {
+            await ctx.message.reply(new Embed({
+                title: "Shell Disabled",
+                description: "For security reasons, the shell command has been disabled. Please check your configuration if this is not intentional.",
+                color: 0xFF0000,
+            }))
+            return;
+        }
 		console.log(`**********\nA shell command has began execution.\n**********`);
 		await ctx.message.reply(
 			new Embed({
@@ -900,12 +833,14 @@ class RockPaperScissorsCommand extends Command {
 		const userChoice = ctx.argString.split(" ")[0].toLowerCase();
 		let customOptionsDisabled = false;
 		LogDebug(`RockPaperScissorsCommand userChoice: ${userChoice}`); // DEBUG
+            
+        Deno.readTextFile("./rps_custom_options.csv").catch(() => {
+            customOptionsDisabled = true;
+        })
 
 		const _file = await Deno.open("./rps_custom_options.csv").catch((error) => {
 			if (error.message.includes("No such file or directory (os error 2): open './rps_custom_options.csv'")) {
-				console.log(
-					"\n***** Error: No custom RPS options file found! To stop seeing this error, please create the file and leave it empty. Refer to README.md for more information.*****\n"
-				);
+				LogError(`No custom RPS options file found! To stop seeing this error, please create the file and leave it empty if you don't want to use it. Refer to README.md for more information.`)
 				customOptionsDisabled = true;
 			}
 		});
@@ -913,64 +848,73 @@ class RockPaperScissorsCommand extends Command {
 		if (!customOptionsDisabled) {
 			var customOptions = [];
 			var acceptableCustomOptions = ["rock", "paper", "scissors", "everything", "nothing"];
-			const file = await Deno.open("./rps_custom_options.csv");
-			for await (const row of readCSV(file)) {
-				// console.log("row:");
-				// console.log(row);
-				let tempCounter = 1;
-				let tempName = "";
-				let tempWinsAgainst = "";
-				let tempLosesAgainst = "";
-				for await (const cell of row) {
-					if (tempCounter > 3) {
-						LogError(`RPS Error - Invalid CSV Format, please refer to \"./rps_custom_options.csv.example\".\nRPS custom options will not work!`);
-						customOptionsDisabled = true;
-						break;
-					} else if (tempCounter == 1) {
-						tempName = cell;
-					} else if (tempCounter == 2) {
-						if (!acceptableCustomOptions.includes(cell)) {
-							LogError(`RPS Error - Invalid CSV Format. ${cell} of ${row} is not rock/paper/scissors/everything/nothing. 
-							Unfortunately, you cannot set custom options for what custom options win/lose against.\nRPS custom options will not work!`);
-							customOptionsDisabled = true;
-							break;
-						}
-						tempWinsAgainst = cell;
-					} else if (tempCounter == 3) {
-						if (!acceptableCustomOptions.includes(cell)) {
-							LogError(`Error - Invalid CSV Format. ${cell} of ${row} is not rock/paper/scissors/everything/nothing. 
-							Unfortunately, you cannot set custom options for what custom options win/lose against.\nRPS custom options will not work!`);
-							customOptionsDisabled = true;
-							break;
-						}
-						tempLosesAgainst = cell;
-					}
-					LogDebug(`RockPaperScissors Command > cell: ${cell}`); // DEBUG
-					LogDebug(`RockPaperScissors Command > the cell is of type ${typeof cell}`); // DEBUG
-					LogDebug(`RockPaperScissors Command > the temp counter is ${tempCounter}`); // DEBUG
-					tempCounter++;
-				}
-				if (tempWinsAgainst == tempLosesAgainst && tempWinsAgainst != "") {
-					LogError(`RPS Error - Invalid CSV Format. ${tempName} both wins against ${tempWinsAgainst}, but also loses against ${tempLosesAgainst}.
-					RPS custom options will not work!`);
-					customOptionsDisabled = true;
-				} else if (
-					(tempWinsAgainst == "everything" && tempLosesAgainst != "nothing") ||
-					(tempWinsAgainst == "nothing" && tempLosesAgainst != "everything")
-				) {
-					LogError(`RPS Error - Invalid CSV Format. ${tempName} wins against ${tempWinsAgainst}, but the opposite is ${tempLosesAgainst}.
-					If everything or nothing is used for one option, the opposite must be used for the other option. So, if the bot wins against 
-					everything, it must lose against specifically nothing, and vice versa. RPS custom options will not work!`);
-				}
-				customOptions.push({
-					name: tempName,
-					winsAgainst: tempWinsAgainst,
-					losesAgainst: tempLosesAgainst,
-				});
-			}
-
-			file.close();
-		}
+			let file = await Deno.open("./rps_custom_options.csv").catch(error => {
+                if (error.message.includes("The system cannot find the file specified (os error 2): open './rps_custom_options.csv'")) {
+                    LogError(`No custom RPS options file found! To stop seeing this error, please create the file and leave it empty if you don't want to use it. Refer to README.md for more information.`)
+                    customOptionsDisabled = true
+                }
+            });
+            if (!customOptionsDisabled) {
+                const file = await Deno.open("./rps_custom_options.csv")
+                for await (const row of readCSV(file)) {
+                    // console.log("row:");
+                    // console.log(row);
+                    let tempCounter = 1;
+                    let tempName = "";
+                    let tempWinsAgainst = "";
+                    let tempLosesAgainst = "";
+                    for await (const cell of row) {
+                        if (tempCounter > 3) {
+                            LogError(`RPS Error - Invalid CSV Format, please refer to \"./rps_custom_options.csv.example\".\nRPS custom options will not work!`);
+                            customOptionsDisabled = true;
+                            break;
+                        } else if (tempCounter == 1) {
+                            tempName = cell;
+                        } else if (tempCounter == 2) {
+                            if (!acceptableCustomOptions.includes(cell)) {
+                                LogError(`RPS Error - Invalid CSV Format. ${cell} of ${row} is not rock/paper/scissors/everything/nothing. 
+                                Unfortunately, you cannot set custom options for what custom options win/lose against.\nRPS custom options will not work!`);
+                                customOptionsDisabled = true;
+                                break;
+                            }
+                            tempWinsAgainst = cell;
+                        } else if (tempCounter == 3) {
+                            if (!acceptableCustomOptions.includes(cell)) {
+                                LogError(`Error - Invalid CSV Format. ${cell} of ${row} is not rock/paper/scissors/everything/nothing. 
+                                Unfortunately, you cannot set custom options for what custom options win/lose against.\nRPS custom options will not work!`);
+                                customOptionsDisabled = true;
+                                break;
+                            }
+                            tempLosesAgainst = cell;
+                        }
+                        LogDebug(`RockPaperScissors Command > cell: ${cell}`); // DEBUG
+                        LogDebug(`RockPaperScissors Command > the cell is of type ${typeof cell}`); // DEBUG
+                        LogDebug(`RockPaperScissors Command > the temp counter is ${tempCounter}`); // DEBUG
+                        tempCounter++;
+                    }
+                    if (tempWinsAgainst == tempLosesAgainst && tempWinsAgainst != "") {
+                        LogError(`RPS Error - Invalid CSV Format. ${tempName} both wins against ${tempWinsAgainst}, but also loses against ${tempLosesAgainst}.
+                        RPS custom options will not work!`);
+                        customOptionsDisabled = true;
+                    } else if (
+                        (tempWinsAgainst == "everything" && tempLosesAgainst != "nothing") ||
+                        (tempWinsAgainst == "nothing" && tempLosesAgainst != "everything")
+                    ) {
+                        LogError(`RPS Error - Invalid CSV Format. ${tempName} wins against ${tempWinsAgainst}, but the opposite is ${tempLosesAgainst}.
+                        If everything or nothing is used for one option, the opposite must be used for the other option. So, if the bot wins against 
+                        everything, it must lose against specifically nothing, and vice versa. RPS custom options will not work!`);
+                    }
+                    customOptions.push({
+                        name: tempName,
+                        winsAgainst: tempWinsAgainst,
+                        losesAgainst: tempLosesAgainst,
+                    });
+                }
+    
+                file.close();
+            }
+            }
+			
 
 		const botChoice = DetermineBotChoice(RandomNumber(1, 3)!);
 		let winner = "";
@@ -1002,27 +946,6 @@ class RockPaperScissorsCommand extends Command {
 			{
 				winner == "user"
 			}
-		// if (userChoice == botChoice) {
-		// 	winner = "tie";
-		// } else if (userChoice == "rock") {
-		// 	if (botChoice == "paper") {
-		// 		winner = "bot";
-		// 	} else if (botChoice == "scissors") {
-		// 		winner = "user";
-		// 	}
-		// } else if (userChoice == "paper") {
-		// 	if (botChoice == "rock") {
-		// 		winner = "user";
-		// 	} else if (botChoice == "scissors") {
-		// 		winner = "bot";
-		// 	}
-		// } else if (userChoice == "scissors") {
-		// 	if (botChoice == "rock") {
-		// 		winner = "bot";
-		// 	} else if (botChoice == "paper") {
-		// 		winner = "user";
-		// 	}
-		// }
 		 else if (!customOptionsDisabled) {
 			let customOptionFound = false;
 			let customOption: any;
@@ -1254,6 +1177,14 @@ class EvalCommand extends Command {
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
+        if (!evalEnabled) {
+            await ctx.message.reply(new Embed({
+                title: "Eval Disabled",
+                description: "For security reasons, the eval command has been disabled. Please check your configuration if this is not intentional.",
+                color: 0xFF0000,
+            }))
+            return;
+        }
 		LogDebug(`The EvalCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
 		console.log(`\n\n*****\nExecuting Eval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`);
 		if (developerMode) {
@@ -1325,12 +1256,20 @@ class EvalCommand extends Command {
 	}
 }
 
-class AwaitEvalCommand extends Command {
+class AvalCommand extends Command {
 	name = "aval";
 	description = "Lets you run awaited TypeScript code with the bot. Owner only.\n**Syntax:** `aval <code to evaluate>`";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
+        if (!avalEnabled) {
+            await ctx.message.reply(new Embed({
+                title: "Aval Disabled",
+                description: "For security reasons, the aval command has been disabled. Please check your configuration if this is not intentional.",
+                color: 0xFF0000,
+            }))
+            return;
+        }
 		LogDebug(`The Aval command has begun execution! (Command Author ID: ${ctx.author.id})`);
 		console.log(`\n\n*****\nExecuting Aval Code!\n\nCommand Executed By: ${ctx.author}\nExecuting: ${ctx.argString}\n*****\n\n`);
 		if (developerMode) {
@@ -1732,6 +1671,34 @@ class ListRemindersCommand extends Command {
 	}
 }
 
+// TODO: I'll do this later (clearly I don't have enough things put on hold lol)
+class _ReminderBackupCommand extends Command {
+    name = "testcommand123";
+    aliases = ["backupreminders", "remindmebackup", "remindbackup"];
+    description = "Backs up the reminders file. Currently cannot be restored via command, but the file can just be renamed to 'reminders.json' to restore it. Owner only."
+    ownerOnly = true;
+    async execute(ctx: CommandContext) {
+        LogDebug(`The ReminderBackupCommand has begun execution! (Comamnd Author ID: ${ctx.author.id})`);
+        const remindersBackupArray:string[] = JSON.parse(await Deno.readTextFile("./reminders.json"));
+        LogDebug(`The constant remindersBackupArray has been created. Content:\n${remindersBackupArray}`)
+
+        LogDebug(`Attempting to write to the file`)
+        const fileName = "backuptemp"
+        try {
+            Deno.writeTextFile(`${fileName}.json.bak`, JSON.stringify(remindersBackupArray))
+        }
+        catch (writeFileError) {
+            console.log("as expected, an error happened assuming the filename is the same. We need to know the error message to handle that one.")
+            console.log(`writeFileError: ${writeFileError}`)
+            console.log(`writeFileError.message: ${writeFileError.message}`)
+        }
+        
+        // const userTimestamp = ctx.argString.split(" ")[0];
+		// const preTimestamp = Math.floor(Date.now() / 1000);
+
+    }
+}
+
 class TimestampCommand extends Command {
 	name = "timestamp";
 	aliases = ["timestampgen", "gentimestamp", "generatetimestamp"];
@@ -2075,23 +2042,49 @@ bot.commands.add(CancelReminderCommand);
 bot.commands.add(ListRemindersCommand);
 bot.commands.add(TimestampCommand);
 bot.commands.add(SuCommand);
-bot.commands.add(AwaitEvalCommand);
+bot.commands.add(AvalCommand);
 bot.commands.add(SendWebhookCommand);
 bot.commands.add(DiceCommand);
 bot.commands.add(BotInfoCommand)
 
-const token = await Deno.readTextFile("./token.txt");
+let token;
+try {
+    token = await Deno.readTextFile("./token.txt");
+}
+catch (readTokenError) {
+    if (readTokenError.message.includes("The system cannot find the file specified")) {
+        LogCritical(`The bot cannot find the token.txt file. As a result, the bot is unable to start and will now shut down`)
+        exit(1)
+    }
+    else {
+        LogCritical(`A critical error occured where the bot cannot access the token.txt file. Please make sure you have a proper token in the token.txt file. \n
+        readTokenError: ${readTokenError} \n
+        readTokenError.message: ${readTokenError.message} \n
+        readTokenError.stack: ${readTokenError.stack}`)
+        LogCritical(`The bot will now shut down.`)
+        exit(1)
+    }
+}
 
-bot.connect(token, [
-	GatewayIntents.GUILDS,
-	GatewayIntents.GUILD_MESSAGES,
-	GatewayIntents.GUILD_VOICE_STATES,
-	GatewayIntents.GUILD_PRESENCES,
-	GatewayIntents.GUILD_MEMBERS,
-	GatewayIntents.MESSAGE_CONTENT,
-	GatewayIntents.GUILD_EMOJIS_AND_STICKERS,
-	GatewayIntents.DIRECT_MESSAGES,
-]);
+try {
+    bot.connect(token, [
+        GatewayIntents.GUILDS,
+        GatewayIntents.GUILD_MESSAGES,
+        GatewayIntents.GUILD_VOICE_STATES,
+        GatewayIntents.GUILD_PRESENCES,
+        GatewayIntents.GUILD_MEMBERS,
+        GatewayIntents.MESSAGE_CONTENT,
+        GatewayIntents.GUILD_EMOJIS_AND_STICKERS,
+        GatewayIntents.DIRECT_MESSAGES,
+    ]);
+}
+catch (botConnectError) {
+        LogCritical(`An unexpected critical error occurred where the bot could not connect to Discord. As a result, the bot will shut down. \n
+        botConnectError: ${botConnectError} \n
+        botConnectError.message: ${botConnectError.message} \n
+        botConnectError.stack: ${botConnectError.stack}`)
+}
+
 
 setInterval(async () => {
 	const currentTime = Math.floor(Date.now() / 1000);

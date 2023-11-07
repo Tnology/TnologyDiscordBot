@@ -48,3 +48,7 @@ To configure the bot, please create a `.env` file (with this specific name). I w
 # Custom RPS Options
 
 Create a file called `rps_custom_options.csv`. You can leave it empty if you don't want any options. If you wish to add custom options, here is how the data is laid out: `Name,<What it beats (rock|paper|scissors|everything|nothing)>,<What it loses against (rock|paper|scissors|everything|nothing)>`. The bot will tie with the option not specified to win/lose against if everything and nothing are not used. Refer to `rps_custom_options.csv.example` for more information.
+
+# Topics File
+
+The `topics.txt` file contains some default topics you can use. You can add, remove, or modify any topics in the file.

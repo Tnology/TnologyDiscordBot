@@ -1,4 +1,12 @@
-Pre-Alpha v0.3.0-Pre1.1
-
-Changelog:
-- Fixed some broken things because I never tested any of my code. I had like 5 minutes to try running the bot and fixing the code, so hopefully the code works now. If not, I'll fix it later.
+Pre-Alpha v0.3.0
+- Added 2 new values to the .env file: OWNERS_OVERRIDE_STORY_CHANNELS and STORY_CHANNEL_USER_OVERRIDES. The former is a boolean value to allow bot owners to override the story channels, while the latter allows for a custom list of users to override the story channels.
+- Added some debug logging for one-word and two-word story channels.
+- Added 3 other values to the .env file: EVAL_DISABLED, AVAL_DISABLED, and SHELL_DISABLED, which will disable the eval, aval, and shell commands respectively if not set to false. (Closes #2 - thanks to @Tnology for the suggestion)
+- The topics for the topic command are now in the new topics.txt file. If this file is not found, an error is logged and a default "How are you?" question is added. (Closes #4 - thanks to @Tnology for the suggestion)
+- Made the invalid/no value for MAXIMUM_RANDOM_NUMBER notice print as a proper error instead of a console.log().
+- Fixed a bug where a .env value would break just because there was a comment at the end of the line (after the value).
+- Fixed a bug where the bot could not send the start message embed.
+- Creates the reminders.json file if it does not exist.
+- If the reminders.json file contains invalid data, the bot will now shut down to prevent unwanted overwriting or other issues.
+- The bot now sends a critical error if the token.txt file is not found and shuts down.
+- If the rps_custom_options.csv file is not found, the bot simply disables custom options.
