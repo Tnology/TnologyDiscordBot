@@ -2049,7 +2049,8 @@ bot.commands.add(BotInfoCommand)
 
 let token;
 try {
-    token = await Deno.readTextFile("./token.txt");
+    let tempToken = await Deno.readTextFile("./token.txt");
+    token = tempToken.split("\n")[0]
 }
 catch (readTokenError) {
     if (readTokenError.message.includes("The system cannot find the file specified")) {
