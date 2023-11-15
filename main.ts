@@ -6,7 +6,7 @@ import {
 	CommandContext,
 	Webhook,
 	TextChannel,
-} from "https://raw.githubusercontent.com/harmonyland/harmony/daca400ae9feab19604381abddbdab16aa1ede2b/mod.ts";
+} from "https://raw.githubusercontent.com/harmonyland/harmony/e3e3c73056b1980ee214d7047aa2d104c515f737/mod.ts";
 import { isNumber, isString } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
 import { readCSV } from "https://deno.land/x/csv@v0.8.0/mod.ts";
@@ -14,6 +14,7 @@ import { encode } from "https://deno.land/std@0.175.0/encoding/base64.ts";
 import { uptime } from "https://deno.land/std@0.173.0/node/os.ts";
 import { exit } from "https://deno.land/std@0.173.0/node/process.ts";
 
+// FIXME: The SuCommand seems to crash when either providing a new user (try it with a new user) or an invalid user.
 // TODO: Add a send webhook command.
 
 await config({ export: true });
@@ -44,22 +45,18 @@ if (!["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"].includes(loggingLevel!) |
 	loggingLevel = "INFO";
 }
 
-const criticalChannel = Deno.env.get("CRITICAL_LOGGING_CHANNEL");
-const errorChannel = Deno.env.get("ERROR_LOGGING_CHANNEL");
-const warningChannel = Deno.env.get("WARNING_LOGGING_CHANNEL");
-const infoChannel = Deno.env.get("INFO_LOGGING_CHANNEL");
-const debugChannel = Deno.env.get("DEBUG_LOGGING_CHANNEL");
-
-const botStartLoggingChannel = Deno.env.get("BOT_START_LOGGING_CHANNEL")?.split("#")[0];
-const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL")?.split("#")[0];
-const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL")?.split("#")[0];
-const dmLoggingChannel = Deno.env.get("DM_LOGGING_CHANNEL")?.split("#")[0];
+const criticalChannel = Deno.env.get("CRITICAL_LOGGING_CHANNEL")?.split("#")[0];
+const errorChannel = Deno.env.get("ERROR_LOGGING_CHANNEL")?.split("#")[0];
+const warningChannel = Deno.env.get("WARNING_LOGGING_CHANNEL")?.split("#")[0];
+const infoChannel = Deno.env.get("INFO_LOGGING_CHANNEL")?.split("#")[0];
+const debugChannel = Deno.env.get("DEBUG_LOGGING_CHANNEL")?.split("#")[0];
 
 function LogCritical(message: string) {
 	// This will always log.
 	console.log(`\n\n*****CRITICAL ERROR*****\n\nA critical error has occurred. Please contact the developer if this causes an issue!\nTime: ${GetFormattedTime(Date.now())}\nMessage:\n${message}\n\n************************`);
 	if (criticalChannel != "-1" && criticalChannel != undefined) {
-		SendEmbed(criticalChannel, "‼️ Critical Error!", `A critical error has occured. Please contact the developer if this causes an issue!\n**Time:** <t:${Date.now()}>\n**Message:**\n\`\`\`\n${message}\n\`\`\`\n`, 0x550000)
+        const date = `${Date.now()}`
+		SendEmbed(criticalChannel, "‼️ Critical Error!", `A critical error has occured. Please contact the developer if this causes an issue!\n**Time:** <t:${date.slice(0, -3)}>\n**Message:**\n\`\`\`\n${message}\n\`\`\`\n`, 0x550000)
 	}
 	return;
 }
@@ -70,7 +67,10 @@ function LogError(message: string) {
 		return -1;
 	}
 	if (errorChannel != "-1" && errorChannel != undefined) {
-		SendEmbed(errorChannel, "⛔ Error", `An error has occured.\n**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0xFF0000);
+        const date = `${Date.now()}`
+        if (!message.includes("An error occurred attempting to send an embed.")) {
+            SendEmbed(errorChannel, "⛔ Error", `An error has occured.\n**Time:** <t:${date.slice(0, -3)}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0xFF0000);
+        }
 	}
 	const messageArray = message.split("\n").slice(1); // if this has an issue, change from "const messageArray" to "let messageArray"
 	let finalOutput = `${GetFormattedTime(Date.now())} | [ERROR]: ${message.split("\n")[0]}\n`;
@@ -87,7 +87,8 @@ function LogWarning(message: string) {
 		return -1;
 	}
 	if (warningChannel != "-1" && warningChannel != undefined) {
-		SendEmbed(warningChannel, "⚠️ Warning", `A warning has occurred.\n**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0xFFFF00);
+        const date = `${Date.now()}`
+		SendEmbed(warningChannel, "⚠️ Warning", `A warning has occurred.\n**Time:** <t:${date.slice(0, -3)}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0xFFFF00);
 	}
 	const messageArray = message.split("\n").slice(1); // if messageArray has an issue, change "const messageArray" to "let messageArray"
 	let finalOutput = `${GetFormattedTime(Date.now())} | [WARNING]: ${message.split("\n")[0]}\n`;
@@ -104,7 +105,8 @@ function LogInfo(message: string) {
 		return -1;
 	}
 	if (infoChannel != "-1" && infoChannel != undefined) {
-		SendEmbed(infoChannel, "ℹ️ Info", `Information has been logged.\n**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0x0000FF);
+        const date = `${Date.now()}`
+		SendEmbed(infoChannel, "ℹ️ Info", `Information has been logged.\n**Time:** <t:${date.slice(0, -3)}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0x0000FF);
 	}
 	const messageArray = message.split("\n").slice(1); // if messageArray has an issue, change "const messageArray" to "let messageArray"
 	let finalOutput = `${GetFormattedTime(Date.now())} | [INFO]: ${message.split("\n")[0]}\n`;
@@ -121,7 +123,8 @@ function LogDebug(message: string) {
 		return -1;
 	}
 	if (debugChannel != "-1" && debugChannel != undefined) {
-		SendEmbed(debugChannel, "🔰 Debug", `**Time:** <t:${Date.now()}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0x5555FF);
+        const date = `${Date.now()}`
+		SendEmbed(debugChannel, "🔰 Debug", `**Time:** <t:${date.slice(0, -3)}>\n**Message:** \n\`\`\`\n${message}\n\`\`\`\n`, 0x5555FF);
 	}
 	const messageArray = message.split("\n").slice(1); // if messageArray has an issue, change "const messageArray" to "let messageArray"
 	let finalOutput = `${GetFormattedTime(Date.now())} | [DEBUG]: ${message.split("\n")[0]}\n`;
@@ -142,27 +145,65 @@ else {
 	maximumRandomNumber = Number(Deno.env.get("MAXIMUM_RANDOM_NUMBER")?.split("#")[0]);
 }
 
+const botStartLoggingChannel = Deno.env.get("BOT_START_LOGGING_CHANNEL")?.split("#")[0];
+const evalLoggingChannel = Deno.env.get("EVAL_LOGGING_CHANNEL")?.split("#")[0];
+const shellLoggingChannel = Deno.env.get("SHELL_LOGGING_CHANNEL")?.split("#")[0];
+const dmLoggingChannel = Deno.env.get("DM_LOGGING_CHANNEL")?.split("#")[0];
+
+const botMissingPermissionLoggingChannel = Deno.env.get("BOT_MISSING_PERMISSION_LOGGING_CHANNEL")?.split("#")[0];
+const userMissingPermissionLoggingChannel = Deno.env.get("USER_MISSING_PERMISSION_LOGGING_CHANNEL")?.split("#")[0];
+
+
 const discussionThreadsEnabled = Deno.env.get("ENABLE_DISCUSSION_THREADS")?.split("#")[0].trim() == "true";
 const discussionChannels = Deno.env.get("DISCUSSION_CHANNELS")?.split("#")[0].trim().split(",");
 
+
 let oneWordStoryChannels = Deno.env.get("ONE_WORD_STORY_CHANNELS")?.split("#")[0].trim().split(",");
 const oneWordStoryLoggingChannel = Deno.env.get("ONE_WORD_STORY_LOGGING_CHANNEL")!.trim().split("#")[0];
-
 let twoWordStoryChannels = Deno.env.get("TWO_WORD_STORY_CHANNELS")?.split("#")[0].trim().split(",");
 const twoWordStoryLoggingChannel = Deno.env.get("TWO_WORD_STORY_LOGGING_CHANNEL")!.trim().split("#")[0];
 
 const storyWebhooksEnabled = Deno.env.get("STORY_WEBHOOKS")?.split("#")[0].trim() == "true";
 const botOverridesStoryChannels = Deno.env.get("BOT_OVERRIDES_STORY_CHANNELS")?.split("#")[0].trim() == "true";
 const ownersOverrideStoryChannels = Deno.env.get("OWNERS_OVERRIDE_STORY_CHANNELS")?.split("#")[0].trim() == "true";
-
 const storyChannelsOverrideList: string[] | undefined = Deno.env.get("STORY_CHANNEL_USER_OVERRIDE")?.split("#")[0].trim().split(",");
+
 
 const evalEnabled = Deno.env.get("EVAL_DISABLED")?.split("#")[0].trim() == "false";
 const avalEnabled = Deno.env.get("AVAL_DISABLED")?.split("#")[0].trim() == "false";
 const shellEnabled = Deno.env.get("SHELL_DISABLED")?.split("#")[0].trim() == "false";
 
 
-// const usernameChangeLoggingChannel = Deno.env.get("USERNAME_CHANGE_LOGGING_CHANNEL"); // TODO:
+let botPrefix;
+if (developerMode) {
+    if (Deno.env.get("BOT_DEV_PREFIX") == undefined) {
+        LogError(`A prefix for the BOT_DEV_PREFIX was not found in your .env file, and the bot is in developer mode. Therefore, the default developer mode prefix of >> will be used. Please set the value in your .env file to stop seeing this message.`);
+        botPrefix = ">>";
+    }
+    else {
+        botPrefix = Deno.env.get("BOT_DEV_PREFIX");
+    }
+}
+else {
+    if (Deno.env.get("BOT_PREFIX") == undefined) {
+        LogError(`A prefix for the BOT_PREFIX value was not found in your .env file. Therefore, the default prefix of > will be used. Please set the value in the .env file to stop seeing this message.`);
+        botPrefix = ">";
+    }
+    else {
+        botPrefix = Deno.env.get("BOT_PREFIX");
+    }
+}
+
+// globalThis.addEventListener("unhandledrejection", (unhandledrejectionerror) => {
+//     LogError(`An unhandledrejection error has occurred. Here are the details: \n
+//     unhandledrejectionerror: ${unhandledrejectionerror} \n
+//     unhandledrejectionerror.reason: ${unhandledrejectionerror.reason} \n
+//     unhandledrejectionerror.timeStamp: ${unhandledrejectionerror.timeStamp} \n
+//     unhandledrejectionerror.target ${unhandledrejectionerror.target}`)
+//     unhandledrejectionerror.preventDefault();
+// })
+
+
 
 let reminders: any;
 
@@ -243,14 +284,16 @@ catch (error) {
 	}
 }
 
-function SendEmbed(channelid: string, title: string, description: string, color: number) {
+function SendEmbed(channelid: string, title: string, description: string, color: number, dontcall = false) {
 	if (channelid == "-1") {
 		return false;
 	}
+    if (dontcall) {
+        return false;
+    }
 
 	try {
-		bot.channels
-		.sendMessage(
+		bot.channels.sendMessage(
 			channelid,
 			new Embed({
 				title: title,
@@ -259,15 +302,6 @@ function SendEmbed(channelid: string, title: string, description: string, color:
 			})
 		)
 		.catch((error) => {
-			// if (String(error).includes("(10003) Unknown Channel")) {
-			// 	if (channelid == usernameChangeLoggingChannel) {
-			// 		console.error(
-			// 			`*****Embed Error*****\nAn error occurred attempting to send an embed.\n\nProblem: It appears that the Username Change Logging Channel cannot be found. Please check your .env file and the bot's permissions.\n\nOther Error Info:\nAttempted Channel ID: ${channelid}\n\nAttempted Title: ${title}\n\nAttempted Description: \n-----Error Description-----\n${description}\n-----End Error Description-----\n\nAttempted Color: ${color}\n\nError: ${error}\nProblem (Repeated): It appears that the Username Change Logging Channel cannot be found. Please check your .env file and the bot's permissions.\n*****End Embed Error*****\n`
-			// 		);
-			// 		return false;
-			// 	}
-			// }
-			// else {
 				LogError(
 					`Embed Error: An error occurred attempting to send an embed.\nAttempted Channel ID: ${channelid}\nAttempted Title: ${title}\n\n-----Attempted Description-----\n${description}\n-----End Attempted Description-----\n\nAttempted Color: ${color}\n\nError: ${error}\n*****End Embed Error*****\n`
 				);
@@ -502,7 +536,7 @@ const bot = new CommandClient({
 	caseSensitive: false,
 	enableSlash: false,
 	mentionPrefix: true,
-	prefix: developerMode == false ? ">" : ">>",
+	prefix: botPrefix!,
 	owners: ownersArray,
 	isUserBlacklisted(id: string) {
 		const victims = ["347083401141944333", "314166178144583682"];
@@ -672,7 +706,55 @@ bot.on("gatewayError", (error) => {
 
 bot.on("error", (error) => {
     LogCritical(`A critical error has occurred.\nerror: ${error}\nerror.message: ${error.message}\nerror.stack: ${error.stack}`)
+});
+
+// unhandledrejection.js
+// globalThis.addEventListener("unhandledrejection", (e) => {
+//     console.log("unhandled rejection at:", e.promise, "reason:", e.reason);
+//     e.preventDefault();
+//   }, {passive: true});
+
+
+//   function Foo() {
+//     this.bar = Promise.reject(new Error("bar not available"));
+//   }
+  
+//   new Foo();
+//   Promise.reject();
+  
+
+
+
+bot.on("commandBotMissingPermissions", (ctx) => {
+    if (botMissingPermissionLoggingChannel != "-1" && botMissingPermissionLoggingChannel != undefined) {
+        SendEmbed(botMissingPermissionLoggingChannel, "Bot Missing Permissions", 
+        `The bot seems to be missing permissions for a command.\n
+        Channel ID: ${ctx.channel.id} \n
+        Author ID: ${ctx.author.id} \n
+        Command Name: ${ctx.command.name} \n
+        Guild ID: ${ctx.guild?.id} (Guild Name: ${ctx.guild?.name}) \n
+        Message ID: ${ctx.message.id}`, 
+        0xFF5555)
+    }
 })
+
+bot.on("commandUserMissingPermissions", (ctx) => {
+    if (userMissingPermissionLoggingChannel != "-1" && userMissingPermissionLoggingChannel != undefined) {
+        SendEmbed(userMissingPermissionLoggingChannel, "User Missing Permissions", 
+        `The user seems to be missing permissions for a command.\n
+        Channel ID: ${ctx.channel.id} \n
+        Author ID: ${ctx.author.id} \n
+        Command Name: ${ctx.command.name} \n
+        Guild ID: ${ctx.guild?.id} (Guild Name: ${ctx.guild?.name}) \n
+        Message ID: ${ctx.message.id}`, 
+        0xFF5555)
+    }
+})
+
+// bot.on("commandBotMissingPermissions", (ctx, error) => {
+//     console.log(ctx)
+//     console.log(error)
+// })
 
 bot.on("commandError", (ctx, error) => {
 	if (error.message.includes("No such file or directory (os error 2): open './rps_custom_options.csv'") || error.message.includes("The system cannot find the file specified. (os error 2): open './rps_custom_options.csv'")) {
@@ -1360,7 +1442,7 @@ class CoinflipCommand extends Command {
 class TopicCommand extends Command {
 	name = "topic";
 	aliases = ["generatetopic", "gentopic", "topicgenerate", "topicgen", "topicidea"];
-	description = "Picks a topic from a list of topics that T_nology has created.\n**Syntax:** `topic`";
+	description = "Picks a topic from a list of topics.\n**Syntax:** `topic`";
 
 	async execute(ctx: CommandContext) {
 		LogDebug(`The TopicCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
@@ -1782,21 +1864,208 @@ class SuCommand extends Command {
 
 	async execute(ctx: CommandContext) {
 		LogDebug(`The SuCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
-		const user: string = ctx.argString.split(" ")[0];
+        if (ctx.argString.length == 0) {
+            LogDebug(`The condition ctx.argString.length == 0 is true with the SuCommand.`)
+            await ctx.message.reply(new Embed({
+                title: "No Arguments Provided",
+                description: "You didn't provide any arguments for the command. Please provide the user and the command.",
+                color: 0xFF0000,
+            }));
+            return;
+        }
+        if (ctx.argString.split(" ").length < 2) {
+            LogDebug(`The condition ctx.argString.split(" ").length < 2 is true with the SuCommand.`)
+            await ctx.message.reply(new Embed({
+                title: "No Command Provided",
+                description: "You didn't provide a command for the user to run. Please provide both the user and the command.",
+                color: 0xFF0000,
+            }));
+            return;
+        }
+		const userInput: string = ctx.argString.split(" ")[0];
+        let user;
 		const command: string = ctx.argString.split(" ")[1];
+        if (userInput![0] == "<" && userInput![1] == "@" && userInput!.slice(-1) == ">") {
+            const IDFilter = new RegExp("[0-9]+", "g") // Thank you to ChatGPT for writing me this regex filter, make fun of me all you want but I never bothered learning regex.
+            user = userInput.match(IDFilter)?.join("");
+        }
 		const commandArgs: string = ctx.argString.split(" ").slice(2).join(" ");
-		console.log(commandArgs);
+		LogDebug(`Debug Code: 114 | commandArgs: ${commandArgs}`);
 
-		ctx.author = (await bot.users.get(user))!;
+        try {
+            ctx.author = (await bot.users.fetch(user!))!;
+        }
+        catch (fetchUserError) {
+            if (fetchUserError.message.includes(`Value "undefined" is not snowflake`)) {
+                LogDebug(`Debug Code: 413 | The user could not be fetched and ctx.author could not be set because Value "undefined" is not snowflake`);
+                await ctx.message.reply(new Embed({
+                    title: "Invalid User",
+                    description: "An invalid user was provided. Please mention a user or give the User ID for the user argument!",
+                    color: 0xFF0000,
+                }));
+                return;
+            }
+            else {
+                LogError(`Error Code: 415 | Trying to get the user via SuCommand resulted in an unexpected error. \n
+                fetchUserError: ${fetchUserError} \n
+                fetchUserError.message: ${fetchUserError.message} \n
+                fetchUserError.stack: ${fetchUserError.stack}`);
+                await ctx.message.reply(new Embed({
+                    title: "Unexpected Error",
+                    description: `An unexpected error occurred while trying to fetch the user via the command. \n
+                    fetchUserError.message: ${fetchUserError.message}`
+                }));
+                return;
+            }
+        }
+		
 		ctx.argString = commandArgs;
 
-		bot.commands.find(command)!.execute(ctx);
+        try {
+            bot.commands.find(command)!.execute(ctx);
+        }
+        catch (commandError) {
+            if (commandError.message.includes("Cannot read properties of undefined")) {
+                LogDebug(`Debug Code: 406 | The command that was attempted to run via the SuCommand was likely not found.`);
+                await ctx.message.reply(new Embed({
+                    title: "Command Not Found",
+                    description: "The command couldn't be found. Please make sure you are entering the correct command.",
+                    color: 0xFF0000,
+                }));
+                return;
+            }
+            else {
+                LogError(`Error Code: 407 | The command that was attempted to run via the SuCommand experienced an unexpected error. \n
+                commandError: ${commandError} \n
+                commandError.message: ${commandError.message} \n
+                commandError.stack: ${commandError.stack}`);
+                await ctx.message.reply(new Embed({
+                    title: "Unexpected Error",
+                    description: `An unexpected error occurred while attempting to run the command.\n
+                    commandError.message: ${commandError.message}`,
+                    color: 0xFF0000,
+                }));
+                return;
+            }
+        }
+	}
+}
+
+class RunCommand extends Command {
+	name = "run";
+	aliases = ["runcmd", "execute", "executecmd"];
+	description = "Conming soon. Runs a command with the specified user, channel, and ownerOnly arguments. Owner only.\n**Syntax:** run <user mention> <channel mention> <ownerOnly (true | false)> <command>`";
+	ownerOnly = true;
+
+	async execute(ctx: CommandContext) {
+		LogDebug(`The SuCommand has begun execution! (Command Author ID: ${ctx.author.id})`);
+        LogDebug(`Temporary Debug Note: The command is not implemented yet.`)
+        await ctx.message.reply(new Embed({
+            title: "Coming Soon!",
+            description: "This command is not implemented yet.",
+            color: 0x0000FF,
+        }));
+        return;
+        /*
+        if (ctx.argString.length == 0) {
+            LogDebug(`The condition ctx.argString.length == 0 is true with the SuCommand.`)
+            await ctx.message.reply(new Embed({
+                title: "No Arguments Provided",
+                description: "You didn't provide any arguments for the command. Please provide the user and the command.",
+                color: 0xFF0000,
+            }));
+            return;
+        }
+        if (ctx.argString.split(" ").length < 2) {
+            LogDebug(`The condition ctx.argString.split(" ").length < 2 is true with the SuCommand.`)
+            await ctx.message.reply(new Embed({
+                title: "No Command Provided",
+                description: "You didn't provide a command for the user to run. Please provide both the user and the command.",
+                color: 0xFF0000,
+            }));
+            return;
+        }
+		const userInput: string = ctx.argString.split(" ")[0];
+        let user;
+
+        const channelInput: string = ctx.argString.split(" ")[1]
+        let channel;
+
+        const ownerOnlyInput: string = ctx.argString.split(" ")[2]
+        let ownerOnly;
+
+		const command: string = ctx.argString.split(" ")[3];
+        if (userInput![0] == "<" && userInput![1] == "@" && userInput!.slice(-1) == ">") {
+            const IDFilter = new RegExp("[0-9]+", "g") // Thank you to ChatGPT for writing me this regex filter, make fun of me all you want but I never bothered learning regex.
+            user = userInput.match(IDFilter)?.join("");
+        }
+		const commandArgs: string = ctx.argString.split(" ").slice(2).join(" ");
+		LogDebug(`Debug Code: 114 | commandArgs: ${commandArgs}`);
+
+        try {
+            ctx.author = (await bot.users.fetch(user!))!;
+        }
+        catch (fetchUserError) {
+            if (fetchUserError.message.includes(`Value "undefined" is not snowflake`)) {
+                LogDebug(`Debug Code: 413 | The user could not be fetched and ctx.author could not be set because Value "undefined" is not snowflake`);
+                await ctx.message.reply(new Embed({
+                    title: "Invalid User",
+                    description: "An invalid user was provided. Please mention a user or give the User ID for the user argument!",
+                    color: 0xFF0000,
+                }));
+                return;
+            }
+            else {
+                LogError(`Error Code: 415 | Trying to get the user via SuCommand resulted in an unexpected error. \n
+                fetchUserError: ${fetchUserError} \n
+                fetchUserError.message: ${fetchUserError.message} \n
+                fetchUserError.stack: ${fetchUserError.stack}`);
+                await ctx.message.reply(new Embed({
+                    title: "Unexpected Error",
+                    description: `An unexpected error occurred while trying to fetch the user via the command. \n
+                    fetchUserError.message: ${fetchUserError.message}`
+                }));
+                return;
+            }
+        }
+		
+		ctx.argString = commandArgs;
+
+        try {
+            bot.commands.find(command)!.execute(ctx);
+        }
+        catch (commandError) {
+            if (commandError.message.includes("Cannot read properties of undefined")) {
+                LogDebug(`Debug Code: 406 | The command that was attempted to run via the SuCommand was likely not found.`);
+                await ctx.message.reply(new Embed({
+                    title: "Command Not Found",
+                    description: "The command couldn't be found. Please make sure you are entering the correct command.",
+                    color: 0xFF0000,
+                }));
+                return;
+            }
+            else {
+                LogError(`Error Code: 407 | The command that was attempted to run via the SuCommand experienced an unexpected error. \n
+                commandError: ${commandError} \n
+                commandError.message: ${commandError.message} \n
+                commandError.stack: ${commandError.stack}`);
+                await ctx.message.reply(new Embed({
+                    title: "Unexpected Error",
+                    description: `An unexpected error occurred while attempting to run the command.\n
+                    commandError.message: ${commandError.message}`,
+                    color: 0xFF0000,
+                }));
+                return;
+            }
+        }
+        */
 	}
 }
 
 class SendWebhookCommand extends Command {
 	name = "sendwebhook";
 	aliases = ["webhook", "createwebhook"];
+    description = "Sends a webhook. Owner only.";
 	ownerOnly = true;
 
 	async execute(ctx: CommandContext) {
@@ -2025,27 +2294,44 @@ class BotInfoCommand extends Command {
 	}
 }
 
-bot.commands.add(HelpCommand);
-bot.commands.add(Whoami);
-bot.commands.add(ShellCommand);
-bot.commands.add(RockPaperScissorsCommand);
-bot.commands.add(SayCommand);
-bot.commands.add(SendEmbedCommand);
-bot.commands.add(UserInfoCommand);
+bot.commands.add(AvalCommand);
 bot.commands.add(EvalCommand);
-bot.commands.add(TopicCommand);
+bot.commands.add(BotInfoCommand);
+bot.commands.add(CancelReminderCommand);
 bot.commands.add(CoinflipCommand);
+bot.commands.add(DiceCommand);
+bot.commands.add(HelpCommand);
+bot.commands.add(ListRemindersCommand);
 bot.commands.add(PingCommand);
 bot.commands.add(RandomNumberCommand);
 bot.commands.add(RemindmeCommand);
-bot.commands.add(CancelReminderCommand);
-bot.commands.add(ListRemindersCommand);
+bot.commands.add(RockPaperScissorsCommand);
+bot.commands.add(RunCommand);
+bot.commands.add(SayCommand);
+bot.commands.add(SendEmbedCommand);
+bot.commands.add(ShellCommand);
+bot.commands.add(TopicCommand);
+bot.commands.add(UserInfoCommand);
+bot.commands.add(Whoami);
+
+
+
+
+
+
+
+
+
+
+
+
+
 bot.commands.add(TimestampCommand);
 bot.commands.add(SuCommand);
-bot.commands.add(AvalCommand);
+
 bot.commands.add(SendWebhookCommand);
-bot.commands.add(DiceCommand);
-bot.commands.add(BotInfoCommand)
+
+
 
 let token;
 try {
