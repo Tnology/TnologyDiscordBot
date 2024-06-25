@@ -1,8 +1,2 @@
-Pre-Alpha v0.3.2
-- Added two new values to the .env file: BOT_MISSING_PERMISSION_LOGGING_CHANNEL and USER_MISSING_PERMISSION_LOGGING_CHANNEL
-- Added two other new values to the .env file: BOT_PREFIX and BOT_DEV_PREFIX, for setting the prefix of the bot with developer mode off and on respectively.
-- Made the Su Command use .fetch() instead of .get(), solving some issues if the user is not cached
-- Fixed a bug with the Su command where you could only enter the User ID instead of being able to mention the user
-- Fixed a potential bug where having a comment at the end of some logging channel values for the .env file might mess up the values
-- Fixed the timestamps in the Discord embeds for logging
-- Fixed a bug where the bot would enter an infinite recursion loop between the SendEmbed function and the LogError function. This would happen if the bot didn't have permission to send an embed in the error logging channel, as there would be an error, then it tries to log that error, but it can't, so it tries to log that as an error, and it causes infinite recursion. It also spams the console. This bug has been fixed.
+Pre-Alpha v0.3.2a
+- Small update that's only relevant to a specific person in a specific Discord server

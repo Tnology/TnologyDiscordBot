@@ -6,6 +6,7 @@ import {
 	CommandContext,
 	Webhook,
 	TextChannel,
+  Gateway,
 } from "https://raw.githubusercontent.com/harmonyland/harmony/e3e3c73056b1980ee214d7047aa2d104c515f737/mod.ts";
 import { isNumber, isString } from "https://deno.land/x/redis@v0.25.1/stream.ts";
 import { config } from "https://deno.land/x/dotenv@v3.2.2/mod.ts";
@@ -23,6 +24,14 @@ const versionFile = await Deno.readTextFile("./version.txt");
 const version = versionFile.split("\n")[0];
 
 const developerMode = Deno.env.get("DEV_MODE")?.split("#")[0].trim() == "true";
+
+
+// README: Temporary setting for Bloxs
+// const bloxsMoment = Deno.env.get("BLOXS_MOMENT")?.split("#")[0].trim() == "true";
+const bloxsMoment = true;
+// const bloxsMomentIds = Deno.env.get("BLOXS_MOMENT_IDS")?.split("#")[0].trim().split(",")
+const bloxsMomentIds = ["319223591046742016"]
+
 
 let loggingLevel: string | undefined;
 
@@ -571,6 +580,34 @@ bot.on("ready", () => {
 		  )
 		: {};
 });
+
+
+
+
+// Temporary, For Bloxs's Reaction As Part of Pre-Alpha v0.3.2a Update
+
+bot.on("messageReactionAdd", (reactionMsg, user) => {
+	if (bloxsMoment) {
+		if (bloxsMomentIds!.includes(user.id)) {
+			if (reactionMsg.emoji.name == "♻️") {
+				reactionMsg.emoji.delete();
+				reactionMsg.message.reactions.removeEmoji(reactionMsg.emoji.name);
+			}
+		}
+	}
+})
+
+
+
+
+
+
+
+
+
+
+
+
 
 bot.on("messageCreate", (msg) => {
 
@@ -2363,6 +2400,7 @@ try {
         GatewayIntents.MESSAGE_CONTENT,
         GatewayIntents.GUILD_EMOJIS_AND_STICKERS,
         GatewayIntents.DIRECT_MESSAGES,
+		GatewayIntents.GUILD_MESSAGE_REACTIONS,
     ]);
 }
 catch (botConnectError) {
