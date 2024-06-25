@@ -1,1 +1,1 @@
-const remindersTemp = {"reminders":[{"UserId":319223591046742000,"Timestamp":1719345119,"Reason":"Test Reminder","Expired":true,"ChannelId":"652793531068579840"}],"id":1}
+{"reminders":[{"UserId":319223591046742000,"Timestamp":1719345119,"Reason":"Test Reminder","Expired":true,"ChannelId":"652793531068579840"}],"id":1}
