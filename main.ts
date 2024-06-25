@@ -242,12 +242,18 @@ catch (error) {
     }
     else if (error.message.includes("Unexpected end of JSON input")) {
         LogWarning(`The reminders.json file appears to be empty. Writing to the file for you.`)
-        const remindersTemp = {}
-        Deno.writeTextFile("./reminders.json", JSON.stringify(remindersTemp));
+        // TODO: Set remindersTemp back to this if needed
+		// FIXME: Set remindersTemp back to this if needed
+		// const remindersTemp = {}
+		const remindersTemp = {"reminders":[{"UserId":319223591046742000,"Timestamp":1719345119,"Reason":"Test Reminder","Expired":true,"ChannelId":"652793531068579840"}],"id":1}
+        
+		Deno.writeTextFile("./reminders.json", JSON.stringify(remindersTemp));
         LogDebug(`Debug Code: 131 | It appears that the file has been written to because an error doesn't seem to have been thrown.`)
-        console.log(await Deno.readTextFile("./reminders.json"))
+        
+		console.log(await Deno.readTextFile("./reminders.json"))
         reminders = JSON.parse(await Deno.readTextFile("./reminders.json"));
-        LogInfo(`The reminders.json file appears to have been written to successfully - here is the content: \n
+        
+		LogInfo(`The reminders.json file appears to have been written to successfully - here is the content: \n
         ${await Deno.readTextFile("./reminders.json")}`)
     }
     else if (error.message.includes("is not valid JSON") || 

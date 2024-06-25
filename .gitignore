@@ -2,6 +2,5 @@ token.txt
 env_name.txt
 .env
 reminders.json
-reminders.json.example
 /ignoreme
 rps_custom_options.csv

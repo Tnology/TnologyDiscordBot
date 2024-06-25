@@ -1,2 +1,2 @@
-Pre-Alpha v0.3.2a
-- Small update that's only relevant to a specific person in a specific Discord server
+Pre-Alpha v0.3.3
+- Fixed a bug where the reminders.json file would be broken

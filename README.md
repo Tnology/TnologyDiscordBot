@@ -22,6 +22,7 @@ If you have found a security vulnerability, please let T_nology know (preferably
   - Create a `token.txt` file and add only your bot's token to it.
   - Create the file `rps_custom_options.csv`
   - Create the file `.env` and have it be in the format of `.env.example`
+  - Create the file `reminders.json` and add the following content to it found in the `reminders.json.example` file.
   - To run the bot, run `deno run -A main.ts`
     - If you don't want to use the `-A` flag, you can just give it the flags it needs.
 
