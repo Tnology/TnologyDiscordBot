@@ -1,2 +1,2 @@
-Pre-Alpha v0.3.3a
-- I messed up the reminders.json.example file lol
+Pre-Alpha v0.3.3b
+- Another small update for myself

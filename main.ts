@@ -27,10 +27,8 @@ const developerMode = Deno.env.get("DEV_MODE")?.split("#")[0].trim() == "true";
 
 
 // README: Temporary setting for Bloxs
-// const bloxsMoment = Deno.env.get("BLOXS_MOMENT")?.split("#")[0].trim() == "true";
-const bloxsMoment = true;
-// const bloxsMomentIds = Deno.env.get("BLOXS_MOMENT_IDS")?.split("#")[0].trim().split(",")
-const bloxsMomentIds = ["319223591046742016"]
+const bloxsMoment = Deno.env.get("BLOXS_MOMENT")?.split("#")[0].trim() == "true";
+const bloxsMomentIds = Deno.env.get("BLOXS_MOMENT_IDS")?.split("#")[0].trim().split(",");
 
 
 let loggingLevel: string | undefined;
